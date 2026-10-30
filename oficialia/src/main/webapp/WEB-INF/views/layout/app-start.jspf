@@ -1,0 +1,50 @@
+<%-- Sidebar of the Oficialía de Partes. The including page sets activeNav to mark its menu entry. --%>
+<body>
+<div class="app-shell">
+  <aside class="app-sidebar">
+    <div class="app-brand">
+      <div class="app-brand-logo">SCD</div>
+      <div>
+        <div class="app-brand-name">Sistema de Control de Demandas</div>
+        <div class="app-brand-area">Oficialía de Partes</div>
+      </div>
+    </div>
+
+    <ul class="app-nav">
+      <li>
+        <span class="app-nav-link is-soon" title="Disponible en un siguiente avance">
+          <i class="bi bi-house"></i> Inicio <span class="soon-tag">Pronto</span>
+        </span>
+      </li>
+      <li>
+        <a class="app-nav-link ${activeNav == 'requests' ? 'active' : ''}" href="${ctx}/demand-requests">
+          <i class="bi bi-file-earmark-text"></i> Solicitudes
+        </a>
+      </li>
+      <li>
+        <a class="app-nav-link ${activeNav == 'new-request' ? 'active' : ''}" href="${ctx}/demand-requests/new">
+          <i class="bi bi-file-earmark-plus"></i> Nueva solicitud
+        </a>
+      </li>
+      <li>
+        <span class="app-nav-link is-soon" title="Disponible en un siguiente avance">
+          <i class="bi bi-folder2"></i> Expedientes <span class="soon-tag">Pronto</span>
+        </span>
+      </li>
+      <li>
+        <span class="app-nav-link is-soon" title="Disponible en un siguiente avance">
+          <i class="bi bi-bank"></i> Segunda instancia <span class="soon-tag">Pronto</span>
+        </span>
+      </li>
+    </ul>
+
+    <div class="app-sidebar-footer">
+      <form method="post" action="${ctx}/logout">
+        <button type="submit" class="app-nav-link border-0">
+          <i class="bi bi-box-arrow-right"></i> Cerrar sesión
+        </button>
+      </form>
+    </div>
+  </aside>
+
+  <main class="app-main">

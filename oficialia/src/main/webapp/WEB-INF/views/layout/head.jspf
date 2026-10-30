@@ -1,0 +1,17 @@
+<%-- Opens the page and loads fonts, Bootstrap, the shared Morelos theme and this module's styles.
+     The including page sets pageTitle before including this fragment. --%>
+<c:set var="ctx" value="${pageContext.request.contextPath}" />
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><c:out value="${pageTitle}" /> | SCD-2026</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&family=Roboto:wght@400;500;700&display=swap">
+  <link rel="stylesheet" href="${ctx}/webjars/bootstrap/5.3.3/css/bootstrap.min.css">
+  <link rel="stylesheet" href="${ctx}/webjars/bootstrap-icons/1.13.2/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="${ctx}/assets/shared/css/morelos-theme.css">
+  <link rel="stylesheet" href="${ctx}/assets/css/oficialia.css">
+</head>
