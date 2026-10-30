@@ -26,6 +26,10 @@
     <!-- Library versions: change them only here -->
     <servlet-api.version>6.0.0</servlet-api.version>
     <junit.version>5.11.3</junit.version>
+    <jstl-api.version>3.0.0</jstl-api.version>
+    <jstl-impl.version>3.0.1</jstl-impl.version>
+    <bootstrap.version>5.3.3</bootstrap.version>
+    <bootstrap-icons.version>1.13.2</bootstrap-icons.version>
   </properties>
 
   <dependencyManagement>
@@ -40,6 +44,27 @@
         <artifactId>jakarta.servlet-api</artifactId>
         <version>${servlet-api.version}</version>
         <scope>provided</scope>
+      </dependency>
+      <dependency>
+        <groupId>jakarta.servlet.jsp.jstl</groupId>
+        <artifactId>jakarta.servlet.jsp.jstl-api</artifactId>
+        <version>${jstl-api.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.glassfish.web</groupId>
+        <artifactId>jakarta.servlet.jsp.jstl</artifactId>
+        <version>${jstl-impl.version}</version>
+      </dependency>
+      <!-- Front-end libraries served from the jars under /webjars/ -->
+      <dependency>
+        <groupId>org.webjars</groupId>
+        <artifactId>bootstrap</artifactId>
+        <version>${bootstrap.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.webjars.npm</groupId>
+        <artifactId>bootstrap-icons</artifactId>
+        <version>${bootstrap-icons.version}</version>
       </dependency>
       <dependency>
         <groupId>org.junit</groupId>
