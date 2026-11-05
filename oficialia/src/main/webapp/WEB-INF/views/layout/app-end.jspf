@@ -1,0 +1,4 @@
+<%-- Closes the content area and the page. --%>
+  </main>
+</div>
+<%@ include file="/WEB-INF/views/layout/scripts.jspf" %>

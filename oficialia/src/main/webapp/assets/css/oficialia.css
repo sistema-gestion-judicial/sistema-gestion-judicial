@@ -1,0 +1,13 @@
+/* Styles used only by the Oficialía de Partes module. Shared styles live in common/assets/shared. */
+
+.password-toggle {
+  border: 1px solid var(--mor-field-border);
+  border-left: 0;
+  background: var(--mor-white);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+fieldset:disabled .form-check-label {
+  opacity: 0.75;
+}
