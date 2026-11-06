@@ -33,6 +33,7 @@ public class LoginServlet extends HttpServlet {
 
         if(correo==null||correo.isBlank()||contra==null||contra.isBlank()){
             showError(req,resp,correo,"Introduzca un correo y contraseña para iniciar sesion");
+            return;
         }
         Usuario usuario = serviceAuth.autenticar(correo,contra);
 
@@ -40,12 +41,17 @@ public class LoginServlet extends HttpServlet {
             showError(req,resp,correo,"Correo o contraseña incorrecta");
         }
 
-        HttpSession user = req.getSession(false);
-        user.setAttribute("Usuario",usuario);
+        HttpSession oldSession = req.getSession(false);
+        if (oldSession != null) {
+            oldSession.invalidate();
+        }
+        HttpSession session = req.getSession(true);
+        session.setAttribute("Usuario", usuario);
 
-        if(usuario.getRol().equals("ADMIN")){
+
+        if ("ADMIN".equalsIgnoreCase(usuario.getRol())) {
             resp.sendRedirect("");
-        }else {
+        } else {
             resp.sendRedirect("");
         }
 
