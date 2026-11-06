@@ -92,13 +92,21 @@
                     <span class="dot"></span> <c:out value="${demandRequest.status.label}" />
                   </span>
                 </td>
-                <td class="text-end">
+                <td class="text-end text-nowrap">
                   <c:url var="detailUrl" value="/demand-requests/detail">
                     <c:param name="folio" value="${demandRequest.folio}" />
                   </c:url>
                   <a class="fw-bold text-decoration-none" href="${detailUrl}">
                     <i class="bi bi-eye me-1"></i> Ver
                   </a>
+                  <c:if test="${demandRequest.pending and sessionScope.currentUser.clerk}">
+                    <c:url var="ruleUrl" value="/demand-requests/rule">
+                      <c:param name="folio" value="${demandRequest.folio}" />
+                    </c:url>
+                    <a class="fw-bold text-decoration-none ms-3" href="${ruleUrl}">
+                      <i class="bi bi-clipboard-check me-1"></i> Calificar
+                    </a>
+                  </c:if>
                 </td>
               </tr>
             </c:forEach>
