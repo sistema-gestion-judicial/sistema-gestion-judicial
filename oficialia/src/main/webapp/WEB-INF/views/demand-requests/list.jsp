@@ -93,9 +93,12 @@
                   </span>
                 </td>
                 <td class="text-end">
-                  <span class="text-secondary fw-bold" title="El detalle se muestra en un siguiente avance">
+                  <c:url var="detailUrl" value="/demand-requests/detail">
+                    <c:param name="folio" value="${demandRequest.folio}" />
+                  </c:url>
+                  <a class="fw-bold text-decoration-none" href="${detailUrl}">
                     <i class="bi bi-eye me-1"></i> Ver
-                  </span>
+                  </a>
                 </td>
               </tr>
             </c:forEach>
