@@ -1,7 +1,7 @@
-package mx.edu.utez.judicial.audiencias.api.service;
+package mx.edu.utez.judicial.audiencias.service;
 
-import mx.edu.utez.judicial.audiencias.api.model.Usuario;
-import mx.edu.utez.judicial.audiencias.api.repository.RepositoryUsuario;
+import mx.edu.utez.judicial.audiencias.model.Usuario;
+import mx.edu.utez.judicial.audiencias.repository.RepositoryUsuario;
 
 public class ServiceAuth {
 

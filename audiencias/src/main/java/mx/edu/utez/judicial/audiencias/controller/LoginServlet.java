@@ -1,4 +1,4 @@
-package mx.edu.utez.judicial.audiencias.api.controller;
+package mx.edu.utez.judicial.audiencias.controller;
 
 
 import jakarta.servlet.ServletException;
@@ -7,8 +7,8 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
-import mx.edu.utez.judicial.audiencias.api.model.Usuario;
-import mx.edu.utez.judicial.audiencias.api.service.ServiceAuth;
+import mx.edu.utez.judicial.audiencias.model.Usuario;
+import mx.edu.utez.judicial.audiencias.service.ServiceAuth;
 
 import java.io.IOException;
 
