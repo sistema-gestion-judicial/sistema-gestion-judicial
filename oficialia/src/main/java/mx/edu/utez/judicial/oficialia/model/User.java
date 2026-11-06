@@ -7,13 +7,13 @@ public class User {
 
     private final String email;
     private final String fullName;
-    private final String roleLabel;
+    private final UserRole role;
     private final String courtName;
 
-    public User(String email, String fullName, String roleLabel, String courtName) {
+    public User(String email, String fullName, UserRole role, String courtName) {
         this.email = email;
         this.fullName = fullName;
-        this.roleLabel = roleLabel;
+        this.role = role;
         this.courtName = courtName;
     }
 
@@ -25,11 +25,20 @@ public class User {
         return fullName;
     }
 
+    public UserRole getRole() {
+        return role;
+    }
+
     public String getRoleLabel() {
-        return roleLabel;
+        return role.getLabel();
     }
 
     public String getCourtName() {
         return courtName;
+    }
+
+    /** Only the Oficial de Partes rules demand requests (RF 3.5). */
+    public boolean isClerk() {
+        return role == UserRole.CLERK;
     }
 }

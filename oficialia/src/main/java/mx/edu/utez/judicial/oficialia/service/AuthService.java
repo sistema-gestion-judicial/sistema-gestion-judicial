@@ -4,6 +4,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import mx.edu.utez.judicial.oficialia.model.User;
+import mx.edu.utez.judicial.oficialia.model.UserRole;
 
 /**
  * Checks credentials. Uses demo accounts until the users table exists; then the
@@ -13,9 +14,9 @@ public class AuthService {
 
     private static final Map<String, DemoAccount> DEMO_ACCOUNTS = Map.of(
             "lmendez@utez.edu.mx", new DemoAccount("Oficialia2026",
-                    new User("lmendez@utez.edu.mx", "Laura Méndez", "Oficial de Partes", "Juzgado de Cuautla")),
+                    new User("lmendez@utez.edu.mx", "Laura Méndez", UserRole.CLERK, "Juzgado de Cuautla")),
             "admin.cuautla@utez.edu.mx", new DemoAccount("Oficialia2026",
-                    new User("admin.cuautla@utez.edu.mx", "Jorge Salas", "Administrador de Juzgado",
+                    new User("admin.cuautla@utez.edu.mx", "Jorge Salas", UserRole.COURT_ADMIN,
                             "Juzgado de Cuautla")));
 
     public Optional<User> authenticate(String email, String password) {
