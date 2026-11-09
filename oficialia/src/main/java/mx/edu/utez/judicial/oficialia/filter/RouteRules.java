@@ -12,8 +12,9 @@ final class RouteRules {
 
     private static final Set<String> PUBLIC_PATHS = Set.of("/login", "/api/v1/health");
     private static final List<String> PUBLIC_FOLDERS = List.of("/assets/", "/webjars/");
-    private static final String REQUESTS_PATH = "/demand-requests";
     private static final String NEW_REQUEST_PATH = "/demand-requests/new";
+    // "/" and "/index.jsp" only redirect to the home page
+    private static final Set<String> JUDICIAL_BODY_ADMIN_PATHS = Set.of("/home", "/logout", "/", "/index.jsp");
 
     private RouteRules() {
     }
@@ -22,13 +23,16 @@ final class RouteRules {
         return PUBLIC_PATHS.contains(path) || PUBLIC_FOLDERS.stream().anyMatch(path::startsWith);
     }
 
-    /** Paths without a rule here are open to every signed-in user. */
+    /**
+     * The judicial body administrator only reaches an explicit list of paths. For the other
+     * roles, paths without a rule here are open to every signed-in user.
+     */
     static boolean canAccess(String path, UserRole role) {
+        if (role == UserRole.JUDICIAL_BODY_ADMIN) {
+            return JUDICIAL_BODY_ADMIN_PATHS.contains(path);
+        }
         if (path.equals(NEW_REQUEST_PATH)) {
             return role == UserRole.CLERK;
-        }
-        if (path.equals(REQUESTS_PATH) || path.startsWith(REQUESTS_PATH + "/")) {
-            return role != UserRole.JUDICIAL_BODY_ADMIN;
         }
         return true;
     }

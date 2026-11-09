@@ -60,7 +60,22 @@ class RouteRulesTest {
     }
 
     @Test
-    void aPathThatOnlyStartsLikeRequestsHasNoRequestRule() {
-        assertTrue(RouteRules.canAccess("/demand-requests-report", UserRole.JUDICIAL_BODY_ADMIN));
+    void theJudicialBodyAdministratorReachesHomeSignOutAndTheEntryRedirect() {
+        assertTrue(RouteRules.canAccess("/logout", UserRole.JUDICIAL_BODY_ADMIN));
+        assertTrue(RouteRules.canAccess("/", UserRole.JUDICIAL_BODY_ADMIN));
+        assertTrue(RouteRules.canAccess("/index.jsp", UserRole.JUDICIAL_BODY_ADMIN));
+    }
+
+    @Test
+    void theJudicialBodyAdministratorReachesNothingElse() {
+        assertFalse(RouteRules.canAccess("/demand-requests/new", UserRole.JUDICIAL_BODY_ADMIN));
+        assertFalse(RouteRules.canAccess("/demand-requests-report", UserRole.JUDICIAL_BODY_ADMIN));
+        assertFalse(RouteRules.canAccess("/any-future-page", UserRole.JUDICIAL_BODY_ADMIN));
+    }
+
+    @Test
+    void otherRolesKeepPathsWithoutARuleOpen() {
+        assertTrue(RouteRules.canAccess("/any-future-page", UserRole.COURT_ADMIN));
+        assertTrue(RouteRules.canAccess("/demand-requests-report", UserRole.CLERK));
     }
 }
