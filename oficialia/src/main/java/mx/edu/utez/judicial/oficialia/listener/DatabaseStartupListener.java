@@ -4,6 +4,7 @@ import jakarta.servlet.ServletContextEvent;
 import jakarta.servlet.ServletContextListener;
 import jakarta.servlet.annotation.WebListener;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import mx.edu.utez.judicial.common.db.Database;
 import mx.edu.utez.judicial.common.db.SqlMigrator;
@@ -43,7 +44,18 @@ public class DatabaseStartupListener implements ServletContextListener {
                 LOG.info("Loaded the sample demand requests into the database");
             }
         } catch (Exception e) {
+            // Logged here too, so the cause shows up in the server console and not only in Tomcat's files
+            LOG.log(Level.SEVERE, "Could not prepare the Oficialía database: " + rootCause(e).getMessage(), e);
+            // Fail the deployment: running against a half-built schema would corrupt data
             throw new IllegalStateException("Could not prepare the Oficialía database", e);
         }
+    }
+
+    private static Throwable rootCause(Throwable error) {
+        Throwable cause = error;
+        while (cause.getCause() != null) {
+            cause = cause.getCause();
+        }
+        return cause;
     }
 }
