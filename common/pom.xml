@@ -13,8 +13,13 @@
   <artifactId>common</artifactId>
   <packaging>jar</packaging>
 
-  <!-- Shared by the four web applications: JSTL for the views and the UI libraries -->
+
+  <!-- Shared by the four web applications: JSTL for the views, the UI libraries and JSON for the APIs -->
   <dependencies>
+    <dependency>
+      <groupId>tools.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+    </dependency>
     <dependency>
       <groupId>jakarta.servlet.jsp.jstl</groupId>
       <artifactId>jakarta.servlet.jsp.jstl-api</artifactId>
@@ -30,6 +35,10 @@
     <dependency>
       <groupId>org.webjars.npm</groupId>
       <artifactId>bootstrap-icons</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>tools.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
     </dependency>
   </dependencies>
 </project>
