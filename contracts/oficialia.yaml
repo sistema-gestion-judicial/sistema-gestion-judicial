@@ -1,0 +1,318 @@
+openapi: 3.0.3
+info:
+  title: Oficialía de Partes (SCD-2026)
+  version: 1.0.0
+  description: |
+    Catálogos y expedientes que la Oficialía de Partes comparte con Audiencias, Tocas y Peritos.
+    Un expediente es una solicitud de demanda calificada como procedente.
+
+    - JSON en UTF-8, propiedades en camelCase.
+    - Fechas en ISO 8601. `admittedAt` es fecha y hora local de la Ciudad de México.
+    - Cada sistema tiene su propia clave; pídesela al equipo de Oficialía y mándala en `X-Api-Key`.
+    - Los datos de contacto y el RFC o CURP de las partes no salen de Oficialía.
+servers:
+  - url: https://{app}.azurewebsites.net
+    description: Azure App Service
+    variables:
+      app:
+        default: sgj-oficialia
+  - url: http://localhost:8080/oficialia
+    description: Tomcat local
+security:
+  - apiKey: []
+paths:
+  /api/v1/health:
+    get:
+      summary: Estado del sistema y de su base de datos
+      security: []
+      responses:
+        "200":
+          description: El sistema responde
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Health"
+        "503":
+          description: El sistema responde pero no alcanza su base de datos
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Health"
+  /api/v1/courts:
+    get:
+      summary: Catálogo de juzgados
+      responses:
+        "200":
+          description: Juzgados ordenados por nombre
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Court"
+        "401":
+          $ref: "#/components/responses/InvalidCredentials"
+  /api/v1/courts/{code}:
+    get:
+      summary: Un juzgado por su clave
+      parameters:
+        - name: code
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: "^\\d{2}$"
+          example: "12"
+      responses:
+        "200":
+          description: El juzgado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/Court"
+        "401":
+          $ref: "#/components/responses/InvalidCredentials"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/v1/subject-matters:
+    get:
+      summary: Catálogo de materias
+      responses:
+        "200":
+          description: Materias ordenadas por nombre
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/SubjectMatter"
+        "401":
+          $ref: "#/components/responses/InvalidCredentials"
+  /api/v1/case-files:
+    get:
+      summary: Expedientes, del más reciente al más antiguo
+      parameters:
+        - name: courtCode
+          in: query
+          schema:
+            type: string
+          example: "12"
+        - name: subjectMatter
+          in: query
+          description: Sin distinguir mayúsculas
+          schema:
+            type: string
+          example: Familiar
+        - name: admittedSince
+          in: query
+          description: Solo los calificados como procedentes desde esta fecha
+          schema:
+            type: string
+            format: date
+          example: "2026-11-01"
+      responses:
+        "200":
+          description: Expedientes que cumplen todos los filtros
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/CaseFile"
+                  count:
+                    type: integer
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/InvalidCredentials"
+  /api/v1/case-files/{year}/{sequence}/{courtCode}:
+    get:
+      summary: Un expediente por su número (AAAA/NNNNN/JJ)
+      description: "El número 2026/00432/12 se pide como /api/v1/case-files/2026/00432/12."
+      parameters:
+        - name: year
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: "^\\d{4}$"
+          example: "2026"
+        - name: sequence
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: "^\\d{5}$"
+          example: "00431"
+        - name: courtCode
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: "^\\d{2}$"
+          example: "12"
+      responses:
+        "200":
+          description: El expediente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/CaseFile"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/InvalidCredentials"
+        "404":
+          $ref: "#/components/responses/NotFound"
+components:
+  securitySchemes:
+    apiKey:
+      type: apiKey
+      in: header
+      name: X-Api-Key
+  responses:
+    InvalidCredentials:
+      description: Falta la clave o no es válida (código INVALID_CREDENTIALS)
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    NotFound:
+      description: No existe (COURT_NOT_FOUND o CASE_FILE_NOT_FOUND)
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    BadRequest:
+      description: Parámetro con formato incorrecto (INVALID_PARAMETER o INVALID_CASE_FILE_NUMBER)
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+  schemas:
+    Health:
+      type: object
+      properties:
+        system:
+          type: string
+          example: oficialia
+        status:
+          type: string
+          enum: [UP, DEGRADED]
+        database:
+          type: string
+          enum: [UP, DOWN, NOT_CONFIGURED]
+    Court:
+      type: object
+      properties:
+        code:
+          type: string
+          example: "12"
+        name:
+          type: string
+          example: Juzgado de Cuautla
+        judicialDistrict:
+          type: string
+          example: Distrito judicial de Cuautla
+        active:
+          type: boolean
+    SubjectMatter:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 2
+        name:
+          type: string
+          example: Familiar
+        active:
+          type: boolean
+    Party:
+      type: object
+      properties:
+        identified:
+          type: boolean
+          description: false cuando el demandante es anónimo o el demandado desconocido
+        name:
+          type: string
+          nullable: true
+          example: Juan Ruiz Hernández
+        personType:
+          type: string
+          nullable: true
+          enum: [INDIVIDUAL, COMPANY]
+    CaseFile:
+      type: object
+      properties:
+        caseFileNumber:
+          type: string
+          example: 2026/00431/12
+        requestFolio:
+          type: string
+          example: S-000124/2026
+        court:
+          type: object
+          properties:
+            code:
+              type: string
+              example: "12"
+            name:
+              type: string
+              example: Juzgado de Cuautla
+        subjectMatter:
+          type: string
+          example: Penal
+        receivedDate:
+          type: string
+          format: date
+          example: "2026-10-23"
+        admittedAt:
+          type: string
+          example: "2026-10-24T10:15:00"
+        hearingDesk:
+          type: string
+          nullable: true
+          description: Mesa asignada por Audiencias; null mientras está pendiente
+          example: Mesa 2
+        hearingDeskPending:
+          type: boolean
+        plaintiff:
+          $ref: "#/components/schemas/Party"
+        defendant:
+          $ref: "#/components/schemas/Party"
+        legalRepresentative:
+          type: string
+          nullable: true
+        annexCount:
+          type: integer
+          example: 1
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              example: CASE_FILE_NOT_FOUND
+            message:
+              type: string
+            details:
+              type: array
+              items:
+                type: string
