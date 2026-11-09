@@ -11,6 +11,7 @@ import java.io.IOException;
 import mx.edu.utez.judicial.oficialia.controller.ErrorView;
 import mx.edu.utez.judicial.oficialia.model.User;
 import mx.edu.utez.judicial.oficialia.service.AuthService;
+import mx.edu.utez.judicial.oficialia.util.SessionCookie;
 
 /**
  * Reads every request as UTF-8, sends anyone without a session to the login page, ends the
@@ -41,6 +42,7 @@ public class AuthFilter extends HttpFilter {
         }
         if (!authService.isActive(user.getEmail())) {
             request.getSession().invalidate();
+            SessionCookie.clear(request, response);
             response.sendRedirect(request.getContextPath() + "/login?inactive");
             return;
         }
