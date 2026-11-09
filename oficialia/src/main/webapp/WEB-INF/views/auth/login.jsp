@@ -39,9 +39,13 @@
 
       <form method="post" action="${ctx}/login" novalidate>
         <div class="mb-3">
-          <label for="email" class="form-label">Correo electrónico</label>
-          <input type="email" class="form-control" id="email" name="email" autocomplete="username"
-                 value="<c:out value='${email}' />" placeholder="nombre@utez.edu.mx" required autofocus>
+          <label for="email" class="form-label">Correo institucional</label>
+          <input type="email" class="form-control ${not empty emailError ? 'is-invalid' : ''}" id="email" name="email"
+                 autocomplete="username" value="<c:out value='${email}' />" placeholder="nombre@utez.edu.mx"
+                 required autofocus>
+          <c:if test="${not empty emailError}">
+            <div class="invalid-feedback"><c:out value="${emailError}" /></div>
+          </c:if>
         </div>
 
         <div class="mb-1">

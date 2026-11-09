@@ -1,7 +1,6 @@
 package mx.edu.utez.judicial.oficialia.dao;
 
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
@@ -9,6 +8,7 @@ import java.util.stream.Collectors;
 import mx.edu.utez.judicial.oficialia.model.User;
 import mx.edu.utez.judicial.oficialia.model.UserAccount;
 import mx.edu.utez.judicial.oficialia.model.UserRole;
+import mx.edu.utez.judicial.oficialia.util.EmailValidator;
 
 /**
  * TEMPORARY demo accounts, kept until the users table exists (#28). Only salted hashes are
@@ -22,7 +22,7 @@ public class InMemoryUserDao implements UserDao {
 
     public InMemoryUserDao(List<UserAccount> accounts) {
         accountsByEmail = accounts.stream()
-                .collect(Collectors.toUnmodifiableMap(account -> normalize(account.user().getEmail()),
+                .collect(Collectors.toUnmodifiableMap(account -> EmailValidator.normalize(account.user().getEmail()),
                         Function.identity()));
     }
 
@@ -32,11 +32,7 @@ public class InMemoryUserDao implements UserDao {
 
     @Override
     public Optional<UserAccount> findByEmail(String email) {
-        return Optional.ofNullable(accountsByEmail.get(normalize(email)));
-    }
-
-    private static String normalize(String email) {
-        return email.trim().toLowerCase(Locale.ROOT);
+        return Optional.ofNullable(accountsByEmail.get(EmailValidator.normalize(email)));
     }
 
     private static List<UserAccount> sampleAccounts() {

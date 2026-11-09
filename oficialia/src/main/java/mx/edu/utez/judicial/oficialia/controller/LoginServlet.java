@@ -11,6 +11,7 @@ import java.util.Optional;
 import mx.edu.utez.judicial.oficialia.filter.AuthFilter;
 import mx.edu.utez.judicial.oficialia.model.User;
 import mx.edu.utez.judicial.oficialia.service.AuthService;
+import mx.edu.utez.judicial.oficialia.util.EmailValidator;
 
 /**
  * Shows the login form and starts the session (RF 1.1).
@@ -44,6 +45,12 @@ public class LoginServlet extends HttpServlet {
 
         if (email == null || email.isBlank() || password == null || password.isBlank()) {
             showError(request, response, email, "Escriba su correo electrónico y su contraseña.");
+            return;
+        }
+        if (!EmailValidator.isValid(email)) {
+            request.setAttribute("emailError", "Escriba un correo con formato válido.");
+            request.setAttribute("email", email);
+            request.getRequestDispatcher(VIEW).forward(request, response);
             return;
         }
 
