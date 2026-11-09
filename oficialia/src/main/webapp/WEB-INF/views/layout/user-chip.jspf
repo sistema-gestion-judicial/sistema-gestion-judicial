@@ -1,8 +1,11 @@
-<%-- Name and role of the signed-in user, shown at the top right of every page. --%>
+<%-- Name of the signed-in user, with the court for clerks and the role for administrators.
+     Shown at the top right of every page. --%>
 <div class="user-chip">
   <div class="user-chip-avatar"><i class="bi bi-person"></i></div>
   <div>
     <div class="user-chip-name"><c:out value="${sessionScope.currentUser.fullName}" /></div>
-    <div class="user-chip-role"><c:out value="${sessionScope.currentUser.roleLabel}" /></div>
+    <div class="user-chip-role">
+      <c:out value="${sessionScope.currentUser.clerk ? sessionScope.currentUser.courtName : sessionScope.currentUser.roleLabel}" />
+    </div>
   </div>
 </div>
