@@ -26,14 +26,22 @@
     <!-- Library versions: change them only here -->
     <servlet-api.version>6.0.0</servlet-api.version>
     <junit.version>5.11.3</junit.version>
+    <mysql-connector.version>9.7.0</mysql-connector.version>
+    <jackson.version>3.1.3</jackson.version>
   </properties>
 
   <dependencyManagement>
     <dependencies>
       <dependency>
+        <groupId>tools.jackson.core</groupId>
+        <artifactId>jackson-databind</artifactId>
+        <version>${jackson.version}</version>
+      </dependency>
+
+      <dependency>
         <groupId>mysql</groupId>
         <artifactId>mysql-connector-java</artifactId>
-        <version>9.7.0</version>
+        <version>${mysql-connector.version}</version>
       </dependency>
 
       <dependency>
