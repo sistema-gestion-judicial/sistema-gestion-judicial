@@ -6,7 +6,7 @@ import java.util.Locale;
 import mx.edu.utez.judicial.oficialia.client.HearingDeskClient;
 import mx.edu.utez.judicial.oficialia.client.SampleHearingDeskClient;
 import mx.edu.utez.judicial.oficialia.dao.DemandRequestDao;
-import mx.edu.utez.judicial.oficialia.dao.InMemoryDemandRequestDao;
+import mx.edu.utez.judicial.oficialia.dao.OficialiaDaos;
 import mx.edu.utez.judicial.oficialia.exception.AccessDeniedException;
 import mx.edu.utez.judicial.oficialia.exception.BusinessRuleException;
 import mx.edu.utez.judicial.oficialia.exception.ServiceUnavailableException;
@@ -29,7 +29,7 @@ public class RulingService {
     private final Clock clock;
 
     public RulingService() {
-        this(InMemoryDemandRequestDao.getInstance(), SHARED_DESK_CLIENT, Clock.systemDefaultZone());
+        this(OficialiaDaos.demandRequests(), SHARED_DESK_CLIENT, Clock.systemDefaultZone());
     }
 
     public RulingService(DemandRequestDao demandRequestDao, HearingDeskClient hearingDeskClient, Clock clock) {
