@@ -35,6 +35,12 @@
   <dependencyManagement>
     <dependencies>
       <dependency>
+        <groupId>mysql</groupId>
+        <artifactId>mysql-connector-java</artifactId>
+        <version>9.7.0</version>
+      </dependency>
+
+      <dependency>
         <groupId>mx.edu.utez.judicial</groupId>
         <artifactId>common</artifactId>
         <version>${project.version}</version>
@@ -44,6 +50,13 @@
         <artifactId>jakarta.servlet-api</artifactId>
         <version>${servlet-api.version}</version>
         <scope>provided</scope>
+      </dependency>
+      <!-- JDBC driver for MySQL 8.4; each module declares it with runtime scope -->
+      <dependency>
+        <groupId>com.mysql</groupId>
+        <artifactId>mysql-connector-j</artifactId>
+        <version>${mysql-connector.version}</version>
+        <scope>runtime</scope>
       </dependency>
       <dependency>
         <groupId>jakarta.servlet.jsp.jstl</groupId>

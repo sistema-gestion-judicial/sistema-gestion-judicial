@@ -1,0 +1,29 @@
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: sgj-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      OFICIALIA_DB_PASSWORD: ${OFICIALIA_DB_PASSWORD}
+      PERITOS_DB_PASSWORD: ${PERITOS_DB_PASSWORD}
+      AUDIENCIAS_DB_PASSWORD: ${AUDIENCIAS_DB_PASSWORD}
+      TOCAS_DB_PASSWORD: ${TOCAS_DB_PASSWORD}
+      TZ: America/Mexico_City
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_0900_ai_ci
+    ports:
+        - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+      # Runs only the first time, when the data volume is empty
+      - ./docker/mysql/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+volumes:
+    mysql-data:
