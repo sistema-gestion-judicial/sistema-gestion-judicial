@@ -3,6 +3,7 @@ package mx.edu.utez.judicial.oficialia.filter;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import mx.edu.utez.judicial.oficialia.model.UserRole;
 import org.junit.jupiter.api.Test;
 
 class RouteRulesTest {
@@ -30,5 +31,36 @@ class RouteRulesTest {
     void keepsApplicationPagesPrivate() {
         assertFalse(RouteRules.isPublic("/demand-requests"));
         assertFalse(RouteRules.isPublic("/logout"));
+    }
+
+    @Test
+    void onlyTheClerkRegistersRequests() {
+        assertTrue(RouteRules.canAccess("/demand-requests/new", UserRole.CLERK));
+        assertFalse(RouteRules.canAccess("/demand-requests/new", UserRole.COURT_ADMIN));
+        assertFalse(RouteRules.canAccess("/demand-requests/new", UserRole.JUDICIAL_BODY_ADMIN));
+    }
+
+    @Test
+    void courtStaffSeeRequests() {
+        assertTrue(RouteRules.canAccess("/demand-requests", UserRole.CLERK));
+        assertTrue(RouteRules.canAccess("/demand-requests/detail", UserRole.COURT_ADMIN));
+    }
+
+    @Test
+    void theJudicialBodyAdministratorDoesNotSeeRequests() {
+        assertFalse(RouteRules.canAccess("/demand-requests", UserRole.JUDICIAL_BODY_ADMIN));
+        assertFalse(RouteRules.canAccess("/demand-requests/detail", UserRole.JUDICIAL_BODY_ADMIN));
+    }
+
+    @Test
+    void everyRoleReachesTheHomePage() {
+        for (UserRole role : UserRole.values()) {
+            assertTrue(RouteRules.canAccess("/home", role));
+        }
+    }
+
+    @Test
+    void aPathThatOnlyStartsLikeRequestsHasNoRequestRule() {
+        assertTrue(RouteRules.canAccess("/demand-requests-report", UserRole.JUDICIAL_BODY_ADMIN));
     }
 }

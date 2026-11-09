@@ -8,9 +8,12 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
+import mx.edu.utez.judicial.oficialia.controller.ErrorView;
+import mx.edu.utez.judicial.oficialia.model.User;
 
 /**
- * Reads every request as UTF-8 and sends anyone without a session to the login page.
+ * Reads every request as UTF-8, sends anyone without a session to the login page and
+ * stops users whose role cannot open the requested page.
  */
 @WebFilter("/*")
 public class AuthFilter extends HttpFilter {
@@ -22,15 +25,28 @@ public class AuthFilter extends HttpFilter {
             throws IOException, ServletException {
         request.setCharacterEncoding("UTF-8");
 
-        boolean isPublic = RouteRules.isPublic(resolvedPath(request));
-        HttpSession session = request.getSession(false);
-        boolean isSignedIn = session != null && session.getAttribute(SESSION_USER) != null;
-
-        if (isPublic || isSignedIn) {
+        String path = resolvedPath(request);
+        if (RouteRules.isPublic(path)) {
             chain.doFilter(request, response);
-        } else {
-            response.sendRedirect(request.getContextPath() + "/login");
+            return;
         }
+
+        User user = signedInUser(request);
+        if (user == null) {
+            response.sendRedirect(request.getContextPath() + "/login");
+            return;
+        }
+        if (!RouteRules.canAccess(path, user.getRole())) {
+            ErrorView.forbidden(request, response, "Su perfil no tiene acceso a esta sección.");
+            return;
+        }
+        chain.doFilter(request, response);
+    }
+
+    /** Returns the user of the current session, or null when nobody is signed in. */
+    private static User signedInUser(HttpServletRequest request) {
+        HttpSession session = request.getSession(false);
+        return session == null ? null : (User) session.getAttribute(SESSION_USER);
     }
 
     /**
