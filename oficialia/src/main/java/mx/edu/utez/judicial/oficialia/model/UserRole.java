@@ -6,7 +6,8 @@ package mx.edu.utez.judicial.oficialia.model;
 public enum UserRole {
 
     CLERK("Oficial de Partes"),
-    COURT_ADMIN("Administrador de Juzgado");
+    COURT_ADMIN("Administrador de Juzgado"),
+    JUDICIAL_BODY_ADMIN("Administrador del órgano judicial");
 
     private final String label;
 
