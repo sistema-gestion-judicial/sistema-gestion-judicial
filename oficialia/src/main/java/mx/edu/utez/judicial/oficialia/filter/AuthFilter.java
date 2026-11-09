@@ -46,6 +46,8 @@ public class AuthFilter extends HttpFilter {
             response.sendRedirect(request.getContextPath() + "/login?inactive");
             return;
         }
+        // Without this, the back button could show a private page from the browser's copy after signing out
+        response.setHeader("Cache-Control", "no-store");
         if (!RouteRules.canAccess(path, user.getRole())) {
             ErrorView.forbidden(request, response, "Su perfil no tiene acceso a esta sección.");
             return;
