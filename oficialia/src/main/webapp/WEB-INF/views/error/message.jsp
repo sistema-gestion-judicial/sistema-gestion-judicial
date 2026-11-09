@@ -7,7 +7,7 @@
 
 <header class="app-topbar">
   <div>
-    <a class="back-link" href="${ctx}/demand-requests"><i class="bi bi-arrow-left"></i> Volver a Solicitudes</a>
+    <a class="back-link" href="${ctx}/home"><i class="bi bi-arrow-left"></i> Volver al inicio</a>
   </div>
   <%@ include file="/WEB-INF/views/layout/user-chip.jspf" %>
 </header>
@@ -16,7 +16,7 @@
   <span class="empty-icon mb-3"><i class="bi bi-shield-exclamation"></i></span>
   <h1 class="page-title fs-3"><c:out value="${errorTitle}" /></h1>
   <p class="mb-4"><c:out value="${errorMessage}" /></p>
-  <a class="btn btn-primary" href="${ctx}/demand-requests">Ir a Solicitudes</a>
+  <a class="btn btn-primary" href="${ctx}/home">Ir al inicio</a>
 </div>
 
 <%@ include file="/WEB-INF/views/layout/app-end.jspf" %>

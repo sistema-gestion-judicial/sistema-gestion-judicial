@@ -30,7 +30,7 @@ public class LoginServlet extends HttpServlet {
             throws ServletException, IOException {
         HttpSession session = request.getSession(false);
         if (session != null && session.getAttribute(AuthFilter.SESSION_USER) != null) {
-            response.sendRedirect(request.getContextPath() + "/demand-requests");
+            response.sendRedirect(request.getContextPath() + HomeServlet.PATH);
             return;
         }
         if (request.getParameter("logout") != null) {
@@ -80,7 +80,7 @@ public class LoginServlet extends HttpServlet {
         }
         HttpSession session = request.getSession(true);
         session.setAttribute(AuthFilter.SESSION_USER, user);
-        response.sendRedirect(request.getContextPath() + "/demand-requests");
+        response.sendRedirect(request.getContextPath() + HomeServlet.PATH);
     }
 
     private void showError(HttpServletRequest request, HttpServletResponse response, String email,
