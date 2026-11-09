@@ -1,10 +1,9 @@
 package mx.edu.utez.judicial.common.db;
 
-import org.junit.Test;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.List;
+import org.junit.jupiter.api.Test;
 
 class SqlMigratorTest {
 
