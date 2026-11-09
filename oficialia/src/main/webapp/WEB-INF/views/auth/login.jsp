@@ -39,7 +39,7 @@
 
       <form method="post" action="${ctx}/login" novalidate>
         <div class="mb-3">
-          <label for="email" class="form-label">Correo institucional</label>
+          <label for="email" class="form-label">Correo electrónico</label>
           <input type="email" class="form-control ${not empty emailError ? 'is-invalid' : ''}" id="email" name="email"
                  autocomplete="username" value="<c:out value='${email}' />" placeholder="nombre@utez.edu.mx"
                  required autofocus>
