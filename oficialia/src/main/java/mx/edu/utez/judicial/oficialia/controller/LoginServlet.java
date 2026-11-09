@@ -38,6 +38,9 @@ public class LoginServlet extends HttpServlet {
         if (request.getParameter("logout") != null) {
             request.setAttribute("infoMessage", "Cerró sesión correctamente.");
         }
+        if (request.getParameter("expired") != null) {
+            request.setAttribute("expiredMessage", "Su sesión se cerró por inactividad. Vuelva a iniciar sesión.");
+        }
         if (request.getParameter("inactive") != null) {
             request.setAttribute("errorMessage", INACTIVE_ACCOUNT_MESSAGE);
         }

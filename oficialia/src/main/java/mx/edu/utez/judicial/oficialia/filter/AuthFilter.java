@@ -37,7 +37,7 @@ public class AuthFilter extends HttpFilter {
 
         User user = signedInUser(request);
         if (user == null) {
-            response.sendRedirect(request.getContextPath() + "/login");
+            sendToLogin(request, response);
             return;
         }
         if (!authService.isActive(user.getEmail())) {
@@ -51,6 +51,18 @@ public class AuthFilter extends HttpFilter {
             return;
         }
         chain.doFilter(request, response);
+    }
+
+    /**
+     * A session cookie the server no longer recognizes means the session expired. It is removed
+     * so the notice appears only once; signing out already removes it, so that case shows no notice.
+     */
+    private static void sendToLogin(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        boolean sessionExpired = request.getRequestedSessionId() != null && !request.isRequestedSessionIdValid();
+        if (sessionExpired) {
+            SessionCookie.clear(request, response);
+        }
+        response.sendRedirect(request.getContextPath() + (sessionExpired ? "/login?expired" : "/login"));
     }
 
     /** Returns the user of the current session, or null when nobody is signed in. */
