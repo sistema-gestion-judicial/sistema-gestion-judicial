@@ -7,8 +7,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
-import java.util.Optional;
 import mx.edu.utez.judicial.oficialia.filter.AuthFilter;
+import mx.edu.utez.judicial.oficialia.model.SignInResult;
 import mx.edu.utez.judicial.oficialia.model.User;
 import mx.edu.utez.judicial.oficialia.service.AuthService;
 import mx.edu.utez.judicial.oficialia.util.EmailValidator;
@@ -20,6 +20,8 @@ import mx.edu.utez.judicial.oficialia.util.EmailValidator;
 public class LoginServlet extends HttpServlet {
 
     private static final String VIEW = "/WEB-INF/views/auth/login.jsp";
+    private static final String INACTIVE_ACCOUNT_MESSAGE =
+            "Su cuenta está inactiva. Contacte al administrador del sistema.";
 
     private final AuthService authService = new AuthService();
 
@@ -54,19 +56,24 @@ public class LoginServlet extends HttpServlet {
             return;
         }
 
-        Optional<User> user = authService.authenticate(email, password);
-        if (user.isEmpty()) {
+        SignInResult result = authService.signIn(email, password);
+        switch (result.status()) {
+            case SIGNED_IN -> startSession(request, response, result.user());
             // Same message for unknown email or wrong password, so the form does not reveal which accounts exist
-            showError(request, response, email, "El correo o la contraseña no son correctos.");
-            return;
+            case INVALID_CREDENTIALS ->
+                    showError(request, response, email, "El correo o la contraseña no son correctos.");
+            case INACTIVE_ACCOUNT -> showError(request, response, email, INACTIVE_ACCOUNT_MESSAGE);
         }
+    }
 
+    private void startSession(HttpServletRequest request, HttpServletResponse response, User user)
+            throws IOException {
         HttpSession oldSession = request.getSession(false);
         if (oldSession != null) {
             oldSession.invalidate();
         }
         HttpSession session = request.getSession(true);
-        session.setAttribute(AuthFilter.SESSION_USER, user.get());
+        session.setAttribute(AuthFilter.SESSION_USER, user);
         response.sendRedirect(request.getContextPath() + "/demand-requests");
     }
 

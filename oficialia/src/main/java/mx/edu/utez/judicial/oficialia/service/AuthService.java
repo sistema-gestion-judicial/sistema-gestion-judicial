@@ -3,11 +3,11 @@ package mx.edu.utez.judicial.oficialia.service;
 import java.util.Optional;
 import mx.edu.utez.judicial.oficialia.dao.InMemoryUserDao;
 import mx.edu.utez.judicial.oficialia.dao.UserDao;
-import mx.edu.utez.judicial.oficialia.model.User;
+import mx.edu.utez.judicial.oficialia.model.SignInResult;
 import mx.edu.utez.judicial.oficialia.model.UserAccount;
 
 /**
- * Checks credentials against the stored password hashes.
+ * Checks credentials against the stored password hashes and decides the outcome of a sign in.
  */
 public class AuthService {
 
@@ -24,17 +24,21 @@ public class AuthService {
         this.userDao = userDao;
     }
 
-    public Optional<User> authenticate(String email, String password) {
+    public SignInResult signIn(String email, String password) {
         if (email == null || password == null) {
-            return Optional.empty();
+            return SignInResult.invalidCredentials();
         }
         Optional<UserAccount> account = userDao.findByEmail(email);
         String storedHash = account.map(UserAccount::passwordHash).orElse(PLACEHOLDER_HASH);
         boolean passwordMatches = PasswordHasher.matches(password, storedHash);
 
         if (account.isEmpty() || !passwordMatches) {
-            return Optional.empty();
+            return SignInResult.invalidCredentials();
         }
-        return Optional.of(account.get().user());
+        // Checked only after the password, so nobody can learn an account's status without knowing it
+        if (!account.get().active()) {
+            return SignInResult.inactiveAccount();
+        }
+        return SignInResult.signedIn(account.get().user());
     }
 }
