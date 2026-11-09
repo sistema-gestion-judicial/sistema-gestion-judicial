@@ -59,7 +59,12 @@
             <td><span class="badge-mor ${perito.active ? '' : 'is-neutral'}"><c:out value="${perito.active ? 'Activo' : 'Inactivo'}" /></span></td>
             <td class="text-nowrap">
               <a class="fw-semibold me-3" href="${ctx}/admin/peritos/${perito.id}/editar"><i class="bi bi-pencil"></i> Editar</a>
-              <a class="fw-semibold" href="${ctx}/admin/peritos/${perito.id}/estado"><i class="bi bi-power"></i> ${perito.active ? 'Desactivar' : 'Activar'}</a>
+              <button type="button" class="btn btn-link p-0 fw-semibold align-baseline text-decoration-none"
+                      data-bs-toggle="modal" data-bs-target="#estadoPeritoModal"
+                      data-perito-id="${perito.id}" data-perito-name="${perito.fullName}"
+                      data-perito-cases="${perito.activeCases}" data-perito-active="${perito.active}">
+                <i class="bi bi-power"></i> ${perito.active ? 'Desactivar' : 'Activar'}
+              </button>
             </td>
           </tr>
         </c:forEach>
@@ -73,4 +78,30 @@
   </div>
 </section>
 
+<%-- Admin 3 · Cambiar estado del perito: confirmation modal with the reason for the change. --%>
+<div class="modal fade" id="estadoPeritoModal" tabindex="-1" aria-labelledby="estadoPeritoTitle" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <form class="modal-content" method="post" action="${ctx}/admin/peritos/0/estado" data-action-template="${ctx}/admin/peritos/__ID__/estado">
+      <input type="hidden" name="activar" value="false">
+      <div class="modal-header border-0 pb-0">
+        <h2 class="modal-title page-section-title" id="estadoPeritoTitle">Desactivar perito</h2>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body">
+        <p>¿Seguro que desea desactivar a <strong data-perito-name-target></strong>? Mientras esté inactivo no recibirá nuevas asignaciones automáticas.</p>
+        <div class="alert alert-warning d-none" role="alert" data-perito-cases-alert>
+          Tiene <span data-perito-cases-target></span> caso(s) activo(s). Deberá reasignar a otro perito antes de que se apliquen los cambios.
+        </div>
+        <label class="form-label" for="motivoEstado">Motivo del cambio de estado *</label>
+        <textarea id="motivoEstado" name="motivo" class="form-control" rows="4" placeholder="Escriba el motivo..." required></textarea>
+      </div>
+      <div class="modal-footer border-0">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="submit" class="btn btn-primary">Desactivar perito</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<c:set var="pageScript" value="peritos-estado.js" />
 <%@ include file="/WEB-INF/views/layout/app-end.jspf" %>
