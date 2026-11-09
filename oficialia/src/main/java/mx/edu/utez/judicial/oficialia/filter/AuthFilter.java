@@ -12,6 +12,7 @@ import java.util.List;
 
 /**
  * Reads every request as UTF-8 and sends anyone without a session to the login page.
+ * The API under /api/ has its own credentials, checked by {@link ApiKeyFilter}.
  */
 @WebFilter("/*")
 public class AuthFilter extends HttpFilter {
@@ -19,11 +20,11 @@ public class AuthFilter extends HttpFilter {
     public static final String SESSION_USER = "currentUser";
 
     private static final List<String> PUBLIC_PATHS =
-            List.of("/login", "/assets/", "/webjars/", "/api/v1/health");
+        List.of("/login", "/assets/", "/webjars/", "/api/");
 
     @Override
     protected void doFilter(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
-            throws IOException, ServletException {
+        throws IOException, ServletException {
         request.setCharacterEncoding("UTF-8");
 
         String path = request.getRequestURI().substring(request.getContextPath().length());
