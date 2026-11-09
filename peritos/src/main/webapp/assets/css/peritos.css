@@ -51,9 +51,3 @@
   font-size: 15px;
   line-height: 22px;
 }
-
-.upload-dropzone {
-  background: var(--mor-white);
-  border-color: var(--mor-field-border) !important;
-  cursor: pointer;
-}

@@ -1,0 +1,9 @@
+<%-- Page title, short description and the signed-in user. The including page sets pageHeading and pageDescription. --%>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<header class="page-header">
+  <div>
+    <h1 class="page-title"><c:out value="${pageHeading}" /></h1>
+    <p class="page-description"><c:out value="${pageDescription}" /></p>
+  </div>
+  <%@ include file="/WEB-INF/views/layout/user-chip.jspf" %>
+</header>

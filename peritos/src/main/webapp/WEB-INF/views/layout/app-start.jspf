@@ -1,0 +1,74 @@
+<%-- Sidebar of the Gestión de Peritos system. The including page sets navRole ("admin" or "perito")
+     and activeNav to mark its menu entry. --%>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<body>
+<div class="app-shell">
+  <aside class="app-sidebar">
+    <div class="app-brand">
+      <div class="app-brand-logo">Logo</div>
+      <div>
+        <div class="app-brand-kicker">SGP-2026</div>
+        <div class="app-brand-name">Sistema de Gestión de Peritos</div>
+        <div class="app-brand-area">Gobierno del Estado de Morelos</div>
+      </div>
+    </div>
+
+    <ul class="app-nav">
+      <li>
+        <a class="app-nav-link ${activeNav == 'home' ? 'active' : ''}" href="${ctx}/${navRole}/inicio">
+          <i class="bi bi-house"></i> Inicio
+        </a>
+      </li>
+      <c:choose>
+        <c:when test="${navRole == 'admin'}">
+          <li>
+            <a class="app-nav-link ${activeNav == 'peritos' ? 'active' : ''}" href="${ctx}/admin/peritos">
+              <i class="bi bi-people"></i> Peritos
+            </a>
+          </li>
+          <li>
+            <a class="app-nav-link ${activeNav == 'solicitudes' ? 'active' : ''}" href="${ctx}/admin/solicitudes">
+              <i class="bi bi-file-earmark-text"></i> Solicitudes
+            </a>
+          </li>
+          <li>
+            <a class="app-nav-link ${activeNav == 'expedientes' ? 'active' : ''}" href="${ctx}/admin/expedientes">
+              <i class="bi bi-folder2"></i> Expedientes
+            </a>
+          </li>
+          <li>
+            <a class="app-nav-link ${activeNav == 'bitacora' ? 'active' : ''}" href="${ctx}/admin/bitacora">
+              <i class="bi bi-clipboard"></i> Bitácora
+            </a>
+          </li>
+        </c:when>
+        <c:otherwise>
+          <li>
+            <a class="app-nav-link ${activeNav == 'peritajes' ? 'active' : ''}" href="${ctx}/perito/peritajes">
+              <i class="bi bi-file-earmark-text"></i> Mis peritajes
+            </a>
+          </li>
+          <li>
+            <a class="app-nav-link ${activeNav == 'dictamenes' ? 'active' : ''}" href="${ctx}/perito/dictamenes">
+              <i class="bi bi-pencil-square"></i> Dictámenes
+            </a>
+          </li>
+          <li>
+            <a class="app-nav-link ${activeNav == 'notificaciones' ? 'active' : ''}" href="${ctx}/perito/notificaciones">
+              <i class="bi bi-bell"></i> Notificaciones
+            </a>
+          </li>
+        </c:otherwise>
+      </c:choose>
+    </ul>
+
+    <div class="app-sidebar-footer">
+      <form method="post" action="${ctx}/logout">
+        <button type="submit" class="app-nav-link border-0">
+          <i class="bi bi-box-arrow-left"></i> Cerrar sesión
+        </button>
+      </form>
+    </div>
+  </aside>
+
+  <main class="app-main">
