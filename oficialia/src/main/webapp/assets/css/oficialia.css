@@ -198,3 +198,11 @@ fieldset:disabled .form-check-label {
   color: var(--mor-text-muted);
   border-color: var(--mor-line);
 }
+
+/* The user chip is also the button that opens the user menu */
+.user-chip-button {
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
