@@ -1,0 +1,59 @@
+/* Styles used only by the Gestión de Peritos module. Shared styles live in common/assets/shared. */
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1.5rem;
+}
+
+.page-title {
+  font-size: 36px;
+  line-height: 44px;
+  font-weight: 400;
+  margin-bottom: 0.5rem;
+}
+
+.page-description {
+  color: var(--mor-text-muted);
+  margin-bottom: 0;
+}
+
+.page-section-title {
+  font-size: 22px;
+  line-height: 30px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.table-mor-wrapper {
+  background: var(--mor-white);
+  border: 1px solid var(--mor-line);
+  border-radius: var(--mor-radius);
+  box-shadow: var(--mor-shadow);
+  overflow: hidden;
+}
+
+.summary-strip {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.summary-strip .summary-label {
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--mor-text-muted);
+}
+
+.summary-strip .summary-value {
+  font-weight: 600;
+  font-size: 15px;
+  line-height: 22px;
+}
+
+.upload-dropzone {
+  background: var(--mor-white);
+  border-color: var(--mor-field-border) !important;
+  cursor: pointer;
+}
