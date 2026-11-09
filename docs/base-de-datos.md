@@ -48,6 +48,6 @@ cambiar una tabla, crea el siguiente (`V003__add_column_x.sql`).
 
 ## En la nube
 
-En Azure cada sistema usa la misma idea: un servidor Azure Database for MySQL 8.4 con una base y un
-usuario por módulo, y las mismas variables de entorno configuradas en su App Service. La guía de
-despliegue está en `despliegue-azure.md`.
+Cada equipo despliega su módulo donde prefiera, con su propia base en la nube y las mismas variables
+de entorno que usa en local. Oficialía usa Heroku con JawsDB MySQL: la guía está en
+`docs/despliegue-heroku.md`.

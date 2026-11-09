@@ -11,8 +11,8 @@ info:
     - Cada sistema tiene su propia clave; pídesela al equipo de Oficialía y mándala en `X-Api-Key`.
     - Los datos de contacto y el RFC o CURP de las partes no salen de Oficialía.
 servers:
-  - url: https://{app}.azurewebsites.net
-    description: Azure App Service
+  - url: https://{app}.herokuapp.com
+    description: Heroku. La URL exacta la da `heroku apps:info`.
     variables:
       app:
         default: sgj-oficialia
