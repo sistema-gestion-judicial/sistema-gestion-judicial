@@ -10,15 +10,18 @@ import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import mx.edu.utez.judicial.oficialia.controller.ErrorView;
 import mx.edu.utez.judicial.oficialia.model.User;
+import mx.edu.utez.judicial.oficialia.service.AuthService;
 
 /**
- * Reads every request as UTF-8, sends anyone without a session to the login page and
- * stops users whose role cannot open the requested page.
+ * Reads every request as UTF-8, sends anyone without a session to the login page, ends the
+ * session of accounts that are no longer active and stops users whose role cannot open the page.
  */
 @WebFilter("/*")
 public class AuthFilter extends HttpFilter {
 
     public static final String SESSION_USER = "currentUser";
+
+    private final AuthService authService = new AuthService();
 
     @Override
     protected void doFilter(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
@@ -34,6 +37,11 @@ public class AuthFilter extends HttpFilter {
         User user = signedInUser(request);
         if (user == null) {
             response.sendRedirect(request.getContextPath() + "/login");
+            return;
+        }
+        if (!authService.isActive(user.getEmail())) {
+            request.getSession().invalidate();
+            response.sendRedirect(request.getContextPath() + "/login?inactive");
             return;
         }
         if (!RouteRules.canAccess(path, user.getRole())) {

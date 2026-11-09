@@ -1,6 +1,8 @@
 package mx.edu.utez.judicial.oficialia.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.Instant;
 import java.util.List;
@@ -84,6 +86,13 @@ class AuthServiceTest {
         service.signIn(EMAIL, PASSWORD);
 
         assertEquals(Status.INVALID_CREDENTIALS, service.signIn(EMAIL, WRONG_PASSWORD).status());
+    }
+
+    @Test
+    void tellsWhetherAnAccountCanKeepUsingTheSystem() {
+        assertTrue(service.isActive(EMAIL));
+        assertFalse(service.isActive(INACTIVE_EMAIL));
+        assertFalse(service.isActive("nobody@utez.edu.mx"));
     }
 
     private void failAttempts(String email, int times) {

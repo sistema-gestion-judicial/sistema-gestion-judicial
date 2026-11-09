@@ -56,6 +56,11 @@ public class AuthService {
         return SignInResult.signedIn(account.get().user());
     }
 
+    /** Tells whether the account still exists and can keep using the system. */
+    public boolean isActive(String email) {
+        return userDao.findByEmail(email).map(UserAccount::active).orElse(false);
+    }
+
     private static SignInResult locked(Duration remaining) {
         // Rounded up, so the message never says 0 minutes while the lock is still on
         return SignInResult.locked(Math.ceilDiv(remaining.toSeconds(), SECONDS_PER_MINUTE));
