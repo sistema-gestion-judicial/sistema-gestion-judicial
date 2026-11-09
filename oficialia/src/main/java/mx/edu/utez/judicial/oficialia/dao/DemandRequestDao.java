@@ -5,8 +5,8 @@ import java.util.Optional;
 import mx.edu.utez.judicial.oficialia.model.DemandRequest;
 
 /**
- * Access to the demand requests of every court. The in-memory version is replaced by a JDBC one
- * when the database schema exists (#28); services do not change.
+ * Access to the demand requests of every court. {@link JdbcDemandRequestDao} reads MySQL;
+ * {@link InMemoryDemandRequestDao} keeps sample data when no database is configured.
  */
 public interface DemandRequestDao {
 
@@ -16,6 +16,7 @@ public interface DemandRequestDao {
 
     Optional<DemandRequest> findByFolio(String folio);
 
-    /** Saves the changes made to a request. */
+    void insert(DemandRequest demandRequest);
+
     void update(DemandRequest demandRequest);
 }
