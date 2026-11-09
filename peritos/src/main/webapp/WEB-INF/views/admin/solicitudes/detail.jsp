@@ -106,4 +106,36 @@
   </div>
 </div>
 
+<%-- Admin 6 · Editar perito asignado: manual reassignment of the perito chosen by the system. --%>
+<div class="modal fade" id="editarPeritoModal" tabindex="-1" aria-labelledby="editarPeritoTitle" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <form class="modal-content" method="post" action="${ctx}/admin/solicitudes/${solicitud.id}/asignacion">
+      <div class="modal-header border-0 pb-0">
+        <h2 class="modal-title page-section-title" id="editarPeritoTitle">Editar perito asignado</h2>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body">
+        <p class="text-muted">Cambie de forma manual el perito que el sistema asignó automáticamente.</p>
+        <div class="alert alert-success py-2">
+          Perito actual: <strong><c:out value="${solicitud.assignedPerito.fullName}" /></strong>
+        </div>
+        <label class="form-label" for="nuevoPerito">Nuevo perito *</label>
+        <select id="nuevoPerito" name="peritoId" class="form-select mb-3" required>
+          <option value="">Selecciona un perito activo de la materia ${solicitud.subject}</option>
+          <c:forEach var="candidato" items="${candidatePeritos}">
+            <option value="${candidato.id}"><c:out value="${candidato.fullName}" /></option>
+          </c:forEach>
+        </select>
+        <label class="form-label" for="motivoReasignacion">Motivo del cambio *</label>
+        <textarea id="motivoReasignacion" name="motivo" class="form-control" rows="4" placeholder="Escriba el motivo de la reasignación..." required></textarea>
+        <div class="form-text">El cambio quedará registrado en la bitácora y se notificará a ambos peritos.</div>
+      </div>
+      <div class="modal-footer border-0">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="submit" class="btn btn-primary">Guardar cambio</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <%@ include file="/WEB-INF/views/layout/app-end.jspf" %>
