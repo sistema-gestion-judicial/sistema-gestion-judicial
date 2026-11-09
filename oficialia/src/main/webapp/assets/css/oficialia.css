@@ -206,3 +206,10 @@ fieldset:disabled .form-check-label {
   text-align: left;
   cursor: pointer;
 }
+
+/* On phones the page title and the user chip do not fit on one line */
+@media (max-width: 575.98px) {
+  .app-topbar {
+    flex-wrap: wrap;
+  }
+}
