@@ -7,6 +7,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
+import java.time.Duration;
+import mx.edu.utez.judicial.oficialia.config.AuthSettings;
 import mx.edu.utez.judicial.oficialia.filter.AuthFilter;
 import mx.edu.utez.judicial.oficialia.model.SignInResult;
 import mx.edu.utez.judicial.oficialia.model.User;
@@ -82,6 +84,7 @@ public class LoginServlet extends HttpServlet {
             oldSession.invalidate();
         }
         HttpSession session = request.getSession(true);
+        session.setMaxInactiveInterval((int) Duration.ofMinutes(AuthSettings.SESSION_TIMEOUT_MINUTES).toSeconds());
         session.setAttribute(AuthFilter.SESSION_USER, user);
         response.sendRedirect(request.getContextPath() + HomeServlet.PATH);
     }

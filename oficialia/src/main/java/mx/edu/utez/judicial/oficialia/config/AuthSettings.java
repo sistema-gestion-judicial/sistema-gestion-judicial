@@ -7,6 +7,7 @@ public final class AuthSettings {
 
     public static final int MAX_FAILED_ATTEMPTS = 3;
     public static final int LOCK_MINUTES = 15;
+    public static final int SESSION_TIMEOUT_MINUTES = 20;
 
     private AuthSettings() {
     }
