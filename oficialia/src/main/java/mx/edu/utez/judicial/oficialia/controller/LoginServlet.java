@@ -63,7 +63,13 @@ public class LoginServlet extends HttpServlet {
             case INVALID_CREDENTIALS ->
                     showError(request, response, email, "El correo o la contraseña no son correctos.");
             case INACTIVE_ACCOUNT -> showError(request, response, email, INACTIVE_ACCOUNT_MESSAGE);
+            case LOCKED -> showError(request, response, email, lockedMessage(result.lockedMinutes()));
         }
+    }
+
+    private static String lockedMessage(long minutes) {
+        return "Demasiados intentos fallidos. Intente de nuevo en " + minutes
+                + (minutes == 1 ? " minuto." : " minutos.");
     }
 
     private void startSession(HttpServletRequest request, HttpServletResponse response, User user)

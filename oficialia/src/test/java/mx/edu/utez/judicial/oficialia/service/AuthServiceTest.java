@@ -2,7 +2,9 @@ package mx.edu.utez.judicial.oficialia.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import java.time.Instant;
 import java.util.List;
+import mx.edu.utez.judicial.oficialia.config.AuthSettings;
 import mx.edu.utez.judicial.oficialia.dao.InMemoryUserDao;
 import mx.edu.utez.judicial.oficialia.model.SignInResult;
 import mx.edu.utez.judicial.oficialia.model.SignInResult.Status;
@@ -19,9 +21,9 @@ class AuthServiceTest {
     private static final String WRONG_PASSWORD = "other-password";
     private static final String HASH = PasswordHasher.hash(PASSWORD);
 
-    private final AuthService service = new AuthService(new InMemoryUserDao(List.of(
-            account(EMAIL, true),
-            account(INACTIVE_EMAIL, false))));
+    private final AuthService service = new AuthService(
+            new InMemoryUserDao(List.of(account(EMAIL, true), account(INACTIVE_EMAIL, false))),
+            new LoginAttemptTracker(() -> Instant.parse("2026-11-09T10:00:00Z")));
 
     @Test
     void acceptsTheRightPasswordIgnoringEmailCase() {
@@ -50,6 +52,44 @@ class AuthServiceTest {
     void reportsAnInactiveAccountOnlyAfterTheRightPassword() {
         assertEquals(Status.INACTIVE_ACCOUNT, service.signIn(INACTIVE_EMAIL, PASSWORD).status());
         assertEquals(Status.INVALID_CREDENTIALS, service.signIn(INACTIVE_EMAIL, WRONG_PASSWORD).status());
+    }
+
+    @Test
+    void locksOnTheLastAllowedFailureAndReportsTheMinutes() {
+        failAttempts(EMAIL, AuthSettings.MAX_FAILED_ATTEMPTS - 1);
+
+        SignInResult result = service.signIn(EMAIL, WRONG_PASSWORD);
+
+        assertEquals(Status.LOCKED, result.status());
+        assertEquals(AuthSettings.LOCK_MINUTES, result.lockedMinutes());
+    }
+
+    @Test
+    void keepsTheLockEvenWithTheRightPassword() {
+        failAttempts(EMAIL, AuthSettings.MAX_FAILED_ATTEMPTS);
+
+        assertEquals(Status.LOCKED, service.signIn(EMAIL, PASSWORD).status());
+    }
+
+    @Test
+    void locksUnknownEmailsLikeRealOnes() {
+        failAttempts("nobody@utez.edu.mx", AuthSettings.MAX_FAILED_ATTEMPTS - 1);
+
+        assertEquals(Status.LOCKED, service.signIn("nobody@utez.edu.mx", WRONG_PASSWORD).status());
+    }
+
+    @Test
+    void aSuccessfulSignInRestartsTheCount() {
+        failAttempts(EMAIL, AuthSettings.MAX_FAILED_ATTEMPTS - 1);
+        service.signIn(EMAIL, PASSWORD);
+
+        assertEquals(Status.INVALID_CREDENTIALS, service.signIn(EMAIL, WRONG_PASSWORD).status());
+    }
+
+    private void failAttempts(String email, int times) {
+        for (int i = 0; i < times; i++) {
+            service.signIn(email, WRONG_PASSWORD);
+        }
     }
 
     private static UserAccount account(String email, boolean active) {
