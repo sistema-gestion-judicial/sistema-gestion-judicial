@@ -21,9 +21,11 @@ import mx.edu.utez.judicial.oficialia.model.DemandRequest;
 public class DatabaseStartupListener implements ServletContextListener {
 
     /** Schema scripts in the order they run. Add new ones at the end; never edit one already pushed. */
-    static final List<String> MIGRATIONS = List.of(
+    public static final List<String> MIGRATIONS = List.of(
         "V001__create_catalogs.sql",
-        "V002__create_demand_requests.sql");
+        "V002__create_demand_requests.sql",
+        "V003__add_judicial_districts_and_court_details.sql",
+        "V004__add_matter_codes_and_rejection_reasons.sql");
 
     private static final Logger LOG = Logger.getLogger(DatabaseStartupListener.class.getName());
 
