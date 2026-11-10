@@ -42,6 +42,13 @@ services:
       OFICIALIA_DB_USER: oficialia
       OFICIALIA_DB_PASSWORD: ${OFICIALIA_DB_PASSWORD}
       OFICIALIA_API_KEYS: ${OFICIALIA_API_KEYS:-local=dev-key}
+      # Mail for the password recovery codes; without a host nothing is sent (see docs/correo.md)
+      OFICIALIA_MAIL_HOST: ${OFICIALIA_MAIL_HOST:-}
+      OFICIALIA_MAIL_PORT: ${OFICIALIA_MAIL_PORT:-587}
+      OFICIALIA_MAIL_USER: ${OFICIALIA_MAIL_USER:-}
+      OFICIALIA_MAIL_PASSWORD: ${OFICIALIA_MAIL_PASSWORD:-}
+      OFICIALIA_MAIL_FROM: ${OFICIALIA_MAIL_FROM:-}
+      OFICIALIA_MAIL_LOG_ONLY: ${OFICIALIA_MAIL_LOG_ONLY:-false}
     ports:
       # 8081 so it does not clash with the Tomcat that IntelliJ runs on 8080
       - "8081:8080"
