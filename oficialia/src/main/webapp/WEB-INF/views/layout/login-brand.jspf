@@ -1,0 +1,21 @@
+  <%--
+  Created by IntelliJ IDEA.
+  User: aleja
+  Date: 10/11/2026
+  Time: 12:12 p.m.
+  To change this template use File | Settings | File Templates.
+--%>
+    <%-- Left brand panel shared by the login and the password recovery pages. --%>
+    <section class="login-brand">
+    <div class="app-brand-logo">SCD</div>
+    <div class="login-brand-body">
+    <div class="login-brand-rule"></div>
+    <h1>Sistema de Control<br>de Demandas</h1>
+    <div class="login-brand-area">Oficialía de Partes</div>
+    <p class="fs-5 mb-0">Registre y califique solicitudes de demanda, y detecte duplicidades entre juzgados.</p>
+    </div>
+    <div class="login-brand-footer">
+    Acceso exclusivo para personal autorizado.<br>
+    ¿Tiene problemas para entrar? Contacte al administrador del sistema.
+    </div>
+    </section>

@@ -6,19 +6,7 @@
 <%@ include file="/WEB-INF/views/layout/head.jspf" %>
 <body>
 <div class="login-split">
-  <section class="login-brand">
-    <div class="app-brand-logo">SCD</div>
-    <div class="login-brand-body">
-      <div class="login-brand-rule"></div>
-      <h1>Sistema de Control<br>de Demandas</h1>
-      <div class="login-brand-area">Oficialía de Partes</div>
-      <p class="fs-5 mb-0">Registre y califique solicitudes de demanda, y detecte duplicidades entre juzgados.</p>
-    </div>
-    <div class="login-brand-footer">
-      Acceso exclusivo para personal autorizado.<br>
-      ¿Tiene problemas para entrar? Contacte al administrador del sistema.
-    </div>
-  </section>
+  <%@ include file="/WEB-INF/views/layout/login-brand.jspf" %>
 
   <section class="login-panel">
     <div class="card-mor login-card">
@@ -63,9 +51,7 @@
           </div>
         </div>
         <div class="text-end mb-4">
-          <span class="small text-decoration-underline text-secondary" title="Disponible en un siguiente avance">
-            ¿Olvidó su contraseña?
-          </span>
+          <a class="small text-secondary" href="${ctx}/password-recovery">¿Olvidó su contraseña?</a>
         </div>
 
         <button type="submit" class="btn btn-primary w-100">Entrar</button>
