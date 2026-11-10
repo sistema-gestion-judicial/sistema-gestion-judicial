@@ -21,6 +21,17 @@ class RouteRulesTest {
     }
 
     @Test
+    void opensTheSystemApiGuardedByItsKeyFilter() {
+        assertTrue(RouteRules.isPublic("/api/v1/courts"));
+    }
+
+    @Test
+    void keepsApiPathsOutsideTheKeyFilterPrivate() {
+        assertFalse(RouteRules.isPublic("/api"));
+        assertFalse(RouteRules.isPublic("/api/v2/x"));
+    }
+
+    @Test
     void doesNotOpenPathsThatOnlyStartLikeAPublicOne() {
         assertFalse(RouteRules.isPublic("/login-history"));
         assertFalse(RouteRules.isPublic("/login/anything"));
