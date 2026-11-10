@@ -8,7 +8,7 @@ import java.io.IOException;
 /**
  * Shows a message page inside the application layout, with the HTTP status it belongs to.
  */
-final class ErrorView {
+public final class ErrorView {
 
     private static final String VIEW = "/WEB-INF/views/error/message.jsp";
 
@@ -28,7 +28,7 @@ final class ErrorView {
         show(request, response, HttpServletResponse.SC_NOT_FOUND, "Solicitud no encontrada", message);
     }
 
-    static void forbidden(HttpServletRequest request, HttpServletResponse response, String message)
+    public static void forbidden(HttpServletRequest request, HttpServletResponse response, String message)
             throws ServletException, IOException {
         show(request, response, HttpServletResponse.SC_FORBIDDEN, "Permiso insuficiente", message);
     }

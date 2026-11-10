@@ -15,9 +15,11 @@
   </div>
   <div class="d-flex flex-column align-items-end gap-3">
     <%@ include file="/WEB-INF/views/layout/user-chip.jspf" %>
-    <a class="btn btn-primary" href="${ctx}/demand-requests/new">
-      <i class="bi bi-plus-lg me-1"></i> Registrar solicitud
-    </a>
+    <c:if test="${sessionScope.currentUser.clerk}">
+      <a class="btn btn-primary" href="${ctx}/demand-requests/new">
+        <i class="bi bi-plus-lg me-1"></i> Registrar solicitud
+      </a>
+    </c:if>
   </div>
 </header>
 

@@ -7,10 +7,11 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
-import java.util.Optional;
 import mx.edu.utez.judicial.oficialia.filter.AuthFilter;
+import mx.edu.utez.judicial.oficialia.model.SignInResult;
 import mx.edu.utez.judicial.oficialia.model.User;
 import mx.edu.utez.judicial.oficialia.service.AuthService;
+import mx.edu.utez.judicial.oficialia.util.EmailValidator;
 
 /**
  * Shows the login form and starts the session (RF 1.1).
@@ -19,6 +20,8 @@ import mx.edu.utez.judicial.oficialia.service.AuthService;
 public class LoginServlet extends HttpServlet {
 
     private static final String VIEW = "/WEB-INF/views/auth/login.jsp";
+    private static final String INACTIVE_ACCOUNT_MESSAGE =
+            "Su cuenta está inactiva. Contacte al administrador del sistema.";
 
     private final AuthService authService = new AuthService();
 
@@ -27,11 +30,14 @@ public class LoginServlet extends HttpServlet {
             throws ServletException, IOException {
         HttpSession session = request.getSession(false);
         if (session != null && session.getAttribute(AuthFilter.SESSION_USER) != null) {
-            response.sendRedirect(request.getContextPath() + "/demand-requests");
+            response.sendRedirect(request.getContextPath() + HomeServlet.PATH);
             return;
         }
         if (request.getParameter("logout") != null) {
             request.setAttribute("infoMessage", "Cerró sesión correctamente.");
+        }
+        if (request.getParameter("inactive") != null) {
+            request.setAttribute("errorMessage", INACTIVE_ACCOUNT_MESSAGE);
         }
         request.getRequestDispatcher(VIEW).forward(request, response);
     }
@@ -46,21 +52,38 @@ public class LoginServlet extends HttpServlet {
             showError(request, response, email, "Escriba su correo electrónico y su contraseña.");
             return;
         }
-
-        Optional<User> user = authService.authenticate(email, password);
-        if (user.isEmpty()) {
-            // Same message for unknown email or wrong password, so the form does not reveal which accounts exist
-            showError(request, response, email, "El correo o la contraseña no son correctos.");
+        if (!EmailValidator.isValid(email)) {
+            request.setAttribute("emailError", "Escriba un correo con formato válido.");
+            request.setAttribute("email", email);
+            request.getRequestDispatcher(VIEW).forward(request, response);
             return;
         }
 
+        SignInResult result = authService.signIn(email, password);
+        switch (result.status()) {
+            case SIGNED_IN -> startSession(request, response, result.user());
+            // Same message for unknown email or wrong password, so the form does not reveal which accounts exist
+            case INVALID_CREDENTIALS ->
+                    showError(request, response, email, "El correo o la contraseña no son correctos.");
+            case INACTIVE_ACCOUNT -> showError(request, response, email, INACTIVE_ACCOUNT_MESSAGE);
+            case LOCKED -> showError(request, response, email, lockedMessage(result.lockedMinutes()));
+        }
+    }
+
+    private static String lockedMessage(long minutes) {
+        return "Demasiados intentos fallidos. Intente de nuevo en " + minutes
+                + (minutes == 1 ? " minuto." : " minutos.");
+    }
+
+    private void startSession(HttpServletRequest request, HttpServletResponse response, User user)
+            throws IOException {
         HttpSession oldSession = request.getSession(false);
         if (oldSession != null) {
             oldSession.invalidate();
         }
         HttpSession session = request.getSession(true);
-        session.setAttribute(AuthFilter.SESSION_USER, user.get());
-        response.sendRedirect(request.getContextPath() + "/demand-requests");
+        session.setAttribute(AuthFilter.SESSION_USER, user);
+        response.sendRedirect(request.getContextPath() + HomeServlet.PATH);
     }
 
     private void showError(HttpServletRequest request, HttpServletResponse response, String email,

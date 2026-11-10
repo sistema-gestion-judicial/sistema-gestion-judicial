@@ -1,35 +1,68 @@
 package mx.edu.utez.judicial.oficialia.service;
 
-import java.util.Locale;
-import java.util.Map;
+import java.time.Duration;
 import java.util.Optional;
-import mx.edu.utez.judicial.oficialia.model.User;
-import mx.edu.utez.judicial.oficialia.model.UserRole;
+import mx.edu.utez.judicial.oficialia.dao.InMemoryUserDao;
+import mx.edu.utez.judicial.oficialia.dao.UserDao;
+import mx.edu.utez.judicial.oficialia.model.SignInResult;
+import mx.edu.utez.judicial.oficialia.model.UserAccount;
 
 /**
- * Checks credentials. Uses demo accounts until the users table exists; then the
- * passwords will be stored as hashes and read through a DAO.
+ * Checks credentials against the stored password hashes and decides the outcome of a sign in.
  */
 public class AuthService {
 
-    private static final Map<String, DemoAccount> DEMO_ACCOUNTS = Map.of(
-            "lmendez@utez.edu.mx", new DemoAccount("Oficialia2026",
-                    new User("lmendez@utez.edu.mx", "Laura Méndez", UserRole.CLERK, "Juzgado de Cuautla")),
-            "admin.cuautla@utez.edu.mx", new DemoAccount("Oficialia2026",
-                    new User("admin.cuautla@utez.edu.mx", "Jorge Salas", UserRole.COURT_ADMIN,
-                            "Juzgado de Cuautla")));
+    /** Checked when the email is unknown, so that case takes as long as a real password check. */
+    private static final String PLACEHOLDER_HASH = PasswordHasher.hash("placeholder");
+    private static final long SECONDS_PER_MINUTE = 60;
 
-    public Optional<User> authenticate(String email, String password) {
-        if (email == null || password == null) {
-            return Optional.empty();
-        }
-        DemoAccount account = DEMO_ACCOUNTS.get(email.trim().toLowerCase(Locale.ROOT));
-        if (account == null || !account.password().equals(password)) {
-            return Optional.empty();
-        }
-        return Optional.of(account.user());
+    private final UserDao userDao;
+    private final LoginAttemptTracker attemptTracker;
+
+    public AuthService() {
+        this(InMemoryUserDao.getInstance(), LoginAttemptTracker.getInstance());
     }
 
-    private record DemoAccount(String password, User user) {
+    public AuthService(UserDao userDao, LoginAttemptTracker attemptTracker) {
+        this.userDao = userDao;
+        this.attemptTracker = attemptTracker;
+    }
+
+    public SignInResult signIn(String email, String password) {
+        if (email == null || password == null) {
+            return SignInResult.invalidCredentials();
+        }
+        Optional<Duration> lock = attemptTracker.remainingLock(email);
+        if (lock.isPresent()) {
+            return locked(lock.get());
+        }
+
+        Optional<UserAccount> account = userDao.findByEmail(email);
+        String storedHash = account.map(UserAccount::passwordHash).orElse(PLACEHOLDER_HASH);
+        boolean passwordMatches = PasswordHasher.matches(password, storedHash);
+
+        if (account.isEmpty() || !passwordMatches) {
+            attemptTracker.recordFailure(email);
+            return attemptTracker.remainingLock(email)
+                    .map(AuthService::locked)
+                    .orElseGet(SignInResult::invalidCredentials);
+        }
+
+        attemptTracker.reset(email);
+        // Checked only after the password, so nobody can learn an account's status without knowing it
+        if (!account.get().active()) {
+            return SignInResult.inactiveAccount();
+        }
+        return SignInResult.signedIn(account.get().user());
+    }
+
+    /** Tells whether the account still exists and can keep using the system. */
+    public boolean isActive(String email) {
+        return userDao.findByEmail(email).map(UserAccount::active).orElse(false);
+    }
+
+    private static SignInResult locked(Duration remaining) {
+        // Rounded up, so the message never says 0 minutes while the lock is still on
+        return SignInResult.locked(Math.ceilDiv(remaining.toSeconds(), SECONDS_PER_MINUTE));
     }
 }
