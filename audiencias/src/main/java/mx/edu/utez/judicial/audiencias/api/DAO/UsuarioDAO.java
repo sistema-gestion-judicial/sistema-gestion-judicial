@@ -9,10 +9,10 @@ public interface UsuarioDAO {
 
     Optional<Usuario> findByEmail(String email);
 
-    Usuario update(Usuario usuario);
+    Usuario update(Usuario usuario,int id);
 
     List<Usuario> findByRol();
 
-    Usuario insert();
+    int insert(Usuario usuario,String pass);
 
 }
