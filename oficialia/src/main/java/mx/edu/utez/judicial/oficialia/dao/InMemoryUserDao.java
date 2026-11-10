@@ -1,8 +1,8 @@
 package mx.edu.utez.judicial.oficialia.dao;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import mx.edu.utez.judicial.oficialia.model.User;
@@ -18,12 +18,12 @@ public class InMemoryUserDao implements UserDao {
 
     private static final InMemoryUserDao INSTANCE = new InMemoryUserDao(sampleAccounts());
 
-    private final Map<String, UserAccount> accountsByEmail;
+    private final ConcurrentMap<String, UserAccount> accountsByEmail;
 
     public InMemoryUserDao(List<UserAccount> accounts) {
         accountsByEmail = accounts.stream()
-                .collect(Collectors.toUnmodifiableMap(account -> EmailValidator.normalize(account.user().getEmail()),
-                        Function.identity()));
+            .collect(Collectors.toConcurrentMap(account -> EmailValidator.normalize(account.user().getEmail()),
+                Function.identity()));
     }
 
     public static InMemoryUserDao getInstance() {
@@ -33,6 +33,12 @@ public class InMemoryUserDao implements UserDao {
     @Override
     public Optional<UserAccount> findByEmail(String email) {
         return Optional.ofNullable(accountsByEmail.get(EmailValidator.normalize(email)));
+    }
+
+    @Override
+    public void updatePasswordHash(String email, String passwordHash) {
+        accountsByEmail.computeIfPresent(EmailValidator.normalize(email),
+            (key, account) -> new UserAccount(account.user(), passwordHash, account.active()));
     }
 
     private static List<UserAccount> sampleAccounts() {
