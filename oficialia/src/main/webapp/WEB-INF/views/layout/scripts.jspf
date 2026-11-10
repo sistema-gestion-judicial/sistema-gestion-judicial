@@ -1,0 +1,7 @@
+<%-- Bootstrap scripts and, when the page sets pageScript, that page's own script. Closes the document. --%>
+<script src="${ctx}/webjars/bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
+<c:if test="${not empty pageScript}">
+  <script src="${ctx}/assets/js/${pageScript}"></script>
+</c:if>
+</body>
+</html>
