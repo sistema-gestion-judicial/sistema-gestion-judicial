@@ -25,7 +25,8 @@ public class DatabaseStartupListener implements ServletContextListener {
         "V001__create_catalogs.sql",
         "V002__create_demand_requests.sql",
         "V003__add_judicial_districts_and_court_details.sql",
-        "V004__add_matter_codes_and_rejection_reasons.sql");
+        "V004__add_matter_codes_and_rejection_reasons.sql",
+        "V005__create_users.sql");
 
     private static final Logger LOG = Logger.getLogger(DatabaseStartupListener.class.getName());
 
