@@ -44,8 +44,15 @@ heroku config:set --app $APP \
   OFICIALIA_DB_USER="USUARIO" \
   OFICIALIA_DB_PASSWORD="CONTRASEÑA" \
   OFICIALIA_API_KEYS="audiencias=CLAVE1;tocas=CLAVE2;peritos=CLAVE3" \
+  OFICIALIA_ADMIN_EMAIL="correo@del-administrador" \
+  OFICIALIA_ADMIN_PASSWORD="CONTRASEÑA-SEGURA" \
   TZ=America/Mexico_City
 ```
+
+- `OFICIALIA_ADMIN_EMAIL` y `OFICIALIA_ADMIN_PASSWORD` crean al Administrador del órgano judicial en el
+  primer arranque con la tabla de usuarios vacía (contraseña de 8 caracteres o más, con letras y
+  números). Después ya no cambian nada: puedes borrarlas. **Nunca** pongas `OFICIALIA_SAMPLE_USERS` en
+  producción.
 
 - Las claves son para los otros equipos. Genera cada una con `openssl rand -hex 24` y pásasela a
   cada equipo por privado.
