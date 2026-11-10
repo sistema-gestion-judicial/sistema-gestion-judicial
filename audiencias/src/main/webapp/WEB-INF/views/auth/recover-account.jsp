@@ -60,7 +60,7 @@
             </c:if>
           </div>
 
-          <button type="submit" class="btn btn-auth-primary w-100 py-2 mt-4 mb-4">Enviar enlace</button>
+          <button onC type="submit" class="btn btn-auth-primary w-100 py-2 mt-4 mb-4">Enviar enlace</button>
 
           <div class="text-center">
             <span class="text-muted small">¿Quieres iniciar sesión? </span>

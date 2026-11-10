@@ -28,6 +28,7 @@
       <div class="border-top border-secondary border-opacity-50 pt-3">
         <p class="small text-white-50 mb-1">Acceso exclusivo para personal autorizado.</p>
         <p class="small text-white-50 mb-0">¿Tiene problemas para entrar? Contacte al administrador del sistema.</p>
+        <a href="inicioabogados.jsp" class="small text-white-50 mb-0">inicio</a>
       </div>
     </div>
 
