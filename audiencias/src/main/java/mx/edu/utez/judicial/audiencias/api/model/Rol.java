@@ -1,6 +1,6 @@
 package mx.edu.utez.judicial.audiencias.api.model;
 
-public enum Roles {
+public enum Rol {
     ADMINISTRADOR,
     ABOGADO
 }

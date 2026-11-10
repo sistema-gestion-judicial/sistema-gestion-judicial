@@ -2,59 +2,78 @@ package mx.edu.utez.judicial.audiencias.api.model;
 
 public class Usuario {
 
-    private String nombre;
-    private  String apellido;
-    private Roles rol;
-    private  boolean activo;
-    private  String mesa;
+    private String cedulaProfesional;
+    private Rol rol;
+    private Boolean activo;
+    private String correo;
+    private String nombreCompleto;
+    private String materia;
 
-    public Usuario(String nombre, String apellido, boolean activo,Roles rol,String mesa) {
-        this.nombre = nombre;
-        this.apellido = apellido;
-        this.activo = activo;
+    // Constructor vacío
+    public Usuario() {
+    }
+
+    // Constructor con parámetros
+    public Usuario(String cedulaProfesional, Rol rol, Boolean activo, String correo, String nombreCompleto) {
+        this.cedulaProfesional = cedulaProfesional;
         this.rol = rol;
-        this.mesa = mesa;
+        this.activo = activo;
+        this.correo = correo;
+        this.nombreCompleto = nombreCompleto;
+    }
+    public Usuario(String correo, String nombreCompleto,Rol rol,Boolean activo) {
+        this.rol = rol;
+        this.activo = activo;
+        this.correo = correo;
+        this.nombreCompleto = nombreCompleto;
     }
 
-    public String getNombre() {
-        return nombre;
+    public Usuario(String nombreCompleto,String cedulaProfesional,boolean estado,String materia) {
+        this.cedulaProfesional = cedulaProfesional;
+        this.nombreCompleto = nombreCompleto;
+        this.activo = activo;
+        this.materia = materia;
+
+
+    }
+    // Getters y Setters
+    public String getCedulaProfesional() {
+        return cedulaProfesional;
     }
 
-    public void setNombre(String nombre) {
-        this.nombre = nombre;
+    public void setCedulaProfesional(String cedulaProfesional) {
+        this.cedulaProfesional = cedulaProfesional;
     }
 
-    public String getApellido() {
-        return apellido;
-    }
-
-    public void setApellido(String apellido) {
-        this.apellido = apellido;
-    }
-
-    public Roles getRol() {
+    public Rol getRol() {
         return rol;
     }
 
-    public void setRol(Roles rol) {
+    public void setRol(Rol rol) {
         this.rol = rol;
     }
 
-    public boolean isActivo() {
+    public Boolean getActivo() {
         return activo;
     }
 
-    public void setActivo(boolean activo) {
+    public void setActivo(Boolean activo) {
         this.activo = activo;
     }
 
-    public String getMesa() {
-        return mesa;
+    public String getCorreo() {
+        return correo;
     }
 
-    public void setMesa(String mesa) {
-        this.mesa = mesa;
+    public void setCorreo(String correo) {
+        this.correo = correo;
     }
 
+    public String getNombreCompleto() {
+        return nombreCompleto;
+    }
 
+    public void setNombreCompleto(String nombreCompleto) {
+        this.nombreCompleto = nombreCompleto;
+    }
 }
