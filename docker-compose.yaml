@@ -1,3 +1,6 @@
+# Local MySQL for the four systems: one server, one database and one user per module.
+# Start it with `docker compose up -d` after copying .env.example to .env.
+# `docker compose --profile app up -d --build` also builds and runs Oficialía at http://localhost:8081
 services:
   mysql:
     image: mysql:8.4
@@ -10,20 +13,38 @@ services:
       AUDIENCIAS_DB_PASSWORD: ${AUDIENCIAS_DB_PASSWORD}
       TOCAS_DB_PASSWORD: ${TOCAS_DB_PASSWORD}
       TZ: America/Mexico_City
-    command:
-      - --character-set-server=utf8mb4
-      - --collation-server=utf8mb4_0900_ai_ci
+    command: ["--character-set-server=utf8mb4", "--collation-server=utf8mb4_0900_ai_ci"]
     ports:
-        - "3306:3306"
+      - "3306:3306"
     volumes:
       - mysql-data:/var/lib/mysql
       # Runs only the first time, when the data volume is empty
       - ./docker/mysql/init:/docker-entrypoint-initdb.d:ro
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p${MYSQL_ROOT_PASSWORD}"]
       interval: 10s
       timeout: 5s
       retries: 10
 
+  oficialia:
+    # Only starts with --profile app, so `docker compose up -d` keeps running just MySQL
+    profiles: ["app"]
+    build:
+      context: .
+      dockerfile: oficialia/Dockerfile
+    container_name: sgj-oficialia
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      # Inside the compose network the database host is the service name, not localhost
+      OFICIALIA_DB_URL: jdbc:mysql://mysql:3306/sgj_oficialia
+      OFICIALIA_DB_USER: oficialia
+      OFICIALIA_DB_PASSWORD: ${OFICIALIA_DB_PASSWORD}
+      OFICIALIA_API_KEYS: ${OFICIALIA_API_KEYS:-local=dev-key}
+    ports:
+      # 8081 so it does not clash with the Tomcat that IntelliJ runs on 8080
+      - "8081:8080"
+
 volumes:
-    mysql-data:
+  mysql-data:
