@@ -199,6 +199,21 @@ fieldset:disabled .form-check-label {
   border-color: var(--mor-line);
 }
 
+/* The user chip is also the button that opens the user menu */
+.user-chip-button {
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+/* On phones the page title and the user chip do not fit on one line */
+@media (max-width: 575.98px) {
+  .app-topbar {
+    flex-wrap: wrap;
+  }
+}
+
 /* ---- Ruling a demand request --------------------------------------------- */
 .decision-options {
   display: grid;

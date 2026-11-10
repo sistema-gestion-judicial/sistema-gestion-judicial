@@ -11,6 +11,7 @@ import java.io.IOException;
 import mx.edu.utez.judicial.oficialia.controller.ErrorView;
 import mx.edu.utez.judicial.oficialia.model.User;
 import mx.edu.utez.judicial.oficialia.service.AuthService;
+import mx.edu.utez.judicial.oficialia.util.SessionCookie;
 
 /**
  * Reads every request as UTF-8, sends anyone without a session to the login page, ends the
@@ -36,19 +37,34 @@ public class AuthFilter extends HttpFilter {
 
         User user = signedInUser(request);
         if (user == null) {
-            response.sendRedirect(request.getContextPath() + "/login");
+            sendToLogin(request, response);
             return;
         }
         if (!authService.isActive(user.getEmail())) {
             request.getSession().invalidate();
+            SessionCookie.clear(request, response);
             response.sendRedirect(request.getContextPath() + "/login?inactive");
             return;
         }
+        // Without this, the back button could show a private page from the browser's copy after signing out
+        response.setHeader("Cache-Control", "no-store");
         if (!RouteRules.canAccess(path, user.getRole())) {
             ErrorView.forbidden(request, response, "Su perfil no tiene acceso a esta sección.");
             return;
         }
         chain.doFilter(request, response);
+    }
+
+    /**
+     * A session cookie the server no longer recognizes means the session expired. It is removed
+     * so the notice appears only once; signing out already removes it, so that case shows no notice.
+     */
+    private static void sendToLogin(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        boolean sessionExpired = request.getRequestedSessionId() != null && !request.isRequestedSessionIdValid();
+        if (sessionExpired) {
+            SessionCookie.clear(request, response);
+        }
+        response.sendRedirect(request.getContextPath() + (sessionExpired ? "/login?expired" : "/login"));
     }
 
     /** Returns the user of the current session, or null when nobody is signed in. */

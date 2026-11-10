@@ -1,4 +1,5 @@
-<%@ page contentType="text/html;charset=UTF-8" pageEncoding="UTF-8" %>
+<%-- session="false": viewing this page must not create a session that could later look expired. --%>
+<%@ page contentType="text/html;charset=UTF-8" pageEncoding="UTF-8" session="false" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <c:set var="pageTitle" value="Iniciar sesión" />
 <c:set var="pageScript" value="login.js" />
@@ -29,6 +30,11 @@
       <c:if test="${not empty infoMessage}">
         <div class="alert alert-mor-success py-2" role="status">
           <i class="bi bi-check-circle me-1"></i> <c:out value="${infoMessage}" />
+        </div>
+      </c:if>
+      <c:if test="${not empty expiredMessage}">
+        <div class="alert alert-mor-info py-2" role="status">
+          <i class="bi bi-clock-history me-1"></i> <c:out value="${expiredMessage}" />
         </div>
       </c:if>
       <c:if test="${not empty errorMessage}">

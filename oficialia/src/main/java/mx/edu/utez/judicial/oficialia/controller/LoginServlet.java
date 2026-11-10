@@ -7,6 +7,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
+import java.time.Duration;
+import mx.edu.utez.judicial.oficialia.config.AuthSettings;
 import mx.edu.utez.judicial.oficialia.filter.AuthFilter;
 import mx.edu.utez.judicial.oficialia.model.SignInResult;
 import mx.edu.utez.judicial.oficialia.model.User;
@@ -36,10 +38,13 @@ public class LoginServlet extends HttpServlet {
         if (request.getParameter("logout") != null) {
             request.setAttribute("infoMessage", "Cerró sesión correctamente.");
         }
+        if (request.getParameter("expired") != null) {
+            request.setAttribute("expiredMessage", "Su sesión se cerró por inactividad. Vuelva a iniciar sesión.");
+        }
         if (request.getParameter("inactive") != null) {
             request.setAttribute("errorMessage", INACTIVE_ACCOUNT_MESSAGE);
         }
-        request.getRequestDispatcher(VIEW).forward(request, response);
+        showLoginForm(request, response);
     }
 
     @Override
@@ -55,7 +60,7 @@ public class LoginServlet extends HttpServlet {
         if (!EmailValidator.isValid(email)) {
             request.setAttribute("emailError", "Escriba un correo con formato válido.");
             request.setAttribute("email", email);
-            request.getRequestDispatcher(VIEW).forward(request, response);
+            showLoginForm(request, response);
             return;
         }
 
@@ -82,6 +87,7 @@ public class LoginServlet extends HttpServlet {
             oldSession.invalidate();
         }
         HttpSession session = request.getSession(true);
+        session.setMaxInactiveInterval((int) Duration.ofMinutes(AuthSettings.SESSION_TIMEOUT_MINUTES).toSeconds());
         session.setAttribute(AuthFilter.SESSION_USER, user);
         response.sendRedirect(request.getContextPath() + HomeServlet.PATH);
     }
@@ -90,6 +96,13 @@ public class LoginServlet extends HttpServlet {
             String message) throws ServletException, IOException {
         request.setAttribute("errorMessage", message);
         request.setAttribute("email", email);
+        showLoginForm(request, response);
+    }
+
+    private void showLoginForm(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        // Without this, the back button could bring back the form with the password still typed in it
+        response.setHeader("Cache-Control", "no-store");
         request.getRequestDispatcher(VIEW).forward(request, response);
     }
 }
