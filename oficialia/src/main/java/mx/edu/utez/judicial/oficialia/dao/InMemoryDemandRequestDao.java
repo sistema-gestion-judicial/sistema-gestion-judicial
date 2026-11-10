@@ -49,12 +49,18 @@ public class InMemoryDemandRequestDao implements DemandRequestDao {
     }
 
     @Override
+    public void insert(DemandRequest demandRequest) {
+        requestsByFolio.put(demandRequest.getFolio(), demandRequest);
+    }
+
+    @Override
     public void update(DemandRequest demandRequest) {
         // The object in the map is the one that was changed; a JDBC DAO runs the UPDATE here
         requestsByFolio.put(demandRequest.getFolio(), demandRequest);
     }
 
-    private static List<DemandRequest> sampleRequests() {
+    /** Sample requests of the demo; also used to fill an empty database. */
+    public static List<DemandRequest> sampleRequests() {
         String cuautla = "Juzgado de Cuautla";
         String clerk = "Laura Méndez";
         List<DemandRequest> requests = new ArrayList<>();

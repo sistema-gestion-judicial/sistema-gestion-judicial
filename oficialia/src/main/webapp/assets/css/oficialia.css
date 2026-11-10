@@ -198,3 +198,72 @@ fieldset:disabled .form-check-label {
   color: var(--mor-text-muted);
   border-color: var(--mor-line);
 }
+
+/* ---- Ruling a demand request --------------------------------------------- */
+.decision-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1rem;
+}
+
+.decision-option {
+  display: flex;
+  gap: 0.85rem;
+  align-items: flex-start;
+  padding: 1.25rem;
+  border: 2px solid var(--mor-line);
+  border-radius: var(--mor-radius);
+  background: var(--mor-white);
+  cursor: pointer;
+}
+
+.decision-option .form-check-input {
+  flex-shrink: 0;
+  margin-top: 0.3rem;
+}
+
+.decision-option:has(input:checked).is-admissible {
+  border-color: var(--mor-success-text);
+  background: var(--mor-success-bg);
+}
+
+.decision-option:has(input:checked).is-inadmissible {
+  border-color: var(--mor-warning-text);
+  background: var(--mor-warning-bg);
+}
+
+.decision-option:has(input:focus-visible) {
+  outline: 3px solid var(--mor-info-border);
+  outline-offset: 2px;
+}
+
+.decision-options.is-invalid .decision-option {
+  border-color: var(--mor-danger);
+}
+
+.decision-icon {
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.is-admissible .decision-icon {
+  color: var(--mor-success-text);
+}
+
+.is-inadmissible .decision-icon {
+  color: var(--mor-warning-text);
+}
+
+.decision-title {
+  display: block;
+  font-family: var(--mor-font-title);
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.decision-text {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.92rem;
+  color: var(--mor-text-muted);
+}

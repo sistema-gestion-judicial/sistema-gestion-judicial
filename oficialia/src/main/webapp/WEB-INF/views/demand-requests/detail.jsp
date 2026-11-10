@@ -22,6 +22,11 @@
   <%@ include file="/WEB-INF/views/layout/user-chip.jspf" %>
 </header>
 
+<c:if test="${not empty flashWarning}">
+  <div class="alert alert-mor-warning d-flex gap-2 align-items-start" role="alert">
+    <i class="bi bi-exclamation-triangle mt-1"></i> <span><c:out value="${flashWarning}" /></span>
+  </div>
+</c:if>
 <c:if test="${not empty flashMessage}">
   <div class="alert alert-mor-success d-flex gap-2 align-items-start" role="status">
     <i class="bi bi-check-circle mt-1"></i> <span><c:out value="${flashMessage}" /></span>
@@ -140,6 +145,26 @@
   </div>
 
   <div class="col-xl-4 d-flex flex-column gap-4">
+    <c:if test="${demandRequest.pending}">
+      <section class="card-mor p-4">
+        <h2 class="card-title fs-5 mb-2"><i class="bi bi-clipboard-check me-2"></i>Calificación</h2>
+        <c:choose>
+          <c:when test="${sessionScope.currentUser.clerk}">
+            <p class="text-secondary">Revise los datos y los anexos, y califique la solicitud como procedente
+              o no procedente.</p>
+            <c:url var="ruleUrl" value="/demand-requests/rule">
+              <c:param name="folio" value="${demandRequest.folio}" />
+            </c:url>
+            <a class="btn btn-primary w-100" href="${ruleUrl}">
+              <i class="bi bi-clipboard-check me-1"></i> Calificar solicitud
+            </a>
+          </c:when>
+          <c:otherwise>
+            <p class="text-secondary mb-0">Solo la Oficial de Partes puede calificar esta solicitud.</p>
+          </c:otherwise>
+        </c:choose>
+      </section>
+    </c:if>
     <section class="card-mor p-4">
       <h2 class="card-title fs-5 mb-3"><i class="bi bi-clock-history me-2"></i>Seguimiento</h2>
       <ol class="timeline">

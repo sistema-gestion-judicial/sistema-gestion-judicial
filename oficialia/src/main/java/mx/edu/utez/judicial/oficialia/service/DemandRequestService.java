@@ -4,7 +4,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import mx.edu.utez.judicial.oficialia.dao.DemandRequestDao;
-import mx.edu.utez.judicial.oficialia.dao.InMemoryDemandRequestDao;
+import mx.edu.utez.judicial.oficialia.dao.OficialiaDaos;
 import mx.edu.utez.judicial.oficialia.exception.AccessDeniedException;
 import mx.edu.utez.judicial.oficialia.exception.NotFoundException;
 import mx.edu.utez.judicial.oficialia.model.DemandRequest;
@@ -19,7 +19,7 @@ public class DemandRequestService {
     private final DemandRequestDao demandRequestDao;
 
     public DemandRequestService() {
-        this(InMemoryDemandRequestDao.getInstance());
+        this(OficialiaDaos.demandRequests());
     }
 
     public DemandRequestService(DemandRequestDao demandRequestDao) {
