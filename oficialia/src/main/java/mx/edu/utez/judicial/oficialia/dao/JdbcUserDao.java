@@ -33,7 +33,7 @@ public class JdbcUserDao implements UserDao {
         if (email == null) {
             return Optional.empty();
         }
-        String sql = "SELECT u.email, u.first_name, u.last_name, u.role, u.password_hash, u.active, "
+        String sql = "SELECT u.id, u.email, u.first_name, u.last_name, u.role, u.password_hash, u.active, "
             + "c.name AS court_name, c.active AS court_active FROM users u "
             + "LEFT JOIN courts c ON c.code = u.court_code WHERE u.email = ?";
         try (Connection connection = database.getConnection();
@@ -45,7 +45,7 @@ public class JdbcUserDao implements UserDao {
                 }
                 String courtName = rows.getString("court_name");
                 boolean courtActive = courtName == null || rows.getBoolean("court_active");
-                User user = new User(rows.getString("email"),
+                User user = new User(rows.getLong("id"), rows.getString("email"),
                     rows.getString("first_name") + " " + rows.getString("last_name"),
                     UserRole.valueOf(rows.getString("role")), courtName);
                 return Optional.of(new UserAccount(user, rows.getString("password_hash"),

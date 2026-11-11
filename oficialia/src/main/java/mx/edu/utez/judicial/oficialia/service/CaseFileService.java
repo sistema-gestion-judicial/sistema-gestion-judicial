@@ -15,7 +15,7 @@ import mx.edu.utez.judicial.oficialia.model.RequestStatus;
  */
 public class CaseFileService {
 
-    /** YYYY/NNNNN/CC, the format produced by {@link CaseFileNumberGenerator}. */
+    /** YYYY/NNNNN/CC, the format of every case file number (DFR 2.5). */
     public static final Pattern CASE_FILE_NUMBER = Pattern.compile("\\d{4}/\\d{5}/\\d{2}");
 
     private final DemandRequestDao demandRequestDao;
