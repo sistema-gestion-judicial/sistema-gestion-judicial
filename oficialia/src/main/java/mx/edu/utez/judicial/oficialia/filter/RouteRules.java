@@ -10,7 +10,9 @@ import mx.edu.utez.judicial.oficialia.model.UserRole;
  */
 final class RouteRules {
 
-    private static final Set<String> PUBLIC_PATHS = Set.of("/login", "/api/v1/health");
+    // The password recovery pages are for people who cannot sign in
+    private static final Set<String> PUBLIC_PATHS = Set.of("/login", "/password-recovery",
+        "/password-recovery/code", "/password-recovery/reset", "/api/v1/health");
     // The system API skips the session check because ApiKeyFilter guards /api/v1/* with X-Api-Key
     private static final List<String> PUBLIC_FOLDERS = List.of("/assets/", "/webjars/", "/api/v1/");
     private static final String NEW_REQUEST_PATH = "/demand-requests/new";
