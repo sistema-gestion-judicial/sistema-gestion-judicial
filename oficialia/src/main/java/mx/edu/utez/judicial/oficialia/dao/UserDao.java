@@ -4,8 +4,8 @@ import java.util.Optional;
 import mx.edu.utez.judicial.oficialia.model.UserAccount;
 
 /**
- * Access to the user accounts. TEMPORARY: it must be reviewed when the users table exists (#28);
- * a JDBC version then replaces the in-memory one and services do not change.
+ * Access to the user accounts: {@link JdbcUserDao} with a database, {@link InMemoryUserDao} without one.
+ * Services get it from {@link OficialiaDaos#users()}.
  */
 public interface UserDao {
 

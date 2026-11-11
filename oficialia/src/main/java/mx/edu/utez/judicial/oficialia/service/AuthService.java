@@ -2,7 +2,7 @@ package mx.edu.utez.judicial.oficialia.service;
 
 import java.time.Duration;
 import java.util.Optional;
-import mx.edu.utez.judicial.oficialia.dao.InMemoryUserDao;
+import mx.edu.utez.judicial.oficialia.dao.OficialiaDaos;
 import mx.edu.utez.judicial.oficialia.dao.UserDao;
 import mx.edu.utez.judicial.oficialia.model.SignInResult;
 import mx.edu.utez.judicial.oficialia.model.UserAccount;
@@ -20,7 +20,7 @@ public class AuthService {
     private final LoginAttemptTracker attemptTracker;
 
     public AuthService() {
-        this(InMemoryUserDao.getInstance(), LoginAttemptTracker.getInstance());
+        this(OficialiaDaos.users(), LoginAttemptTracker.getInstance());
     }
 
     public AuthService(UserDao userDao, LoginAttemptTracker attemptTracker) {

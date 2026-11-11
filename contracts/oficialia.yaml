@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Oficialía de Partes (SCD-2026)
-  version: 1.0.0
+  version: 1.1.0
   description: |
     Catálogos y expedientes que la Oficialía de Partes comparte con Audiencias, Tocas y Peritos.
     Un expediente es una solicitud de demanda calificada como procedente.
@@ -222,24 +222,73 @@ components:
       properties:
         code:
           type: string
+          description: Clave estable del juzgado; es la parte JJ del número de expediente
           example: "12"
+        number:
+          type: integer
+          description: Número oficial del juzgado
+          example: 12
         name:
           type: string
           example: Juzgado de Cuautla
         judicialDistrict:
           type: string
+          description: Nombre del distrito judicial
           example: Distrito judicial de Cuautla
+        judicialDistrictCode:
+          type: string
+          description: Clave estable del distrito judicial
+          example: CUA
+        address:
+          $ref: "#/components/schemas/CourtAddress"
+        subjectMatters:
+          type: array
+          description: Claves de las materias que atiende el juzgado
+          items:
+            type: string
+          example: [CIV, FAM, MER, PEN]
         active:
           type: boolean
+    CourtAddress:
+      type: object
+      description: Cualquier parte puede ser null mientras el juzgado no tenga su dirección completa
+      properties:
+        street:
+          type: string
+          nullable: true
+          example: Av. Reforma 120
+        neighborhood:
+          type: string
+          nullable: true
+          example: Centro
+        postalCode:
+          type: string
+          nullable: true
+          example: "62740"
+        municipality:
+          type: string
+          nullable: true
+          example: Cuautla
+        phone:
+          type: string
+          nullable: true
+          example: "7353521000"
     SubjectMatter:
       type: object
       properties:
         id:
           type: integer
           example: 2
+        code:
+          type: string
+          description: Clave estable de la materia (DFR 3.3.6); no cambia aunque cambie el nombre
+          example: FAM
         name:
           type: string
           example: Familiar
+        description:
+          type: string
+          nullable: true
         active:
           type: boolean
     Party:

@@ -24,7 +24,9 @@ public class SubjectMatterApiServlet extends HttpServlet {
         List<Map<String, Object>> matters = catalogDao.findSubjectMatters().stream().map(matter -> {
             Map<String, Object> json = new LinkedHashMap<>();
             json.put("id", matter.getId());
+            json.put("code", matter.getCode());
             json.put("name", matter.getName());
+            json.put("description", matter.getDescription());
             json.put("active", matter.isActive());
             return json;
         }).toList();

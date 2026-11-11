@@ -10,20 +10,25 @@ import mx.edu.utez.judicial.common.db.Database;
 import mx.edu.utez.judicial.common.db.SqlMigrator;
 import mx.edu.utez.judicial.oficialia.dao.InMemoryDemandRequestDao;
 import mx.edu.utez.judicial.oficialia.dao.JdbcDemandRequestDao;
+import mx.edu.utez.judicial.oficialia.dao.JdbcUserDao;
 import mx.edu.utez.judicial.oficialia.dao.OficialiaDaos;
 import mx.edu.utez.judicial.oficialia.model.DemandRequest;
 
 /**
- * When a database is configured, brings its schema up to date before the first request and,
- * if it has no requests yet, fills it with the demo data (unless OFICIALIA_SAMPLE_DATA=false).
+ * When a database is configured, brings its schema up to date before the first request, creates the
+ * first user accounts when there are none ({@link InitialAccounts}) and, if it has no requests yet, fills
+ * it with the demo requests (unless OFICIALIA_SAMPLE_DATA=false).
  */
 @WebListener
 public class DatabaseStartupListener implements ServletContextListener {
 
     /** Schema scripts in the order they run. Add new ones at the end; never edit one already pushed. */
-    static final List<String> MIGRATIONS = List.of(
+    public static final List<String> MIGRATIONS = List.of(
         "V001__create_catalogs.sql",
-        "V002__create_demand_requests.sql");
+        "V002__create_demand_requests.sql",
+        "V003__add_judicial_districts_and_court_details.sql",
+        "V004__add_matter_codes_and_rejection_reasons.sql",
+        "V005__create_users.sql");
 
     private static final Logger LOG = Logger.getLogger(DatabaseStartupListener.class.getName());
 
@@ -36,6 +41,7 @@ public class DatabaseStartupListener implements ServletContextListener {
     private void prepare(Database database) {
         try {
             new SqlMigrator(database, getClass().getClassLoader()).migrate("db/migration", MIGRATIONS);
+            new InitialAccounts((JdbcUserDao) OficialiaDaos.users(), System::getenv).createIfEmpty();
             JdbcDemandRequestDao requests = (JdbcDemandRequestDao) OficialiaDaos.demandRequests();
             if (requests.count() == 0 && !"false".equalsIgnoreCase(System.getenv("OFICIALIA_SAMPLE_DATA"))) {
                 for (DemandRequest request : InMemoryDemandRequestDao.sampleRequests()) {
