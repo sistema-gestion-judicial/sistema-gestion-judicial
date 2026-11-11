@@ -88,7 +88,7 @@ public class JdbcUsuarioDao implements UsuarioDao {
     }
 
     @Override
-    public List<Usuario> findByRol() {
+    public List<Usuario> findAbogados() {
         String sql = "SELECT u.nombre_completo, u.cedula_profesional, u.estado, m.materia " +
             "FROM usuarios u " +
             "LEFT JOIN mesas m ON u.id = m.id_usuario " +

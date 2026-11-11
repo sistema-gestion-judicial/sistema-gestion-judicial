@@ -11,7 +11,7 @@ public interface UsuarioDao {
 
     Usuario update(Usuario usuario,int id);
 
-    List<Usuario> findByRol();
+    List<Usuario> findAbogados();
 
     int insert(Usuario usuario,String pass);
 
