@@ -8,6 +8,10 @@ pantallas y la API) en Heroku, con una base MySQL de JawsDB.
 | App de Heroku con dyno **Basic** (siempre encendido) | 7 USD/mes |
 | Base JawsDB MySQL, plan **Kitefin** | Gratis (5 MB, 10 conexiones, 3,600 consultas por hora) |
 
+Para que las 3,600 consultas alcancen, Oficialía no revisa en la base en cada clic que la cuenta siga activa:
+confía un minuto en la última revisión (`AuthSettings.ACTIVE_ACCOUNT_CHECK_SECONDS`). Si desactivas a
+alguien directo en la base, su sesión se cierra a más tardar un minuto después.
+
 Todos los comandos van en **Git Bash**, desde la raíz del repo.
 
 ## 1. Preparar

@@ -47,6 +47,11 @@ En local pon las dos cosas en tu `.env` (ya vienen en `.env.example`) o en las v
 IntelliJ. Si tu base ya tenía usuarios, no pasa nada: estas variables solo actúan con la tabla vacía.
 Sin ninguna de ellas, el log avisa que nadie puede iniciar sesión.
 
+Cada página confirma que la cuenta siga activa, pero reutiliza esa respuesta durante un minuto
+(`ActiveAccountCache`). El código que desactive una cuenta debe llamar a
+`ActiveAccountCache.getInstance().forget(email)`, y el que desactive un juzgado a `clear()`, para que la sesión
+se cierre en el siguiente clic y no un minuto después.
+
 En código se usa lo que está en `common`:
 
     DatabaseConfig.fromEnvironment("OFICIALIA")   // lee las variables
