@@ -8,33 +8,77 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
-import java.util.List;
+import mx.edu.utez.judicial.oficialia.controller.ErrorView;
+import mx.edu.utez.judicial.oficialia.model.User;
+import mx.edu.utez.judicial.oficialia.service.AuthService;
+import mx.edu.utez.judicial.oficialia.util.SessionCookie;
 
 /**
- * Reads every request as UTF-8 and sends anyone without a session to the login page.
+ * Reads every request as UTF-8, sends anyone without a session to the login page, ends the
+ * session of accounts that are no longer active and stops users whose role cannot open the page.
  */
 @WebFilter("/*")
 public class AuthFilter extends HttpFilter {
 
     public static final String SESSION_USER = "currentUser";
 
-    private static final List<String> PUBLIC_PATHS =
-            List.of("/login", "/assets/", "/webjars/", "/api/v1/health");
+    private final AuthService authService = new AuthService();
 
     @Override
     protected void doFilter(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws IOException, ServletException {
         request.setCharacterEncoding("UTF-8");
 
-        String path = request.getRequestURI().substring(request.getContextPath().length());
-        boolean isPublic = PUBLIC_PATHS.stream().anyMatch(path::startsWith);
-        HttpSession session = request.getSession(false);
-        boolean isSignedIn = session != null && session.getAttribute(SESSION_USER) != null;
-
-        if (isPublic || isSignedIn) {
+        String path = resolvedPath(request);
+        if (RouteRules.isPublic(path)) {
             chain.doFilter(request, response);
-        } else {
-            response.sendRedirect(request.getContextPath() + "/login");
+            return;
         }
+
+        User user = signedInUser(request);
+        if (user == null) {
+            sendToLogin(request, response);
+            return;
+        }
+        if (!authService.isActive(user.getEmail())) {
+            request.getSession().invalidate();
+            SessionCookie.clear(request, response);
+            response.sendRedirect(request.getContextPath() + "/login?inactive");
+            return;
+        }
+        // Without this, the back button could show a private page from the browser's copy after signing out
+        response.setHeader("Cache-Control", "no-store");
+        if (!RouteRules.canAccess(path, user.getRole())) {
+            ErrorView.forbidden(request, response, "Su perfil no tiene acceso a esta sección.");
+            return;
+        }
+        chain.doFilter(request, response);
+    }
+
+    /**
+     * A session cookie the server no longer recognizes means the session expired. It is removed
+     * so the notice appears only once; signing out already removes it, so that case shows no notice.
+     */
+    private static void sendToLogin(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        boolean sessionExpired = request.getRequestedSessionId() != null && !request.isRequestedSessionIdValid();
+        if (sessionExpired) {
+            SessionCookie.clear(request, response);
+        }
+        response.sendRedirect(request.getContextPath() + (sessionExpired ? "/login?expired" : "/login"));
+    }
+
+    /** Returns the user of the current session, or null when nobody is signed in. */
+    private static User signedInUser(HttpServletRequest request) {
+        HttpSession session = request.getSession(false);
+        return session == null ? null : (User) session.getAttribute(SESSION_USER);
+    }
+
+    /**
+     * The path the server actually resolved. getRequestURI() returns the raw text, so a request
+     * for /assets/../demand-requests would look public and still reach the private page.
+     */
+    private static String resolvedPath(HttpServletRequest request) {
+        String pathInfo = request.getPathInfo();
+        return pathInfo == null ? request.getServletPath() : request.getServletPath() + pathInfo;
     }
 }

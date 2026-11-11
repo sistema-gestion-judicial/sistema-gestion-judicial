@@ -1,45 +1,38 @@
 package mx.edu.utez.judicial.oficialia.service;
 
-import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
+import mx.edu.utez.judicial.oficialia.dao.DemandRequestDao;
+import mx.edu.utez.judicial.oficialia.dao.OficialiaDaos;
+import mx.edu.utez.judicial.oficialia.exception.AccessDeniedException;
+import mx.edu.utez.judicial.oficialia.exception.NotFoundException;
 import mx.edu.utez.judicial.oficialia.model.DemandRequest;
 import mx.edu.utez.judicial.oficialia.model.RequestStatus;
 
 /**
- * Queries the demand requests of the user's court.
- * Returns sample data until DemandRequestDao exists.
+ * Queries the demand requests of the user's court (RF 3.2 and 3.3).
+ * A user only sees the requests of their own court.
  */
 public class DemandRequestService {
 
-    private static final List<DemandRequest> SAMPLE_REQUESTS = List.of(
-            request("S-000127/2026", "2026-10-26", "Familiar", "Ana Torres", "Luis Torres", null,
-                    RequestStatus.PENDING),
-            request("S-000126/2026", "2026-10-26", "Civil", null, "Minera del Sur", null,
-                    RequestStatus.PENDING),
-            request("S-000125/2026", "2026-10-23", "Mercantil", "Grupo Ávila", "Ferre Sur", null,
-                    RequestStatus.PENDING),
-            request("S-000124/2026", "2026-10-23", "Penal", "Juan Ruiz", null, "2026/00431/12",
-                    RequestStatus.ADMISSIBLE),
-            request("S-000123/2026", "2026-10-22", "Familiar", "María Gómez", "Raúl Ortiz", null,
-                    RequestStatus.INADMISSIBLE),
-            request("S-000122/2026", "2026-10-21", "Civil", "Rosa León", "Hugo Vega", "2026/00428/12",
-                    RequestStatus.ADMISSIBLE),
-            request("S-000121/2026", "2026-10-20", "Mercantil", "Ana Lara", "Banco del Sur", "2026/00425/12",
-                    RequestStatus.ADMISSIBLE),
-            request("S-000120/2026", "2026-10-20", "Familiar", "Carla Díaz", "Iván Ibarra", null,
-                    RequestStatus.INADMISSIBLE),
-            request("S-000119/2026", "2026-10-19", "Civil", "Julio Paz", "Inés Ríos", "2026/00419/12",
-                    RequestStatus.ADMISSIBLE));
+    private final DemandRequestDao demandRequestDao;
+
+    public DemandRequestService() {
+        this(OficialiaDaos.demandRequests());
+    }
+
+    public DemandRequestService(DemandRequestDao demandRequestDao) {
+        this.demandRequestDao = demandRequestDao;
+    }
 
     /**
-     * Finds requests whose folio or parties contain the text and that have the given status.
+     * Finds the court's requests whose folio or parties contain the text and that have the given status.
      * Blank filters are ignored. Results are sorted from newest to oldest.
      */
-    public List<DemandRequest> search(String text, RequestStatus status) {
+    public List<DemandRequest> search(String courtName, String text, RequestStatus status) {
         String needle = text == null ? "" : text.trim().toLowerCase(Locale.ROOT);
-        return SAMPLE_REQUESTS.stream()
+        return demandRequestDao.findByCourt(courtName).stream()
                 .filter(request -> status == null || request.getStatus() == status)
                 .filter(request -> needle.isEmpty()
                         || request.getFolio().toLowerCase(Locale.ROOT).contains(needle)
@@ -48,12 +41,23 @@ public class DemandRequestService {
                 .toList();
     }
 
-    public int countAll() {
-        return SAMPLE_REQUESTS.size();
+    public int countByCourt(String courtName) {
+        return demandRequestDao.findByCourt(courtName).size();
     }
 
-    private static DemandRequest request(String folio, String date, String matter, String plaintiff,
-            String defendant, String caseFile, RequestStatus status) {
-        return new DemandRequest(folio, LocalDate.parse(date), matter, plaintiff, defendant, caseFile, status);
+    /**
+     * Returns a request of the user's court.
+     *
+     * @throws NotFoundException when no request has that folio
+     * @throws AccessDeniedException when the request belongs to another court
+     */
+    public DemandRequest getForCourt(String folio, String courtName) {
+        DemandRequest request = demandRequestDao.findByFolio(folio)
+                .orElseThrow(() -> new NotFoundException("No existe una solicitud con el folio indicado."));
+        if (!request.getCourtName().equals(courtName)) {
+            throw new AccessDeniedException(
+                    "No tiene permiso para consultar solicitudes de otro juzgado.");
+        }
+        return request;
     }
 }

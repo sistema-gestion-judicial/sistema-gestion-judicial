@@ -6,6 +6,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
+import mx.edu.utez.judicial.oficialia.util.SessionCookie;
 
 /**
  * Ends the session (RF 1.2). Only POST, so a link or an image cannot sign the user out.
@@ -19,6 +20,7 @@ public class LogoutServlet extends HttpServlet {
         if (session != null) {
             session.invalidate();
         }
+        SessionCookie.clear(request, response);
         response.sendRedirect(request.getContextPath() + "/login?logout");
     }
 }

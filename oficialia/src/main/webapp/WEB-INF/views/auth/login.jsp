@@ -1,4 +1,5 @@
-<%@ page contentType="text/html;charset=UTF-8" pageEncoding="UTF-8" %>
+<%-- session="false": viewing this page must not create a session that could later look expired. --%>
+<%@ page contentType="text/html;charset=UTF-8" pageEncoding="UTF-8" session="false" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <c:set var="pageTitle" value="Iniciar sesión" />
 <c:set var="pageScript" value="login.js" />
@@ -31,6 +32,11 @@
           <i class="bi bi-check-circle me-1"></i> <c:out value="${infoMessage}" />
         </div>
       </c:if>
+      <c:if test="${not empty expiredMessage}">
+        <div class="alert alert-mor-info py-2" role="status">
+          <i class="bi bi-clock-history me-1"></i> <c:out value="${expiredMessage}" />
+        </div>
+      </c:if>
       <c:if test="${not empty errorMessage}">
         <div class="alert alert-mor-warning py-2" role="alert">
           <i class="bi bi-exclamation-triangle me-1"></i> <c:out value="${errorMessage}" />
@@ -40,8 +46,12 @@
       <form method="post" action="${ctx}/login" novalidate>
         <div class="mb-3">
           <label for="email" class="form-label">Correo electrónico</label>
-          <input type="email" class="form-control" id="email" name="email" autocomplete="username"
-                 value="<c:out value='${email}' />" placeholder="nombre@utez.edu.mx" required autofocus>
+          <input type="email" class="form-control ${not empty emailError ? 'is-invalid' : ''}" id="email" name="email"
+                 autocomplete="username" value="<c:out value='${email}' />" placeholder="nombre@utez.edu.mx"
+                 required autofocus>
+          <c:if test="${not empty emailError}">
+            <div class="invalid-feedback"><c:out value="${emailError}" /></div>
+          </c:if>
         </div>
 
         <div class="mb-1">

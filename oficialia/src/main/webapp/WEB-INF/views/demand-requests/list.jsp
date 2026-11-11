@@ -15,9 +15,11 @@
   </div>
   <div class="d-flex flex-column align-items-end gap-3">
     <%@ include file="/WEB-INF/views/layout/user-chip.jspf" %>
-    <a class="btn btn-primary" href="${ctx}/demand-requests/new">
-      <i class="bi bi-plus-lg me-1"></i> Registrar solicitud
-    </a>
+    <c:if test="${sessionScope.currentUser.clerk}">
+      <a class="btn btn-primary" href="${ctx}/demand-requests/new">
+        <i class="bi bi-plus-lg me-1"></i> Registrar solicitud
+      </a>
+    </c:if>
   </div>
 </header>
 
@@ -92,10 +94,21 @@
                     <span class="dot"></span> <c:out value="${demandRequest.status.label}" />
                   </span>
                 </td>
-                <td class="text-end">
-                  <span class="text-secondary fw-bold" title="El detalle se muestra en un siguiente avance">
+                <td class="text-end text-nowrap">
+                  <c:url var="detailUrl" value="/demand-requests/detail">
+                    <c:param name="folio" value="${demandRequest.folio}" />
+                  </c:url>
+                  <a class="fw-bold text-decoration-none" href="${detailUrl}">
                     <i class="bi bi-eye me-1"></i> Ver
-                  </span>
+                  </a>
+                  <c:if test="${demandRequest.pending and sessionScope.currentUser.clerk}">
+                    <c:url var="ruleUrl" value="/demand-requests/rule">
+                      <c:param name="folio" value="${demandRequest.folio}" />
+                    </c:url>
+                    <a class="fw-bold text-decoration-none ms-3" href="${ruleUrl}">
+                      <i class="bi bi-clipboard-check me-1"></i> Calificar
+                    </a>
+                  </c:if>
                 </td>
               </tr>
             </c:forEach>

@@ -1,4 +1,5 @@
 <%-- Closes the content area and the page. --%>
   </main>
 </div>
+<script src="${ctx}/assets/js/unsaved-guard.js"></script>
 <%@ include file="/WEB-INF/views/layout/scripts.jspf" %>

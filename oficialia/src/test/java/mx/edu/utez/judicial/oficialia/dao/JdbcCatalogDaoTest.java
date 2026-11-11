@@ -1,0 +1,46 @@
+package mx.edu.utez.judicial.oficialia.dao;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.util.List;
+import mx.edu.utez.judicial.oficialia.model.Court;
+import mx.edu.utez.judicial.oficialia.model.SubjectMatter;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+/**
+ * Runs only against the test database described in {@link TestDatabase}.
+ */
+class JdbcCatalogDaoTest {
+
+    private JdbcCatalogDao dao;
+
+    @BeforeEach
+    void freshSchema() throws Exception {
+        dao = new JdbcCatalogDao(TestDatabase.migrated());
+    }
+
+    @Test
+    void readsCourtsWithTheirDistrictNumberAndMatters() {
+        List<Court> courts = dao.findCourts();
+
+        assertEquals(List.of("Juzgado de Cuautla", "Juzgado de Cuernavaca", "Juzgado de Jojutla",
+            "Juzgado de Yautepec"), courts.stream().map(Court::getName).toList());
+        Court cuernavaca = dao.findCourt("01").orElseThrow();
+        assertEquals(1, cuernavaca.getNumber());
+        assertEquals("CVA", cuernavaca.getDistrictCode());
+        assertEquals("Cuernavaca", cuernavaca.getAddress().municipality());
+        assertEquals(List.of("CIV", "FAM", "MER", "PEN"), cuernavaca.getSubjectMatterCodes());
+        assertTrue(dao.findCourt("99").isEmpty());
+    }
+
+    @Test
+    void givesEverySubjectMatterItsStableCode() {
+        List<SubjectMatter> matters = dao.findSubjectMatters();
+
+        assertEquals(List.of("CIV", "FAM", "MER", "PEN"), matters.stream().map(SubjectMatter::getCode).toList());
+        assertEquals(List.of("Civil", "Familiar", "Mercantil", "Penal"),
+            matters.stream().map(SubjectMatter::getName).toList());
+    }
+}
