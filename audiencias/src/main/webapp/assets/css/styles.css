@@ -186,3 +186,484 @@ h1, h2, h3, h4, h5, h6,
 .code-input.is-invalid:focus {
   box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.25) !important;
 }
+/* ==========================================================================
+   Estilos Globales y Complementos Módulos Administrador (Mesas y Abogados)
+   ========================================================================== */
+
+/* Fondo con efecto de filigrana / estatua de la justicia */
+.hero-banner-justice {
+  position: relative;
+}
+
+.hero-banner-justice::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 420px;
+  height: 100%;
+  background-image: url('https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=600&q=80');
+  background-position: right center;
+  background-size: cover;
+  opacity: 0.08;
+  mask-image: linear-gradient(to left, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 100%);
+  -webkit-mask-image: linear-gradient(to left, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 100%);
+  pointer-events: none;
+}
+
+/* Buscador con ícono de lupa integrado */
+.search-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.search-wrap .search-icon {
+  position: absolute;
+  left: 12px;
+  color: #6b7280;
+  pointer-events: none;
+}
+
+.search-wrap .search-field {
+  padding-left: 36px !important;
+}
+
+/* Enlace / Botón Limpiar Filtros */
+.btn-link-reset {
+  background: transparent;
+  border: none;
+  color: #6b7280;
+  text-decoration: underline;
+  font-size: 0.875rem;
+  cursor: pointer;
+  padding: 0 8px;
+  transition: color 0.15s ease;
+}
+
+.btn-link-reset:hover {
+  color: #111827;
+}
+
+/* Botón Registrar (Estilo Píldora Verde) */
+.btn-register-pill {
+  background-color: #2b3929;
+  color: #ffffff;
+  border: none;
+  border-radius: 9999px;
+  padding: 8px 18px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.btn-register-pill:hover {
+  background-color: #1d271c;
+}
+
+/* Estilos de Tabla y Encabezados */
+.mesas-table thead tr,
+.abogados-table thead tr {
+  background-color: #dce3d5 !important;
+}
+
+.mesas-table th,
+.abogados-table th {
+  color: #1f2937;
+  font-weight: 600;
+  font-size: 0.875rem;
+  padding: 12px 16px;
+  border-bottom: none;
+}
+
+.mesas-table td,
+.abogados-table td {
+  padding: 12px 16px;
+  vertical-align: middle;
+}
+
+/* Badges de Estado Activo / Inactivo */
+.badge-status {
+  display: inline-block;
+  padding: 3px 14px;
+  border-radius: 9999px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+}
+
+.badge-status.active {
+  background-color: #cbe3b3;
+  color: #2b3929;
+}
+
+.badge-status.inactive {
+  background-color: #e5e7eb;
+  color: #6b7280;
+}
+
+/* Switch Toggle en Filas de Tabla */
+.table-actions-cell {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 14px;
+}
+
+.switch-toggle {
+  position: relative;
+  display: inline-block;
+  width: 36px;
+  height: 20px;
+  margin: 0;
+}
+
+.switch-toggle input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: #d1d5db;
+  transition: 0.2s ease-in-out;
+  border-radius: 20px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 14px;
+  width: 14px;
+  left: 3px;
+  bottom: 3px;
+  background-color: #ffffff;
+  transition: 0.2s ease-in-out;
+  border-radius: 50%;
+}
+
+input:checked + .slider {
+  background-color: #2b3929;
+}
+
+input:checked + .slider:before {
+  transform: translateX(16px);
+}
+
+.btn-icon-action {
+  background: transparent;
+  border: none;
+  color: #1f2937;
+  cursor: pointer;
+  padding: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: background-color 0.15s ease;
+}
+
+.btn-icon-action:hover {
+  background-color: #e5e7eb;
+}
+
+.italic-title {
+  font-style: italic;
+  font-weight: 500;
+}
+
+/* ==========================================================================
+   Modales Emergentes (<dialog>) - Estilo Figma
+   ========================================================================== */
+.custom-modal {
+  border: none;
+  border-radius: 16px;
+  padding: 0;
+  max-width: 580px;
+  width: 90%;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+  background-color: #ffffff;
+}
+
+.custom-modal::backdrop {
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(2px);
+}
+
+.modal-body-custom {
+  padding: 28px 32px;
+}
+
+.modal-title {
+  font-size: 1.35rem;
+  font-weight: 600;
+  margin-bottom: 4px;
+  color: #111827;
+}
+
+.modal-subtitle {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin-bottom: 16px;
+}
+
+.modal-divider {
+  border-top: 1px solid #e5e7eb;
+  margin-bottom: 20px;
+}
+
+.modal-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.modal-form-grid .form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.modal-form-grid label {
+  font-size: 0.825rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.full-width {
+  grid-column: 1 / -1;
+}
+
+/* Inputs y Selects dentro de Modales */
+.modal-form-grid input.form-control,
+.modal-form-grid select.form-select {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #c9cebd;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  color: #1f2937;
+  background-color: #ffffff;
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.modal-form-grid select.form-select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none'%3E%3Cpath d='m4 7 6 6 6-6' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 16px;
+  padding-right: 32px;
+}
+
+.modal-form-grid input.form-control:focus,
+.modal-form-grid select.form-select:focus {
+  border-color: #2b3929;
+  box-shadow: 0 0 0 2px rgba(43, 57, 41, 0.1);
+}
+
+/* Banner Informativo Azul */
+.info-banner {
+  background-color: #ebf3fa;
+  color: #2563eb;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 0.8125rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 16px;
+  margin-top: 12px;
+}
+/* ==========================================================================
+   Estilos específicos acotados a las vistas de Mesas y Abogados
+   ========================================================================== */
+
+/* Título principal de la sección (Mesas / Abogados) */
+.hero-banner-justice #page-title {
+  font-family: 'Playfair Display', Georgia, serif !important;
+  font-weight: 700 !important;
+  font-style: normal !important;
+  color: #111827;
+}
+
+/* Título dentro del contenedor de la tabla */
+.hero-banner-justice + .agenda .agenda-heading h2,
+.agenda-heading #table-title {
+  font-family: 'Playfair Display', Georgia, serif !important;
+  font-weight: 700 !important;
+  font-style: normal !important;
+  color: #111827;
+}
+/* Pestañas de Navegación */
+.tabs-navigation {
+  display: flex;
+  gap: 24px;
+  border-bottom: 1px solid #e5e7eb;
+  margin-bottom: 24px;
+}
+
+.tab-btn {
+  background: transparent;
+  border: none;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #6b7280;
+  padding: 8px 4px 12px 4px;
+  cursor: pointer;
+  position: relative;
+  transition: color 0.15s ease;
+}
+
+.tab-btn:hover {
+  color: #111827;
+}
+
+.tab-btn.active {
+  color: #111827;
+  font-weight: 700;
+}
+
+.tab-btn.active::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background-color: #2b3929;
+  border-radius: 2px 2px 0 0;
+}
+/* ==========================================================================
+   Estilos exactos para la vista Abogados de Audiencia (Figma)
+   ========================================================================== */
+
+/* Título principal de la pantalla */
+.abogados-main-title {
+  font-family: 'Playfair Display', Georgia, serif !important;
+  font-weight: 700 !important;
+  font-size: 2.2rem;
+  color: #111827;
+  margin-bottom: 4px;
+}
+
+/* Indicador activo en el Topbar */
+.main-nav .active-link {
+  position: relative;
+  font-weight: 600;
+  color: #111827 !important;
+  background: transparent;
+  border: none;
+}
+
+.main-nav .active-link::after {
+  content: '';
+  position: absolute;
+  bottom: -6px;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background-color: #2b3929;
+  border-radius: 2px;
+}
+
+/* Tarjeta Contenedora con bordes suavizados y cabecera */
+.abogados-card-container {
+  background-color: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+  margin-top: 24px;
+}
+
+.abogados-card-header {
+  background-color: #dce3d5;
+  padding: 20px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.abogados-card-title {
+  font-family: 'Playfair Display', Georgia, serif !important;
+  font-weight: 700 !important;
+  font-size: 1.25rem;
+  color: #111827;
+  margin: 0 0 2px 0;
+}
+
+.abogados-card-subtitle {
+  font-size: 0.875rem;
+  color: #4b5563;
+}
+
+/* Botón Registrar Abogado */
+.btn-register-pill {
+  background-color: #2b3929;
+  color: #ffffff;
+  border: none;
+  border-radius: 9999px;
+  padding: 8px 18px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.btn-register-pill:hover {
+  background-color: #1d271c;
+}
+
+/* Tabla de Abogados */
+.abogados-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.abogados-table thead tr {
+  background-color: #dce3d5;
+}
+
+.abogados-table th {
+  color: #1f2937;
+  font-weight: 700;
+  font-size: 0.875rem;
+  padding: 12px 24px;
+  text-align: left;
+  border-bottom: 1px solid #c9cebd;
+}
+
+.abogados-table td {
+  padding: 14px 24px;
+  border-bottom: 1px solid #f3f4f6;
+  vertical-align: middle;
+  font-size: 0.875rem;
+}
+
+/* Badges de Estado Pill */
+.badge-status.active {
+  background-color: #cbe3b3;
+  color: #2b3929;
+  padding: 4px 16px;
+  border-radius: 9999px;
+  font-weight: 600;
+  font-size: 0.8125rem;
+  display: inline-block;
+}
