@@ -16,6 +16,7 @@
         <div>
           Si el correo <strong><c:out value="${email}" /></strong> está registrado, recibirá un código de
           verificación. El código vence en ${codeMinutes} minutos y solo puede usarse una vez.
+          Si no llega, espere ${cooldownSeconds} segundos antes de solicitar otro.
         </div>
       </div>
       <c:if test="${not empty errorMessage}">

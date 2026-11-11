@@ -75,6 +75,7 @@ final class RecoveryFlow {
         request.setAttribute("codeLength", AuthSettings.RECOVERY_CODE_LENGTH);
         request.setAttribute("codeMinutes", AuthSettings.RECOVERY_CODE_MINUTES);
         request.setAttribute("passwordMinLength", AuthSettings.PASSWORD_MIN_LENGTH);
+        request.setAttribute("cooldownSeconds", AuthSettings.RECOVERY_REQUEST_COOLDOWN_SECONDS);
         // Same as the login: the back button must not bring back a form with a code or a password typed in it
         response.setHeader("Cache-Control", "no-store");
         request.getRequestDispatcher(view).forward(request, response);

@@ -2,23 +2,15 @@ package mx.edu.utez.judicial.oficialia.dao;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
-import java.sql.Connection;
-import java.sql.Statement;
 import java.time.LocalDateTime;
-import java.util.List;
-import mx.edu.utez.judicial.common.db.Database;
-import mx.edu.utez.judicial.common.db.DatabaseConfig;
-import mx.edu.utez.judicial.common.db.SqlMigrator;
 import mx.edu.utez.judicial.oficialia.model.DemandRequest;
 import mx.edu.utez.judicial.oficialia.model.RequestStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 /**
- * Runs only when OFICIALIA_TEST_DB_URL (plus _USER and _PASSWORD) points to an empty test database,
- * for example the local Docker MySQL. It drops and recreates the tables.
+ * Runs only against the test database described in {@link TestDatabase}.
  */
 class JdbcDemandRequestDaoTest {
 
@@ -26,18 +18,7 @@ class JdbcDemandRequestDaoTest {
 
     @BeforeEach
     void freshSchema() throws Exception {
-        DatabaseConfig config = DatabaseConfig.fromEnvironment("OFICIALIA_TEST").orElse(null);
-        assumeTrue(config != null, "No test database configured");
-        Database database = new Database(config);
-        try (Connection connection = database.getConnection(); Statement statement = connection.createStatement()) {
-            for (String table : List.of("annexes", "parties", "demand_requests", "subject_matters", "courts",
-                "schema_history")) {
-                statement.execute("DROP TABLE IF EXISTS " + table);
-            }
-        }
-        new SqlMigrator(database, getClass().getClassLoader()).migrate("db/migration", List.of(
-            "V001__create_catalogs.sql", "V002__create_demand_requests.sql"));
-        dao = new JdbcDemandRequestDao(database);
+        dao = new JdbcDemandRequestDao(TestDatabase.migrated());
         InMemoryDemandRequestDao.sampleRequests().forEach(dao::insert);
     }
 

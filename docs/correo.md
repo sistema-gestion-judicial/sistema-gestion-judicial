@@ -40,9 +40,23 @@ Con Docker Compose define las variables en `.env` (hay ejemplos comentados en `.
 
 No actives `OFICIALIA_MAIL_LOG_ONLY` en producción: el log mostraría los códigos.
 
+## Límites contra abuso
+
+Por cada correo (esté registrado o no, para no revelar qué cuentas existen) se aceptan como máximo
+**1 código cada 60 segundos y 5 por hora** (`AuthSettings.RECOVERY_REQUEST_COOLDOWN_SECONDS` y
+`RECOVERY_MAX_REQUESTS_PER_HOUR`). Una solicitud que se pasa del límite recibe la misma respuesta que
+las demás, pero no genera código ni correo, y el código vigente conserva sus intentos fallidos. Así
+nadie puede seguir adivinando un código pidiendo otro, ni llenar un buzón ni agotar el cupo diario del
+servidor SMTP (Gmail permite unos 500 al día).
+
+Los correos salen por hilos propios (`MailExecutor`: 2 hilos y una cola de 50), no por el pool común de
+la JVM. Si la cola se llena, el mensaje se descarta y queda un aviso en el log. Los hilos se detienen al
+parar la aplicación (`MailShutdownListener`).
+
 ## Cómo está armado
 
 `PasswordRecoveryService` decide las reglas, `EmailService` elige asunto y texto
 (`EmailContentBuilder`) y `MailClient` solo transporta: `SmtpMailClient` (Jakarta Mail) o
-`SampleMailClient` (solo log). Los códigos y las cuentas están en memoria detrás de `RecoveryCodeDao` y
-`UserDao`; cuando exista la tabla de usuarios se cambian por versiones JDBC y los servicios no cambian.
+`SampleMailClient` (solo log). Las cuentas vienen de `OficialiaDaos.users()` (MySQL o memoria, según
+`OFICIALIA_DB_URL`). Los códigos siguen en memoria detrás de `RecoveryCodeDao`; la tabla
+`password_reset_codes` (V005) permitiría guardarlos en la base para que sobrevivan a un reinicio.

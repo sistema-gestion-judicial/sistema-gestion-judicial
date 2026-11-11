@@ -32,7 +32,7 @@ curl https://sgj-oficialia-ad65e5f5fb37.herokuapp.com/api/v1/health
 | `GET /api/v1/health` | Estado del sistema y de su base. No pide clave |
 | `GET /api/v1/courts` | Todos los juzgados, ordenados por nombre |
 | `GET /api/v1/courts/{code}` | Un juzgado por su clave de dos dígitos, por ejemplo `12` |
-| `GET /api/v1/subject-matters` | Todas las materias (Civil, Familiar, Mercantil, Penal) |
+| `GET /api/v1/subject-matters` | Todas las materias con su clave estable `code` (CIV, FAM, MER, PEN) |
 | `GET /api/v1/case-files` | Los expedientes, del más reciente al más antiguo, con filtros opcionales |
 | `GET /api/v1/case-files/{año}/{número}/{juzgado}` | Un expediente por su número |
 

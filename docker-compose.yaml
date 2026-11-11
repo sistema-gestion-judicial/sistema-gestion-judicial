@@ -49,6 +49,10 @@ services:
       OFICIALIA_MAIL_PASSWORD: ${OFICIALIA_MAIL_PASSWORD:-}
       OFICIALIA_MAIL_FROM: ${OFICIALIA_MAIL_FROM:-}
       OFICIALIA_MAIL_LOG_ONLY: ${OFICIALIA_MAIL_LOG_ONLY:-false}
+      # First accounts, created only while the users table is empty (see docs/base-de-datos.md)
+      OFICIALIA_ADMIN_EMAIL: ${OFICIALIA_ADMIN_EMAIL:-}
+      OFICIALIA_ADMIN_PASSWORD: ${OFICIALIA_ADMIN_PASSWORD:-}
+      OFICIALIA_SAMPLE_USERS: ${OFICIALIA_SAMPLE_USERS:-false}
     ports:
       # 8081 so it does not clash with the Tomcat that IntelliJ runs on 8080
       - "8081:8080"

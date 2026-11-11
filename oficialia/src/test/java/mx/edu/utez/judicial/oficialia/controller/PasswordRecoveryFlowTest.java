@@ -92,6 +92,17 @@ class PasswordRecoveryFlowTest {
     }
 
     @Test
+    void aRepeatedRequestGetsTheSameAnswerButNoSecondMessage() throws Exception {
+        requestPage.doPost(request(Map.of("email", EMAIL)), response());
+        assertEquals("/ctx/password-recovery/code", redirectedTo);
+
+        requestPage.doPost(request(Map.of("email", EMAIL)), response());
+
+        assertEquals("/ctx/password-recovery/code", redirectedTo);
+        assertEquals(List.of(EMAIL), sentTo);
+    }
+
+    @Test
     void aMalformedEmailMarksTheFieldAndSendsNothing() throws Exception {
         requestPage.doPost(request(Map.of("email", "sin-arroba")), response());
 
@@ -198,6 +209,7 @@ class PasswordRecoveryFlowTest {
         assertEquals(6, attributes.get("codeLength"));
         assertEquals(15, attributes.get("codeMinutes"));
         assertEquals(8, attributes.get("passwordMinLength"));
+        assertEquals(60, attributes.get("cooldownSeconds"));
         assertFalse(sessionExists, "opening the first page must not create a session");
     }
 

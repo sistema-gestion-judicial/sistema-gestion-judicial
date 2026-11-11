@@ -33,6 +33,20 @@ entorno de tu módulo (ejemplo de oficialia):
 
 Sin esas variables el módulo de oficialia sigue funcionando con datos en memoria.
 
+### Usuarios de Oficialía
+
+Con base de datos, las cuentas viven en la tabla `users` y no hay cuentas fijas en el código. Al
+arrancar con esa tabla vacía se crean:
+
+| Variable | Qué crea |
+| --- | --- |
+| `OFICIALIA_ADMIN_EMAIL` y `OFICIALIA_ADMIN_PASSWORD` | El Administrador del órgano judicial (contraseña de 8 caracteres o más, con letras y números). Opcionales: `OFICIALIA_ADMIN_FIRST_NAME` y `OFICIALIA_ADMIN_LAST_NAME` |
+| `OFICIALIA_SAMPLE_USERS=true` | Las cuentas demo (oficial de partes, administradores y una cuenta inactiva). **Solo para desarrollo** |
+
+En local pon las dos cosas en tu `.env` (ya vienen en `.env.example`) o en las variables de Tomcat de
+IntelliJ. Si tu base ya tenía usuarios, no pasa nada: estas variables solo actúan con la tabla vacía.
+Sin ninguna de ellas, el log avisa que nadie puede iniciar sesión.
+
 En código se usa lo que está en `common`:
 
     DatabaseConfig.fromEnvironment("OFICIALIA")   // lee las variables

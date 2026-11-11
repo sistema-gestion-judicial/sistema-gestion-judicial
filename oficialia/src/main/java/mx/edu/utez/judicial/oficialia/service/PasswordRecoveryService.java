@@ -5,17 +5,15 @@ import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.concurrent.Executor;
-import java.util.concurrent.ForkJoinPool;
 import java.util.function.Supplier;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import mx.edu.utez.judicial.oficialia.config.AuthSettings;
 import mx.edu.utez.judicial.oficialia.dao.InMemoryRecoveryCodeDao;
-import mx.edu.utez.judicial.oficialia.dao.InMemoryUserDao;
+import mx.edu.utez.judicial.oficialia.dao.OficialiaDaos;
 import mx.edu.utez.judicial.oficialia.dao.RecoveryCodeDao;
 import mx.edu.utez.judicial.oficialia.dao.UserDao;
 import mx.edu.utez.judicial.oficialia.exception.BusinessRuleException;
-import mx.edu.utez.judicial.oficialia.exception.ServiceUnavailableException;
 import mx.edu.utez.judicial.oficialia.model.RecoveryCode;
 import mx.edu.utez.judicial.oficialia.model.User;
 import mx.edu.utez.judicial.oficialia.model.UserAccount;
@@ -44,16 +42,26 @@ public class PasswordRecoveryService {
     private final Clock clock;
     private final Supplier<String> codeGenerator;
     private final Executor mailExecutor;
+    private final RecoveryRequestLimiter requestLimiter;
 
     public PasswordRecoveryService() {
-        this(InMemoryUserDao.getInstance(), InMemoryRecoveryCodeDao.getInstance(), SHARED_EMAIL_SERVICE,
+        this(OficialiaDaos.users(), InMemoryRecoveryCodeDao.getInstance(), SHARED_EMAIL_SERVICE,
             LoginAttemptTracker.getInstance(), Clock.systemDefaultZone(), PasswordRecoveryService::randomCode,
-            ForkJoinPool.commonPool());
+            MailExecutor.shared(), RecoveryRequestLimiter.getInstance());
+    }
+
+    /** The limiter counts the requests with the same clock as the codes; tests use this one. */
+    public PasswordRecoveryService(UserDao userDao, RecoveryCodeDao recoveryCodeDao, EmailService emailService,
+                                   LoginAttemptTracker attemptTracker, Clock clock, Supplier<String> codeGenerator,
+                                   Executor mailExecutor) {
+        this(userDao, recoveryCodeDao, emailService, attemptTracker, clock, codeGenerator, mailExecutor,
+            new RecoveryRequestLimiter(clock::instant));
     }
 
     /** The executor runs the e-mail sending; tests pass one that runs it right away. */
     public PasswordRecoveryService(UserDao userDao, RecoveryCodeDao recoveryCodeDao, EmailService emailService,
-                                   LoginAttemptTracker attemptTracker, Clock clock, Supplier<String> codeGenerator, Executor mailExecutor) {
+                                   LoginAttemptTracker attemptTracker, Clock clock, Supplier<String> codeGenerator,
+                                   Executor mailExecutor, RecoveryRequestLimiter requestLimiter) {
         this.userDao = userDao;
         this.recoveryCodeDao = recoveryCodeDao;
         this.emailService = emailService;
@@ -61,6 +69,7 @@ public class PasswordRecoveryService {
         this.clock = clock;
         this.codeGenerator = codeGenerator;
         this.mailExecutor = mailExecutor;
+        this.requestLimiter = requestLimiter;
     }
 
     /** True when the text has the shape of a code, which is checked before asking the service about it. */
@@ -70,10 +79,17 @@ public class PasswordRecoveryService {
 
     /**
      * Sends a new code to the e-mail when it belongs to an active account, and forgets the previous one.
-     * Does nothing for any other e-mail and never says which case it was.
+     * Does nothing for any other e-mail and never says which case it was. It also does nothing when the e-mail
+     * asked too soon or too often ({@link RecoveryRequestLimiter}); the code it already has stays as it was, with
+     * the failed attempts it had, so asking again never gives more guesses.
      */
     public synchronized void requestCode(String email) {
         String normalized = EmailValidator.normalize(email);
+        // Counted for every e-mail, registered or not: a limit that only applied to real accounts would show
+        // which ones they are
+        if (!requestLimiter.tryAcquire(normalized)) {
+            return;
+        }
         Optional<UserAccount> account = userDao.findByEmail(normalized).filter(UserAccount::active);
         if (account.isEmpty()) {
             return;
@@ -135,7 +151,8 @@ public class PasswordRecoveryService {
         try {
             emailService.sendPasswordRecoveryCode(user.getEmail(), user.getFullName(), code,
                 AuthSettings.RECOVERY_CODE_MINUTES);
-        } catch (ServiceUnavailableException e) {
+        } catch (RuntimeException e) {
+            // Whatever fails here happens in a background thread, where nobody would see it
             LOG.warning("The recovery code was not delivered: " + e.getMessage());
         } finally {
             thread.setContextClassLoader(previous);

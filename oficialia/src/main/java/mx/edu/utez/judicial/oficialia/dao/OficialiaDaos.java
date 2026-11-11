@@ -21,6 +21,10 @@ public final class OficialiaDaos {
         .<CatalogDao>map(JdbcCatalogDao::new)
         .orElseGet(InMemoryCatalogDao::new);
 
+    private static final UserDao USERS = DATABASE
+        .<UserDao>map(JdbcUserDao::new)
+        .orElseGet(InMemoryUserDao::getInstance);
+
     private OficialiaDaos() {
     }
 
@@ -35,5 +39,9 @@ public final class OficialiaDaos {
 
     public static CatalogDao catalogs() {
         return CATALOGS;
+    }
+
+    public static UserDao users() {
+        return USERS;
     }
 }

@@ -40,13 +40,22 @@ class PasswordRecoveryServiceTest {
     private final AuthService auth = new AuthService(users, tracker);
     private final List<String> sentTo = new ArrayList<>();
     private final List<String> sentHtml = new ArrayList<>();
-    private final List<String> generated = new ArrayList<>(List.of(CODE, NEXT_CODE));
+    private final List<String> generated = new ArrayList<>(List.of(CODE, NEXT_CODE, "111111", "222222", "333333",
+        "444444", "555555"));
 
     private PasswordRecoveryService service() {
         return serviceWithMailFailure(false);
     }
 
     private PasswordRecoveryService serviceWithMailFailure(boolean fails) {
+        return serviceWith(new RecoveryRequestLimiter(clock::instant), fails);
+    }
+
+    private PasswordRecoveryService serviceWith(RecoveryRequestLimiter limiter) {
+        return serviceWith(limiter, false);
+    }
+
+    private PasswordRecoveryService serviceWith(RecoveryRequestLimiter limiter, boolean fails) {
         EmailService emailService = new EmailService((to, subject, html) -> {
             if (fails) {
                 throw new ServiceUnavailableException("mail server down");
@@ -56,7 +65,7 @@ class PasswordRecoveryServiceTest {
         });
         // The executor runs the sending right away, so the tests need no waiting
         return new PasswordRecoveryService(users, codes, emailService, tracker, clock,
-            () -> generated.remove(0), Runnable::run);
+            () -> generated.remove(0), Runnable::run, limiter);
     }
 
     @Test
@@ -143,6 +152,7 @@ class PasswordRecoveryServiceTest {
     void aNewRequestReplacesThePreviousCode() {
         PasswordRecoveryService service = service();
         service.requestCode(EMAIL);
+        clock.advanceMinutes(1);
         service.requestCode(EMAIL);
 
         assertThrows(BusinessRuleException.class, () -> service.verifyCode(EMAIL, CODE));
@@ -195,6 +205,75 @@ class PasswordRecoveryServiceTest {
         assertFalse(PasswordRecoveryService.isWellFormedCode("1234567"));
         assertFalse(PasswordRecoveryService.isWellFormedCode("12a456"));
         assertFalse(PasswordRecoveryService.isWellFormedCode(null));
+    }
+
+    @Test
+    void aSecondRequestInsideTheWaitSendsNothingAndKeepsTheCurrentCode() {
+        PasswordRecoveryService service = service();
+        service.requestCode(EMAIL);
+
+        service.requestCode(EMAIL);
+
+        assertEquals(List.of(EMAIL), sentTo);
+        assertThrows(BusinessRuleException.class, () -> service.verifyCode(EMAIL, NEXT_CODE));
+        service.verifyCode(EMAIL, CODE);
+    }
+
+    @Test
+    void afterTheWaitAnotherCodeCanBeRequested() {
+        PasswordRecoveryService service = service();
+        service.requestCode(EMAIL);
+
+        clock.advanceMinutes(1);
+        service.requestCode(EMAIL);
+
+        assertEquals(List.of(EMAIL, EMAIL), sentTo);
+        service.verifyCode(EMAIL, NEXT_CODE);
+    }
+
+    @Test
+    void atMostFiveCodesPerHourForTheSameEmail() {
+        PasswordRecoveryService service = service();
+        for (int i = 0; i < AuthSettings.RECOVERY_MAX_REQUESTS_PER_HOUR; i++) {
+            service.requestCode(EMAIL);
+            clock.advanceMinutes(1);
+        }
+        assertEquals(AuthSettings.RECOVERY_MAX_REQUESTS_PER_HOUR, sentTo.size());
+
+        service.requestCode(EMAIL);
+        assertEquals(AuthSettings.RECOVERY_MAX_REQUESTS_PER_HOUR, sentTo.size(), "the sixth one was refused");
+
+        clock.advanceMinutes(60);
+        service.requestCode(EMAIL);
+        assertEquals(AuthSettings.RECOVERY_MAX_REQUESTS_PER_HOUR + 1, sentTo.size());
+    }
+
+    @Test
+    void unknownEmailsAreCountedToo() {
+        RecoveryRequestLimiter limiter = new RecoveryRequestLimiter(clock::instant);
+        PasswordRecoveryService service = serviceWith(limiter);
+
+        service.requestCode("nobody@utez.edu.mx");
+
+        assertTrue(sentTo.isEmpty());
+        assertFalse(limiter.tryAcquire("nobody@utez.edu.mx"), "the request was counted, registered or not");
+    }
+
+    @Test
+    void askingForAnotherCodeDoesNotGiveMoreGuesses() {
+        PasswordRecoveryService service = service();
+        service.requestCode(EMAIL);
+        for (int i = 0; i < AuthSettings.RECOVERY_MAX_FAILED_ATTEMPTS - 1; i++) {
+            assertThrows(BusinessRuleException.class, () -> service.verifyCode(EMAIL, "000000"));
+        }
+
+        // Before the limit, this replaced the code and gave five new guesses
+        service.requestCode(EMAIL);
+        assertThrows(BusinessRuleException.class, () -> service.verifyCode(EMAIL, "000000"));
+
+        // The code ran out of guesses and neither it nor a replacement is valid
+        assertThrows(BusinessRuleException.class, () -> service.verifyCode(EMAIL, CODE));
+        assertThrows(BusinessRuleException.class, () -> service.verifyCode(EMAIL, NEXT_CODE));
     }
 
     private static UserAccount account(String email, boolean active) {
