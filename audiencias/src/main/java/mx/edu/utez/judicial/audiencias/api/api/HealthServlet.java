@@ -1,4 +1,4 @@
-package mx.edu.utez.judicial.audiencias.api;
+package mx.edu.utez.judicial.audiencias.api.api;
 
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;

@@ -1,11 +1,11 @@
-package mx.edu.utez.judicial.audiencias.api.DAO;
+package mx.edu.utez.judicial.audiencias.api.DAO.usuario;
 
-import mx.edu.utez.judicial.audiencias.api.model.Usuario;
+import mx.edu.utez.judicial.audiencias.api.model.usuario.Usuario;
 
 import java.util.List;
 import java.util.Optional;
 
-public interface UsuarioDAO {
+public interface UsuarioDao {
 
     Optional<Usuario> findByEmail(String email);
 

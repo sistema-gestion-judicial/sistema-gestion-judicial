@@ -1,7 +1,8 @@
-package mx.edu.utez.judicial.audiencias.api.DAO;
+package mx.edu.utez.judicial.audiencias.api.DAO.usuario;
 
-import mx.edu.utez.judicial.audiencias.api.model.Rol;
-import mx.edu.utez.judicial.audiencias.api.model.Usuario;
+import mx.edu.utez.judicial.audiencias.api.DAO.DataAccessException;
+import mx.edu.utez.judicial.audiencias.api.model.usuario.Rol;
+import mx.edu.utez.judicial.audiencias.api.model.usuario.Usuario;
 import mx.edu.utez.judicial.common.db.Database;
 
 import java.sql.*;
@@ -9,11 +10,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public class JDBCUsuarioDao implements UsuarioDAO {
+public class JdbcUsuarioDao implements UsuarioDao {
 
     private final Database database;
 
-    public JDBCUsuarioDao(Database database) {
+    public JdbcUsuarioDao(Database database) {
         this.database = database;
     }
 
@@ -36,7 +37,7 @@ public class JDBCUsuarioDao implements UsuarioDAO {
             }
             return Optional.empty();
         } catch (SQLException e) {
-            throw new DataAccesException("Consulta no realizada", e);
+            throw new DataAccessException("Consulta no realizada", e);
         }
     }
 
@@ -54,7 +55,7 @@ public class JDBCUsuarioDao implements UsuarioDAO {
             }
             return null;
         } catch (SQLException e) {
-            throw new DataAccesException("Consulta no realizada", e);
+            throw new DataAccessException("Consulta no realizada", e);
         }
     }
 
@@ -72,17 +73,17 @@ public class JDBCUsuarioDao implements UsuarioDAO {
                 ps.setNull(1, Types.CHAR);
             }
             ps.setString(2, u.getRol().name());
-            ps.setBoolean(3, Boolean.TRUE.equals(u.getActivo()));
+            ps.setBoolean(3, Boolean.TRUE.equals(u.getEstado()));
             ps.setString(4, u.getCorreo());
             ps.setString(5, u.getNombreCompleto());
             ps.setInt(6, id);
 
             if (ps.executeUpdate() == 0) {
-                throw new DataAccesException("No existe el usuario con id " + id, null);
+                throw new DataAccessException("No existe el usuario con id " + id, null);
             }
             return u;
         } catch (SQLException e) {
-            throw new DataAccesException("No se pudo actualizar el usuario", e);
+            throw new DataAccessException("No se pudo actualizar el usuario", e);
         }
     }
 
@@ -106,7 +107,7 @@ public class JDBCUsuarioDao implements UsuarioDAO {
                 ));
             }
         } catch (SQLException e) {
-            throw new DataAccesException("Consulta no realizada", e);
+            throw new DataAccessException("Consulta no realizada", e);
         }
         return abogados;
     }
@@ -124,7 +125,7 @@ public class JDBCUsuarioDao implements UsuarioDAO {
                 ps.setNull(1, Types.CHAR);
             }
             ps.setString(2, u.getRol().name());
-            ps.setBoolean(3, Boolean.TRUE.equals(u.getActivo()));
+            ps.setBoolean(3, Boolean.TRUE.equals(u.getEstado()));
             ps.setString(4, u.getCorreo());
             ps.setString(5, passwordHash);
             ps.setString(6, u.getNombreCompleto());
@@ -138,7 +139,7 @@ public class JDBCUsuarioDao implements UsuarioDAO {
             }
             return -1;
         } catch (SQLException e) {
-            throw new DataAccesException("No se pudo insertar el usuario", e);
+            throw new DataAccessException("No se pudo insertar el usuario", e);
         }
     }
 }

@@ -1,29 +1,27 @@
-package mx.edu.utez.judicial.audiencias.api.model;
+package mx.edu.utez.judicial.audiencias.api.model.usuario;
 
 public class Usuario {
 
     private String cedulaProfesional;
     private Rol rol;
-    private Boolean activo;
+    private Boolean estado;
     private String correo;
     private String nombreCompleto;
     private String materia;
 
-    // Constructor vacío
     public Usuario() {
     }
 
-    // Constructor con parámetros
-    public Usuario(String cedulaProfesional, Rol rol, Boolean activo, String correo, String nombreCompleto) {
+    public Usuario(String cedulaProfesional, Rol rol, Boolean estado, String correo, String nombreCompleto) {
         this.cedulaProfesional = cedulaProfesional;
         this.rol = rol;
-        this.activo = activo;
+        this.estado = estado;
         this.correo = correo;
         this.nombreCompleto = nombreCompleto;
     }
-    public Usuario(String correo, String nombreCompleto,Rol rol,Boolean activo) {
+    public Usuario(String correo, String nombreCompleto,Rol rol,Boolean estado) {
         this.rol = rol;
-        this.activo = activo;
+        this.estado = estado;
         this.correo = correo;
         this.nombreCompleto = nombreCompleto;
     }
@@ -31,12 +29,12 @@ public class Usuario {
     public Usuario(String nombreCompleto,String cedulaProfesional,boolean estado,String materia) {
         this.cedulaProfesional = cedulaProfesional;
         this.nombreCompleto = nombreCompleto;
-        this.activo = activo;
+        this.estado = estado;
         this.materia = materia;
 
 
     }
-    // Getters y Setters
+
     public String getCedulaProfesional() {
         return cedulaProfesional;
     }
@@ -53,12 +51,12 @@ public class Usuario {
         this.rol = rol;
     }
 
-    public Boolean getActivo() {
-        return activo;
+    public Boolean getEstado() {
+        return estado;
     }
 
-    public void setActivo(Boolean activo) {
-        this.activo = activo;
+    public void setEstado(Boolean estado) {
+        this.estado = estado;
     }
 
     public String getCorreo() {
