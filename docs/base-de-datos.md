@@ -60,6 +60,19 @@ Van en `<modulo>/src/main/resources/db/migration/` con número y descripción:
 queda registrado en la tabla `schema_history`. **Nunca edites un script que ya se subió**: para
 cambiar una tabla, crea el siguiente (`V003__add_column_x.sql`).
 
+Antes de subir un script, pruébalo sobre una base que ya tenga datos (como producción), no solo sobre
+una vacía: `MigrationUpgradeTest` hace eso para Oficialía. Ojo con las palabras reservadas de MySQL 8
+como nombres de columna (`last_value`, `rank`, `rows`, `groups`...): el script falla y, con el
+despliegue automático, la app no arranca.
+
+### Expedientes y bitácora de Oficialía
+
+- `case_files` guarda un expediente por solicitud procedente. Su número `AAAA/NNNNN/JJ` sale de
+  `case_file_sequences` (un consecutivo por juzgado y año) dentro de la misma transacción que la
+  calificación, así que nunca se repite aunque dos oficiales califiquen al mismo tiempo.
+- `audit_log` es la bitácora legal: cada calificación y cada asignación de mesa quedan con su autor (un
+  usuario o el sistema), fecha y detalle. No se edita ni se borra.
+
 ## En la nube
 
 Cada equipo despliega su módulo donde prefiera, con su propia base en la nube y las mismas variables
