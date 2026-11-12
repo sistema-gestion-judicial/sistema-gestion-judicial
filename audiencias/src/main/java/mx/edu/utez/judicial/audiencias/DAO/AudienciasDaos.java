@@ -1,8 +1,8 @@
-package mx.edu.utez.judicial.audiencias.api.DAO;
+package mx.edu.utez.judicial.audiencias.DAO;
 
 import java.util.Optional;
-import mx.edu.utez.judicial.audiencias.api.DAO.usuario.JdbcUsuarioDao;
-import mx.edu.utez.judicial.audiencias.api.DAO.usuario.UsuarioDao;
+import mx.edu.utez.judicial.audiencias.DAO.usuario.JdbcUsuarioDao;
+import mx.edu.utez.judicial.audiencias.DAO.usuario.UsuarioDao;
 import mx.edu.utez.judicial.common.db.Database;
 import mx.edu.utez.judicial.common.db.DatabaseConfig;
 

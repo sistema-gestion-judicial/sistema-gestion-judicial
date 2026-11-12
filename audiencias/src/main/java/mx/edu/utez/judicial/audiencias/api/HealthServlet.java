@@ -1,4 +1,4 @@
-package mx.edu.utez.judicial.audiencias.api.api;
+package mx.edu.utez.judicial.audiencias.api;
 
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -7,7 +7,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import mx.edu.utez.judicial.audiencias.api.DAO.AudienciasDaos;
+import mx.edu.utez.judicial.audiencias.DAO.AudienciasDaos;
 import mx.edu.utez.judicial.common.api.ApiJson;
 
 /**

@@ -1,4 +1,4 @@
-package mx.edu.utez.judicial.audiencias.api.model.usuario;
+package mx.edu.utez.judicial.audiencias.model.usuario;
 
 public class Usuario {
 

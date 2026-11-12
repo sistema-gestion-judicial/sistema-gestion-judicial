@@ -1,8 +1,8 @@
-package mx.edu.utez.judicial.audiencias.api.DAO.usuario;
+package mx.edu.utez.judicial.audiencias.DAO.usuario;
 
-import mx.edu.utez.judicial.audiencias.api.DAO.DataAccessException;
-import mx.edu.utez.judicial.audiencias.api.model.usuario.Rol;
-import mx.edu.utez.judicial.audiencias.api.model.usuario.Usuario;
+import mx.edu.utez.judicial.audiencias.DAO.DataAccessException;
+import mx.edu.utez.judicial.audiencias.model.usuario.Rol;
+import mx.edu.utez.judicial.audiencias.model.usuario.Usuario;
 import mx.edu.utez.judicial.common.db.Database;
 
 import java.sql.*;

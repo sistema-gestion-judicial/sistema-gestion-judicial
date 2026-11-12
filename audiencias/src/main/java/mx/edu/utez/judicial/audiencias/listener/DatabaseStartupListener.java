@@ -6,7 +6,7 @@ import jakarta.servlet.annotation.WebListener;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import mx.edu.utez.judicial.audiencias.api.DAO.AudienciasDaos;
+import mx.edu.utez.judicial.audiencias.DAO.AudienciasDaos;
 import mx.edu.utez.judicial.common.db.Database;
 import mx.edu.utez.judicial.common.db.SqlMigrator;
 

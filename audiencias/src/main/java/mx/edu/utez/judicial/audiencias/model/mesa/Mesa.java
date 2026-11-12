@@ -1,4 +1,4 @@
-package mx.edu.utez.judicial.audiencias.api.model.mesa;
+package mx.edu.utez.judicial.audiencias.model.mesa;
 
 public class Mesa {
 
