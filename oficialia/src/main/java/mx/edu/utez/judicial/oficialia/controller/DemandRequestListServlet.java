@@ -8,8 +8,10 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.util.List;
+import mx.edu.utez.judicial.oficialia.filter.AuthFilter;
 import mx.edu.utez.judicial.oficialia.model.DemandRequest;
 import mx.edu.utez.judicial.oficialia.model.RequestStatus;
+import mx.edu.utez.judicial.oficialia.model.User;
 import mx.edu.utez.judicial.oficialia.service.DemandRequestService;
 
 /**
@@ -19,6 +21,7 @@ import mx.edu.utez.judicial.oficialia.service.DemandRequestService;
 public class DemandRequestListServlet extends HttpServlet {
 
     public static final String FLASH_MESSAGE = "flashMessage";
+    public static final String FLASH_WARNING = "flashWarning";
 
     private final DemandRequestService demandRequestService = new DemandRequestService();
 
@@ -27,11 +30,12 @@ public class DemandRequestListServlet extends HttpServlet {
             throws ServletException, IOException {
         String query = request.getParameter("q");
         RequestStatus status = parseStatus(request.getParameter("status"));
+        User user = (User) request.getSession().getAttribute(AuthFilter.SESSION_USER);
 
-        List<DemandRequest> demandRequests = demandRequestService.search(query, status);
+        List<DemandRequest> demandRequests = demandRequestService.search(user.getCourtName(), query, status);
 
         request.setAttribute("demandRequests", demandRequests);
-        request.setAttribute("totalCount", demandRequestService.countAll());
+        request.setAttribute("totalCount", demandRequestService.countByCourt(user.getCourtName()));
         request.setAttribute("statuses", RequestStatus.values());
         request.setAttribute("query", query == null ? "" : query);
         request.setAttribute("selectedStatus", status == null ? "" : status.name());
@@ -51,12 +55,17 @@ public class DemandRequestListServlet extends HttpServlet {
         }
     }
 
-    /** A message saved before a redirect is shown once and then removed. */
-    private static void moveFlashMessage(HttpServletRequest request) {
+    /** Messages saved before a redirect are shown once and then removed. */
+    static void moveFlashMessage(HttpServletRequest request) {
         HttpSession session = request.getSession(false);
-        if (session != null && session.getAttribute(FLASH_MESSAGE) != null) {
-            request.setAttribute(FLASH_MESSAGE, session.getAttribute(FLASH_MESSAGE));
-            session.removeAttribute(FLASH_MESSAGE);
+        if (session == null) {
+            return;
+        }
+        for (String key : new String[] {FLASH_MESSAGE, FLASH_WARNING}) {
+            if (session.getAttribute(key) != null) {
+                request.setAttribute(key, session.getAttribute(key));
+                session.removeAttribute(key);
+            }
         }
     }
 }

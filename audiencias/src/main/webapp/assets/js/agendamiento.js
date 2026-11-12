@@ -1,11 +1,13 @@
 document.addEventListener("DOMContentLoaded", () => {
-  const pageSize = 2;
+  const pageSize = 4;
   let currentPage = 1;
-  let activeStatus = "Agendada";
+  let activeStatus = "Agendada"; // Inicia activo en "Agendado"
   let searchQuery = "";
   let activeSubject = "";
 
   const rows = document.getElementById("hearingRows");
+  const thead = document.getElementById("hearingThead");
+  const subtitle = document.getElementById("agendaSubtitle");
   const pagination = document.getElementById("pagination");
   const summary = document.getElementById("paginationSummary");
   const dialog = document.getElementById("hearingDialog");
@@ -13,24 +15,35 @@ document.addEventListener("DOMContentLoaded", () => {
   const saveDialogBtn = document.getElementById("saveDialog");
   let selectedHearing = null;
 
-  const hearings = Array.from({ length: 26 }, (_, index) => {
-    const number = 891 + Math.max(0, index);
-    return {
-      expediente: `PEN-2025-${String(number).padStart(4, "0")}`,
-      mesa: `M-${String(3 + (index % 4)).padStart(2, "0")}`,
-      fecha: "26 oct. 2026",
-      hora: index < 2 ? "13:00" : `${String(9 + Math.floor(index / 4)).padStart(2, "0")}:${index % 2 ? "30" : "00"}`,
-      materia: "Penal",
-      estado: "Agendada"
-    };
-  }).concat(
-    [{ expediente: "PEN-2025-0917", mesa: "M-03", fecha: "27 oct. 2026", hora: "09:00", materia: "Penal", estado: "Por agendar" }],
-    Array.from({ length: 5 }, (_, index) => ({
-      expediente: `PEN-2025-${String(918 + index).padStart(4, "0")}`,
-      mesa: `M-${String(3 + (index % 4)).padStart(2, "0")}`,
+  // Colección de datos para todos los estados
+  const hearings = Array.from({ length: 26 }, (_, index) => ({
+    expediente: `PEN-2025-${String(891 + index).padStart(4, "0")}`,
+    mesa: `M-${String(1 + (index % 4)).padStart(2, "0")}`,
+    materia: index % 2 === 0 ? "Familiar" : "Penal",
+    juzgado: "Juzgado 1°",
+    recepcion: "20-10-2026",
+    fecha: "26 oct. 2026",
+    hora: index < 2 ? "13:00" : `${String(9 + Math.floor(index / 4)).padStart(2, "0")}:${index % 2 ? "30" : "00"}`,
+    estado: "Agendada"
+  })).concat(
+    Array.from({ length: 15 }, (_, index) => ({
+      expediente: `PEN-2025-${String(920 + index).padStart(4, "0")}`,
+      mesa: "M-06",
+      materia: "Familiar",
+      juzgado: "Juzgado 2°",
+      recepcion: "03-11-2025",
+      fecha: "",
+      hora: "",
+      estado: "Por agendar"
+    })),
+    Array.from({ length: 36 }, (_, index) => ({
+      expediente: `PEN-2025-${String(891 + (index % 5)).padStart(4, "0")}`,
+      mesa: "M-06",
+      materia: "Familiar",
+      juzgado: "Juzgado 2°",
+      recepcion: "03-11-2025",
       fecha: "27 oct. 2026",
-      hora: `${String(10 + index).padStart(2, "0")}:00`,
-      materia: "Penal",
+      hora: "11:00",
       estado: "Por reagendar"
     }))
   );
@@ -44,7 +57,39 @@ document.addEventListener("DOMContentLoaded", () => {
     );
   }
 
+  // Renderiza los encabezados de tabla según la pestaña activa
+  function renderHeader() {
+    if (!thead) return;
+    thead.replaceChildren();
+    const tr = document.createElement("tr");
+
+    // Tanto "Por agendar" como "Por reagendar" usan las 6 columnas con ícono de calendario
+    if (activeStatus === "Por agendar" || activeStatus === "Por reagendar") {
+      if (subtitle) {
+        subtitle.textContent = activeStatus === "Por agendar"
+          ? "Consulta las denuncias por agendar"
+          : "Consulta las audiencias por reagendar";
+      }
+      ["Expediente", "Mesa", "Materia", "Juzgado", "Recepción", "Agendar"].forEach((text, i) => {
+        const th = document.createElement("th");
+        th.textContent = text;
+        if (i === 5) th.style.textAlign = "center";
+        tr.append(th);
+      });
+    } else {
+      if (subtitle) subtitle.textContent = "Consulta tus audiencias asignadas";
+      ["Expediente", "Mesa", "Fecha", "Hora", "Acciones"].forEach((text, i) => {
+        const th = document.createElement("th");
+        th.textContent = text;
+        if (i === 4) th.style.textAlign = "right";
+        tr.append(th);
+      });
+    }
+    thead.append(tr);
+  }
+
   function renderRows() {
+    renderHeader();
     if (!rows) return;
     rows.replaceChildren();
 
@@ -57,34 +102,74 @@ document.addEventListener("DOMContentLoaded", () => {
       const hearing = visibleHearings[startIndex + index];
       const row = document.createElement("tr");
 
-      [hearing.expediente, hearing.mesa, hearing.fecha, hearing.hora].forEach((val, i) => {
-        const cell = document.createElement("td");
-        cell.textContent = val;
-        if (i === 0) cell.style.fontWeight = "650";
-        row.append(cell);
-      });
+      if (activeStatus === "Por agendar" || activeStatus === "Por reagendar") {
+        // Estructura de 6 columnas de Figma
+        [hearing.expediente, hearing.mesa, hearing.materia, hearing.juzgado, hearing.recepcion].forEach((val, i) => {
+          const cell = document.createElement("td");
+          cell.textContent = val;
+          if (i === 0) cell.style.fontWeight = "700";
+          row.append(cell);
+        });
 
-      const actionCell = document.createElement("td");
-      actionCell.style.textAlign = "right";
+        // Ícono de calendario en la columna Agendar
+        const actionCell = document.createElement("td");
+        actionCell.style.textAlign = "center";
 
-      const viewButton = document.createElement("button");
-      viewButton.className = "view-button";
-      viewButton.type = "button";
-      viewButton.setAttribute("aria-label", `Ver audiencia ${hearing.expediente}`);
-      viewButton.innerHTML = `<svg viewBox="0 0 20 20" fill="none" aria-hidden="true" width="16" height="16"><path d="M1.5 10s3.1-5.3 8.5-5.3 8.5 5.3 8.5 5.3-3.1 5.3-8.5 5.3S1.5 10 1.5 10z" stroke="currentColor" stroke-width="1.8"/><circle cx="10" cy="10" r="2.5" stroke="currentColor" stroke-width="1.8"/></svg><span> Ver</span>`;
+        const btnCalendar = document.createElement("button");
+        btnCalendar.className = "btn-icon-action";
+        btnCalendar.type = "button";
+        btnCalendar.style.background = "transparent";
+        btnCalendar.style.border = "none";
+        btnCalendar.style.cursor = "pointer";
+        btnCalendar.setAttribute("aria-label", `Agendar/Reagendar audiencia ${hearing.expediente}`);
+        btnCalendar.innerHTML = `
+          <svg viewBox="0 0 24 24" fill="none" width="22" height="22" stroke="#1f2937" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+            <line x1="16" y1="2" x2="16" y2="6"/>
+            <line x1="8" y1="2" x2="8" y2="6"/>
+            <line x1="3" y1="10" x2="21" y2="10"/>
+            <circle cx="16" cy="16" r="3"/>
+            <polyline points="16 15 16 16 17 16.5"/>
+          </svg>
+        `;
 
-      viewButton.addEventListener("click", () => openHearing(hearing));
-      actionCell.append(viewButton);
-      row.append(actionCell);
+        btnCalendar.addEventListener("click", () => openHearing(hearing));
+        actionCell.append(btnCalendar);
+        row.append(actionCell);
+
+      } else {
+        // Estructura de 5 columnas para la pestaña "Agendado"
+        [hearing.expediente, hearing.mesa, hearing.fecha, hearing.hora].forEach((val, i) => {
+          const cell = document.createElement("td");
+          cell.textContent = val;
+          if (i === 0) cell.style.fontWeight = "700";
+          row.append(cell);
+        });
+
+        const actionCell = document.createElement("td");
+        actionCell.style.textAlign = "right";
+
+        const viewButton = document.createElement("button");
+        viewButton.className = "btn-icon-action";
+        viewButton.type = "button";
+        viewButton.setAttribute("aria-label", `Ver audiencia ${hearing.expediente}`);
+        viewButton.innerHTML = `<svg viewBox="0 0 20 20" fill="none" aria-hidden="true" width="16" height="16"><path d="M1.5 10s3.1-5.3 8.5-5.3 8.5 5.3 8.5 5.3-3.1 5.3-8.5 5.3S1.5 10 1.5 10z" stroke="currentColor" stroke-width="1.8"/><circle cx="10" cy="10" r="2.5" stroke="currentColor" stroke-width="1.8"/></svg><span style="margin-left:4px;"> Ver</span>`;
+
+        viewButton.addEventListener("click", () => openHearing(hearing));
+        actionCell.append(viewButton);
+        row.append(actionCell);
+      }
+
       rows.append(row);
     }
 
     if (count === 0) {
       const emptyRow = document.createElement("tr");
       const emptyCell = document.createElement("td");
-      emptyCell.colSpan = 5;
+      emptyCell.colSpan = (activeStatus === "Por agendar" || activeStatus === "Por reagendar") ? 6 : 5;
       emptyCell.textContent = "No se encontraron audiencias";
       emptyCell.style.textAlign = "center";
+      emptyCell.style.padding = "20px";
       emptyRow.append(emptyCell);
       rows.append(emptyRow);
     }
@@ -92,7 +177,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const start = totalHearings ? startIndex + 1 : 0;
     const end = Math.min(startIndex + pageSize, totalHearings);
 
-    if (summary) summary.textContent = `Mostrando ${start}-${end} de ${totalHearings}`;
+    if (summary) summary.textContent = `Mostrando ${start}–${end} de ${totalHearings}`;
     const recEl = document.getElementById("recordCount");
     if (recEl) recEl.textContent = `${totalHearings} ${totalHearings === 1 ? "registro" : "registros"}`;
 
@@ -105,8 +190,6 @@ document.addEventListener("DOMContentLoaded", () => {
     button.className = `page-button${options.className ? " " + options.className : ""}`;
     button.textContent = label;
     button.disabled = Boolean(options.disabled);
-    if (options.current) button.setAttribute("aria-current", "page");
-    button.setAttribute("aria-label", options.ariaLabel || `Página ${page}`);
 
     button.addEventListener("click", () => {
       if (page !== currentPage) {
@@ -125,8 +208,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     pagination.append(pageButton("<", Math.max(1, currentPage - 1), {
       className: "arrow",
-      disabled: currentPage === 1,
-      ariaLabel: "Página anterior"
+      disabled: currentPage === 1
     }));
 
     const visiblePages = new Set([1, currentPage, Math.min(pages, currentPage + 1), pages]);
@@ -136,11 +218,10 @@ document.addEventListener("DOMContentLoaded", () => {
       if (page - previous > 1) {
         const ellipsis = document.createElement("span");
         ellipsis.className = "ellipsis";
-        ellipsis.textContent = "...";
+        ellipsis.textContent = "..";
         pagination.append(ellipsis);
       }
       pagination.append(pageButton(String(page), page, {
-        current: page === currentPage,
         className: page === currentPage ? "current" : ""
       }));
       previous = page;
@@ -148,8 +229,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     pagination.append(pageButton(">", Math.min(pages, currentPage + 1), {
       className: "arrow",
-      disabled: currentPage === pages,
-      ariaLabel: "Página siguiente"
+      disabled: currentPage === pages
     }));
   }
 
@@ -222,23 +302,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  const profileButton = document.getElementById("profileButton");
-  const profileMenu = document.getElementById("profileMenu");
-  if (profileButton && profileMenu) {
-    profileButton.addEventListener("click", () => {
-      const expanded = profileButton.getAttribute("aria-expanded") === "true";
-      profileButton.setAttribute("aria-expanded", String(!expanded));
-      profileMenu.classList.toggle("is-open", !expanded);
-    });
-
-    document.addEventListener("click", event => {
-      if (!profileButton.contains(event.target)) {
-        profileButton.setAttribute("aria-expanded", "false");
-        profileMenu.classList.remove("is-open");
-      }
-    });
-  }
-
   const hearingFilters = document.getElementById("hearingFilters");
   if (hearingFilters) {
     hearingFilters.addEventListener("submit", event => {
@@ -255,7 +318,7 @@ document.addEventListener("DOMContentLoaded", () => {
       activeStatus = tab.dataset.status;
       currentPage = 1;
       document.querySelectorAll(".tab-button").forEach(item => {
-        item.setAttribute("aria-selected", String(item === tab));
+        item.classList.toggle("active", item === tab);
       });
       renderRows();
     });

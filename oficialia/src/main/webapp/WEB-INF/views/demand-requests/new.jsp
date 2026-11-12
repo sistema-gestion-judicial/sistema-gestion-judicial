@@ -50,7 +50,7 @@
       </div>
     </c:if>
 
-    <form id="duplicityForm" class="card-mor p-4" method="post" action="${ctx}/demand-requests/new" novalidate>
+    <form id="duplicityForm" class="card-mor p-4" method="post" action="${ctx}/demand-requests/new" novalidate data-unsaved-guard>
       <fieldset ${verified ? 'disabled' : ''}>
         <h2 class="card-title fs-5 mb-3"><i class="bi bi-search me-2"></i>Datos para verificar duplicidad</h2>
 

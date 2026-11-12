@@ -1,8 +1,20 @@
-<%-- Name and role of the signed-in user, shown at the top right of every page. --%>
-<div class="user-chip">
-  <div class="user-chip-avatar"><i class="bi bi-person"></i></div>
-  <div>
-    <div class="user-chip-name"><c:out value="${sessionScope.currentUser.fullName}" /></div>
-    <div class="user-chip-role"><c:out value="${sessionScope.currentUser.roleLabel}" /></div>
+<%-- Name of the signed-in user, with the court for clerks and the role for administrators.
+     Shown at the top right of every page; it opens the user menu. --%>
+<div class="dropdown">
+  <button type="button" class="user-chip user-chip-button" data-bs-toggle="dropdown" aria-expanded="false">
+    <span class="user-chip-avatar"><i class="bi bi-person"></i></span>
+    <span>
+      <span class="user-chip-name d-block"><c:out value="${sessionScope.currentUser.fullName}" /></span>
+      <span class="user-chip-role d-block">
+        <c:out value="${sessionScope.currentUser.clerk ? sessionScope.currentUser.courtName : sessionScope.currentUser.roleLabel}" />
+      </span>
+    </span>
+  </button>
+  <div class="dropdown-menu dropdown-menu-end">
+    <form method="post" action="${ctx}/logout" data-sign-out>
+      <button type="submit" class="dropdown-item">
+        <i class="bi bi-box-arrow-right me-2"></i> Cerrar sesión
+      </button>
+    </form>
   </div>
 </div>
