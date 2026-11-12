@@ -47,6 +47,12 @@ En local pon las dos cosas en tu `.env` (ya vienen en `.env.example`) o en las v
 IntelliJ. Si tu base ya tenía usuarios, no pasa nada: estas variables solo actúan con la tabla vacía.
 Sin ninguna de ellas, el log avisa que nadie puede iniciar sesión.
 
+Después, el Administrador de Juzgado registra a los oficiales de partes de su juzgado desde **Usuarios**
+(`/users`). El sistema genera una contraseña temporal de 12 caracteres y la muestra una sola vez al guardar;
+en la base solo queda su hash. La primera vez que el usuario entra, el sistema lo manda a cambiarla
+(`must_change_password`) y no le deja abrir otra pantalla hasta que lo haga. Sin base de datos, los usuarios
+registrados viven en memoria y se pierden al reiniciar.
+
 En código se usa lo que está en `common`:
 
     DatabaseConfig.fromEnvironment("OFICIALIA")   // lee las variables
