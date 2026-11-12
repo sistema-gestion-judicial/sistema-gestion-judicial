@@ -61,7 +61,11 @@
               <i class="bi bi-geo-alt"></i> Distritos judiciales
             </a>
           </li>
-          ${navCourts}
+          <li>
+            <a class="app-nav-link ${activeNav == 'courts' ? 'active' : ''}" href="${ctx}/courts">
+              <i class="bi bi-bank"></i> Juzgados
+            </a>
+          </li>
         </c:otherwise>
       </c:choose>
     </ul>
