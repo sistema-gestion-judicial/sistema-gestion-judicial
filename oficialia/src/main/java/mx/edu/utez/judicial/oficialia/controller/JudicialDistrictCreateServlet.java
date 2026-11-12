@@ -44,16 +44,16 @@ public class JudicialDistrictCreateServlet extends HttpServlet {
         form.setSeatMunicipality(request.getParameter("seatMunicipality"));
 
         try {
-            JudicialDistrictService.Registration registration =
+            JudicialDistrictService.Saving saving =
                 districtService.register(currentUser(request), form);
-            if (registration.isSaved()) {
+            if (saving.isSaved()) {
                 request.getSession().setAttribute(DemandRequestListServlet.FLASH_MESSAGE,
-                    "El distrito judicial «" + registration.district().getName() + "» (clave "
-                        + registration.district().getCode() + ") quedó registrado como activo.");
+                    "El distrito judicial «" + saving.district().getName() + "» (clave "
+                        + saving.district().getCode() + ") quedó registrado como activo.");
                 response.sendRedirect(request.getContextPath() + "/judicial-districts");
                 return;
             }
-            request.setAttribute("errors", registration.errors());
+            request.setAttribute("errors", saving.errors());
         } catch (AccessDeniedException e) {
             ErrorView.forbidden(request, response, e.getMessage());
             return;

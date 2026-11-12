@@ -1,8 +1,10 @@
 package mx.edu.utez.judicial.oficialia.model;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 
@@ -55,6 +57,25 @@ class JudicialDistrictFormTest {
     @Test
     void collapsesInnerSpacesOfTheName() {
         assertEquals("Distrito judicial de Cuautla", form("CUA", " Distrito   judicial de  Cuautla ", "Cuautla").getName());
+    }
+
+    @Test
+    void anUpdateDoesNotCheckTheLockedCode() {
+        Map<String, String> errors = form("", "Distrito judicial de Tetecala", "Tetecala").validateWithoutCode();
+
+        assertTrue(errors.isEmpty());
+        assertTrue(form("", "", "").validateWithoutCode().keySet().containsAll(List.of("name", "seatMunicipality")));
+        assertFalse(form("", "", "").validateWithoutCode().containsKey("code"));
+    }
+
+    @Test
+    void startsWithTheCurrentValuesOfADistrict() {
+        JudicialDistrictForm form = JudicialDistrictForm.of(
+            new JudicialDistrict("CUA", "Distrito judicial de Cuautla", "Cuautla", true));
+
+        assertEquals("CUA", form.getCode());
+        assertEquals("Distrito judicial de Cuautla", form.getName());
+        assertEquals("Cuautla", form.getSeatMunicipality());
     }
 
     @Test
