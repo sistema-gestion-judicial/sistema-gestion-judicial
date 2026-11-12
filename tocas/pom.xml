@@ -18,10 +18,47 @@
       <groupId>mx.edu.utez.judicial</groupId>
       <artifactId>common</artifactId>
     </dependency>
+    <!-- Provided by Tomcat 10.1 (jakarta.* namespace) -->
     <dependency>
       <groupId>jakarta.servlet</groupId>
       <artifactId>jakarta.servlet-api</artifactId>
+      <version>6.0.0</version>
+      <scope>provided</scope>
     </dependency>
+    <dependency>
+      <groupId>jakarta.servlet.jsp</groupId>
+      <artifactId>jakarta.servlet.jsp-api</artifactId>
+      <version>3.1.1</version>
+      <scope>provided</scope>
+    </dependency>
+
+    <!-- JSTL (jakarta.tags.core) - Tomcat does NOT include it -->
+    <dependency>
+      <groupId>jakarta.servlet.jsp.jstl</groupId>
+      <artifactId>jakarta.servlet.jsp.jstl-api</artifactId>
+      <version>3.0.0</version>
+    </dependency>
+    <dependency>
+      <groupId>org.glassfish.web</groupId>
+      <artifactId>jakarta.servlet.jsp.jstl</artifactId>
+      <version>3.0.1</version>
+    </dependency>
+
+    <!-- Bootstrap served from /webjars/bootstrap/5.3.3/ -->
+    <dependency>
+      <groupId>org.webjars</groupId>
+      <artifactId>bootstrap</artifactId>
+      <version>5.3.3</version>
+    </dependency>
+
+    <!-- JDBC driver for when the database is ready -->
+    <dependency>
+      <groupId>com.mysql</groupId>
+      <artifactId>mysql-connector-j</artifactId>
+      <version>8.4.0</version>
+      <scope>runtime</scope>
+    </dependency>
+
   </dependencies>
 
   <build>
