@@ -20,7 +20,7 @@
     <nav class="main-nav" aria-label="Navegación principal">
       <a href="inicioabogados.jsp" class="nav-link" style="text-decoration:none;">Inicio</a>
       <button class="nav-link" aria-current="page">Agendamiento</button>
-      <button class="nav-link">Audiencias</button>
+      <a href="inicioAudienciasAbogados.jsp" class="nav-link" style="text-decoration:none;">Audiencias</a>
       <button class="nav-link">Notificaciones</button>
     </nav>
 

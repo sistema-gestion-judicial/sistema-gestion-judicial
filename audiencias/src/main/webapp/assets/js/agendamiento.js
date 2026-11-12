@@ -181,7 +181,6 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("detailCase").textContent = hearing.expediente;
     document.getElementById("detailDesk").textContent = hearing.mesa;
 
-    // Aquí usamos .value y los nuevos IDs de los inputs
     document.getElementById("detailDateInput").value = parseSpanishDateToISO(hearing.fecha);
     document.getElementById("detailTimeInput").value = hearing.hora;
 
