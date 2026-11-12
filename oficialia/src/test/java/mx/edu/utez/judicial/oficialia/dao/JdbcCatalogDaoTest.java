@@ -4,8 +4,14 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.Statement;
 import java.util.List;
+import mx.edu.utez.judicial.common.db.Database;
 import mx.edu.utez.judicial.oficialia.model.Court;
+import mx.edu.utez.judicial.oficialia.model.CourtAddress;
+import mx.edu.utez.judicial.oficialia.model.CourtChanges;
 import mx.edu.utez.judicial.oficialia.model.JudicialDistrict;
 import mx.edu.utez.judicial.oficialia.model.SubjectMatter;
 import org.junit.jupiter.api.BeforeEach;
@@ -16,11 +22,13 @@ import org.junit.jupiter.api.Test;
  */
 class JdbcCatalogDaoTest {
 
+    private Database database;
     private JdbcCatalogDao dao;
 
     @BeforeEach
     void freshSchema() throws Exception {
-        dao = new JdbcCatalogDao(TestDatabase.migrated());
+        database = TestDatabase.migrated();
+        dao = new JdbcCatalogDao(database);
     }
 
     @Test
@@ -95,5 +103,51 @@ class JdbcCatalogDaoTest {
         JudicialDistrict unchanged = dao.findJudicialDistrict("CUA").orElseThrow();
         assertEquals("Distrito judicial de Cuautla", unchanged.getName());
         assertEquals("Cuautla", unchanged.getSeatMunicipality());
+    }
+
+    @Test
+    void updatesTheCourtItsDistrictItsAddressAndItsMatters() {
+        dao.updateCourt("12", new CourtChanges("Juzgado Primero de Cuautla", "CVA",
+            new CourtAddress("Av. Reforma 12", "Centro", "62740", "Cuautla", "7353521234"), List.of("CIV", "PEN")));
+
+        Court updated = dao.findCourt("12").orElseThrow();
+        assertEquals("Juzgado Primero de Cuautla", updated.getName());
+        assertEquals("CVA", updated.getDistrictCode());
+        assertEquals("Distrito judicial de Cuernavaca", updated.getJudicialDistrict());
+        assertEquals("Av. Reforma 12", updated.getAddress().street());
+        assertEquals("62740", updated.getAddress().postalCode());
+        assertEquals("7353521234", updated.getAddress().phone());
+        assertEquals(List.of("CIV", "PEN"), updated.getSubjectMatterCodes());
+        assertEquals(12, updated.getNumber());
+        assertTrue(updated.isActive());
+        assertEquals(List.of("CIV", "FAM", "MER", "PEN"), dao.findCourt("01").orElseThrow().getSubjectMatterCodes());
+    }
+
+    @Test
+    void keepsTheCourtWhenTheNewNameBelongsToAnotherCourt() {
+        assertThrows(DuplicateNameException.class, () -> dao.updateCourt("12",
+            new CourtChanges("juzgado de cuernavaca", "CVA", CourtAddress.EMPTY, List.of("PEN"))));
+
+        Court unchanged = dao.findCourt("12").orElseThrow();
+        assertEquals("Juzgado de Cuautla", unchanged.getName());
+        assertEquals("CUA", unchanged.getDistrictCode());
+        assertEquals(List.of("CIV", "FAM", "MER", "PEN"), unchanged.getSubjectMatterCodes());
+    }
+
+    @Test
+    void demandRequestsKeepTheirMatterWhenTheCourtStopsHandlingIt() throws Exception {
+        try (Connection connection = database.getConnection(); Statement statement = connection.createStatement()) {
+            statement.executeUpdate("INSERT INTO demand_requests (folio, received_date, court_code, matter, "
+                + "captured_by) VALUES ('S-000001/2026', '2026-11-01', '12', 'Civil', 'Laura Méndez')");
+        }
+
+        dao.updateCourt("12", new CourtChanges("Juzgado de Cuautla", "CUA", CourtAddress.EMPTY, List.of("PEN")));
+
+        try (Connection connection = database.getConnection();
+             Statement statement = connection.createStatement();
+             ResultSet rows = statement.executeQuery("SELECT matter FROM demand_requests")) {
+            assertTrue(rows.next());
+            assertEquals("Civil", rows.getString(1));
+        }
     }
 }

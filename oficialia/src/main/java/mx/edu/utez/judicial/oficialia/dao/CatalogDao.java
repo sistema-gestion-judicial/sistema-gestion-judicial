@@ -3,6 +3,7 @@ package mx.edu.utez.judicial.oficialia.dao;
 import java.util.List;
 import java.util.Optional;
 import mx.edu.utez.judicial.oficialia.model.Court;
+import mx.edu.utez.judicial.oficialia.model.CourtChanges;
 import mx.edu.utez.judicial.oficialia.model.JudicialDistrict;
 import mx.edu.utez.judicial.oficialia.model.SubjectMatter;
 
@@ -36,6 +37,15 @@ public interface CatalogDao {
     List<Court> findCourts();
 
     Optional<Court> findCourt(String code);
+
+    /**
+     * Changes the name, district, address and subject matters of a court; its code, number and status stay as
+     * they are. Demand requests already registered keep the subject matter they were registered with. Does
+     * nothing when the code is unknown.
+     *
+     * @throws DuplicateNameException when another court already has the name
+     */
+    void updateCourt(String code, CourtChanges changes);
 
     List<SubjectMatter> findSubjectMatters();
 }
