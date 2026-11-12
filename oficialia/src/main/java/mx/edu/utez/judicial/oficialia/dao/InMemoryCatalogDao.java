@@ -28,7 +28,7 @@ public class InMemoryCatalogDao implements CatalogDao {
         new JudicialDistrict("JOJ", "Distrito judicial de Jojutla", "Jojutla", true),
         new JudicialDistrict("CUA", "Distrito judicial de Cuautla", "Cuautla", true));
 
-    private final List<Court> courts = List.of(
+    private List<Court> courts = List.of(
         court("01", "Juzgado de Cuernavaca", "CVA", "Distrito judicial de Cuernavaca", "Cuernavaca"),
         court("05", "Juzgado de Yautepec", "YAU", "Distrito judicial de Yautepec", "Yautepec"),
         court("07", "Juzgado de Jojutla", "JOJ", "Distrito judicial de Jojutla", "Jojutla"),
@@ -60,18 +60,39 @@ public class InMemoryCatalogDao implements CatalogDao {
     }
 
     @Override
-    public List<Court> findCourts() {
+    public synchronized void updateJudicialDistrict(String code, String name, String seatMunicipality) {
+        if (districts.stream().anyMatch(other -> !other.getCode().equals(code)
+                && CatalogNames.sameName(other.getName(), name))) {
+            throw new DuplicateNameException(name, null);
+        }
+        districts = districts.stream()
+            .map(district -> district.getCode().equals(code)
+                ? new JudicialDistrict(code, name, seatMunicipality, district.isActive()) : district)
+            .toList();
+        // Courts keep the name of their district as a copy, so they are rebuilt with the new one
+        courts = courts.stream()
+            .map(court -> court.getDistrictCode().equals(code) ? withDistrictName(court, name) : court)
+            .toList();
+    }
+
+    @Override
+    public synchronized List<Court> findCourts() {
         return courts;
     }
 
     @Override
-    public Optional<Court> findCourt(String code) {
+    public synchronized Optional<Court> findCourt(String code) {
         return courts.stream().filter(court -> court.getCode().equals(code)).findFirst();
     }
 
     @Override
     public List<SubjectMatter> findSubjectMatters() {
         return SUBJECT_MATTERS;
+    }
+
+    private static Court withDistrictName(Court court, String districtName) {
+        return new Court(court.getCode(), court.getNumber(), court.getName(), court.getDistrictCode(), districtName,
+            court.getAddress(), court.getSubjectMatterCodes(), court.isActive());
     }
 
     private static Court court(String code, String name, String districtCode, String districtName,
