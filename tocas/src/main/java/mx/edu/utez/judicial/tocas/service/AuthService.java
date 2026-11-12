@@ -1,5 +1,7 @@
-package mx.edu.utez.judicial.common.service;
+package mx.edu.utez.judicial.tocas.service;
 
+import mx.edu.utez.judicial.common.service.BusinessException;
+import mx.edu.utez.judicial.common.service.PasswordHasher;
 import mx.edu.utez.judicial.tocas.dao.UserDao;
 import mx.edu.utez.judicial.tocas.model.User;
 

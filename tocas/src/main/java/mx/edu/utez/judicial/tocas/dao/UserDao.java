@@ -1,5 +1,6 @@
-package mx.edu.utez.judicial.common.dao;
+package mx.edu.utez.judicial.tocas.dao;
 
+import mx.edu.utez.judicial.common.dao.MemoryStore;
 import mx.edu.utez.judicial.tocas.model.User;
 
 public class UserDao {

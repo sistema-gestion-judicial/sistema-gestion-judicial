@@ -1,9 +1,10 @@
-package mx.edu.utez.judicial.common.controller;
+package mx.edu.utez.judicial.tocas.controller;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import mx.edu.utez.judicial.common.controller.BaseController;
 import mx.edu.utez.judicial.tocas.model.User;
 import mx.edu.utez.judicial.tocas.service.*;
 

@@ -1,8 +1,14 @@
 package mx.edu.utez.judicial.common.dao;
 
-import mx.edu.utez.judicial.common.model.*;
 import mx.edu.utez.judicial.common.service.PasswordHasher;
 
+import mx.edu.utez.judicial.common.service.PasswordHasher;
+import mx.edu.utez.judicial.tocas.model.Appeal;
+import mx.edu.utez.judicial.tocas.model.AuditEntry;
+import mx.edu.utez.judicial.tocas.model.Hearing;
+import mx.edu.utez.judicial.tocas.model.Notification;
+import mx.edu.utez.judicial.tocas.model.Resolution;
+import mx.edu.utez.judicial.tocas.model.User;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -17,20 +23,20 @@ import java.util.concurrent.atomic.AtomicInteger;
  * When the database exists, rewrite the DAO methods with JDBC (see sql/schema.sql and DbConnection)
  * and delete this class.
  */
-final class MemoryStore {
+public final class MemoryStore {
     private static final MemoryStore INSTANCE = new MemoryStore();
 
-    static MemoryStore get() {
+    public static MemoryStore get() {
         return INSTANCE;
     }
 
     final Map<Integer, User> users = new ConcurrentHashMap<>();
     final Map<Integer, Appeal> appeals = new ConcurrentHashMap<>();
-    final List<Hearing> hearings = new CopyOnWriteArrayList<>();
+    public final List<Hearing> hearings = new CopyOnWriteArrayList<>();
     final List<Notification> notifications = new CopyOnWriteArrayList<>();
     final List<AuditEntry> audit = new CopyOnWriteArrayList<>();
     final Map<Integer, Resolution> resolutions = new ConcurrentHashMap<>();
-    final AtomicInteger hearingSeq = new AtomicInteger(1000);
+    public final AtomicInteger hearingSeq = new AtomicInteger(1000);
     final AtomicInteger notificationSeq = new AtomicInteger(1000);
     final AtomicInteger auditSeq = new AtomicInteger(1000);
 

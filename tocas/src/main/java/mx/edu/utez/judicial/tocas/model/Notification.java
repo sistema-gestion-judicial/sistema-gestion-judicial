@@ -1,4 +1,4 @@
-package mx.edu.utez.judicial.common.model;
+package mx.edu.utez.judicial.tocas.model;
 
 import java.time.LocalDateTime;
 

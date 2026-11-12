@@ -1,8 +1,15 @@
-package mx.edu.utez.judicial.common.service;
+package mx.edu.utez.judicial.tocas.service;
 
+import mx.edu.utez.judicial.common.model.CalendarDay;
+import mx.edu.utez.judicial.common.service.AppClock;
+import mx.edu.utez.judicial.common.service.BusinessException;
+import mx.edu.utez.judicial.common.service.FormatUtils;
 import mx.edu.utez.judicial.tocas.dao.AuditDao;
 import mx.edu.utez.judicial.tocas.dao.HearingDao;
-import mx.edu.utez.judicial.tocas.model.*;
+import mx.edu.utez.judicial.tocas.model.Appeal;
+import mx.edu.utez.judicial.tocas.model.AuditEntry;
+import mx.edu.utez.judicial.tocas.model.Hearing;
+import mx.edu.utez.judicial.tocas.model.User;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
@@ -161,7 +168,7 @@ public class HearingService {
         auditDao.add(entry);
 
         notificationService.add(user.getId(), appealId, "HEARING_SCHEDULED", "Ponencia agendada",
-                "La ponencia de la toca " + appeal.getNumber() + " fue agendada para el " + FormatUtils.dateNum(date) + ".");
+            "La ponencia de la toca " + appeal.getNumber() + " fue agendada para el " + FormatUtils.dateNum(date) + ".");
         return h;
     }
 
@@ -193,6 +200,7 @@ public class HearingService {
         LocalDate start = firstOfMonth.minusDays(firstOfMonth.getDayOfWeek().getValue() - 1L);
         LocalDate last = firstOfMonth.withDayOfMonth(firstOfMonth.lengthOfMonth());
         LocalDate end = last.plusDays(7L - last.getDayOfWeek().getValue());
+
         List<CalendarDay> days = new ArrayList<>();
         for (LocalDate d = start; !d.isAfter(end); d = d.plusDays(1)) {
             CalendarDay cell = new CalendarDay();
@@ -220,7 +228,7 @@ public class HearingService {
         List<Integer> days = new ArrayList<>();
         for (Hearing h : byJudge(user)) {
             if (h.getDate().getYear() == firstOfMonth.getYear() && h.getDate().getMonth() == firstOfMonth.getMonth()
-                    && !days.contains(h.getDate().getDayOfMonth())) {
+                && !days.contains(h.getDate().getDayOfMonth())) {
                 days.add(h.getDate().getDayOfMonth());
             }
         }
