@@ -2,6 +2,8 @@ package mx.edu.utez.judicial.oficialia.filter;
 
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import mx.edu.utez.judicial.oficialia.model.UserRole;
 
 /**
@@ -16,8 +18,11 @@ final class RouteRules {
     // The system API skips the session check because ApiKeyFilter guards /api/v1/* with X-Api-Key
     private static final List<String> PUBLIC_FOLDERS = List.of("/assets/", "/webjars/", "/api/v1/");
     private static final String NEW_REQUEST_PATH = "/demand-requests/new";
+    // The catalogs are managed only by the judicial body administrator (DFR 2.1)
+    private static final Set<String> CATALOG_PATHS = Set.of("/judicial-districts", "/judicial-districts/new");
     // "/" and "/index.jsp" only redirect to the home page
-    private static final Set<String> JUDICIAL_BODY_ADMIN_PATHS = Set.of("/home", "/logout", "/", "/index.jsp");
+    private static final Set<String> JUDICIAL_BODY_ADMIN_PATHS = Stream.concat(
+        Stream.of("/home", "/logout", "/", "/index.jsp"), CATALOG_PATHS.stream()).collect(Collectors.toSet());
 
     private RouteRules() {
     }
@@ -36,6 +41,9 @@ final class RouteRules {
         }
         if (path.equals(NEW_REQUEST_PATH)) {
             return role == UserRole.CLERK;
+        }
+        if (CATALOG_PATHS.contains(path)) {
+            return false;
         }
         return true;
     }
