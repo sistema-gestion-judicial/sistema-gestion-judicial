@@ -27,7 +27,7 @@
       <a href="inicioabogados.jsp" class="nav-link" style="text-decoration:none;">Inicio</a>
       <button class="nav-link" aria-current="page">Agendamiento</button>
       <a href="inicioAudienciasAbogados.jsp" class="nav-link" style="text-decoration:none;">Audiencias</a>
-      <button class="nav-link">Notificaciones</button>
+      <a class="nav-link" href="${pageContext.request.contextPath}/notificacionesAbogados.jsp">Notificaciones</a>
     </nav>
 
     <div class="profile-wrap">

@@ -26,7 +26,7 @@
 
     <nav class="main-nav" aria-label="Navegación principal">
       <button class="nav-link" aria-current="page">Mesas</button>
-      <a href="#" class="nav-link" style="text-decoration:none;">Abogados de audiencia</a>
+      <a href="abogados.jsp" class="nav-link" style="text-decoration:none;">Abogados de audiencia</a>
     </nav>
 
     <div class="profile-wrap">

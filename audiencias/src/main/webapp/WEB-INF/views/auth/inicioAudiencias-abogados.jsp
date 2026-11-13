@@ -20,10 +20,10 @@
       </span>
     </a>
     <nav class="main-nav" aria-label="Navegación principal">
-      <a class="nav-link" href="${pageContext.request.contextPath}/inicio-abogados">Inicio</a>
-      <a class="nav-link" href="${pageContext.request.contextPath}/agendamiento-abogados">Agendamiento</a>
+      <a class="nav-link" href="${pageContext.request.contextPath}/inicioabogados.jsp">Inicio</a>
+      <a class="nav-link" href="${pageContext.request.contextPath}/agendamientoAbogados.jsp">Agendamiento</a>
       <a class="nav-link" href="#" aria-current="page">Audiencias</a>
-      <button class="nav-link" type="button">Notificaciones</button>
+      <a class="nav-link" href="${pageContext.request.contextPath}/notificacionesAbogados.jsp">Notificaciones</a>
     </nav>
     <div class="profile-wrap">
       <button class="profile" id="profileButton" aria-expanded="false" aria-haspopup="true" aria-controls="profileMenu" type="button">

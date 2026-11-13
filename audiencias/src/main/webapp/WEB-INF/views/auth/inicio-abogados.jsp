@@ -20,8 +20,8 @@
     <nav class="main-nav" aria-label="Navegación principal">
       <button class="nav-link" aria-current="page">Inicio</button>
       <a href="agendamientoAbogados.jsp" class="nav-link" style="text-decoration:none;">Agendamiento</a>
-      <button class="nav-link">Audiencias</button>
-      <button class="nav-link">Notificaciones</button>
+      <a href="inicioAudienciasAbogados.jsp" class="nav-link" style="text-decoration:none;">Audiencias</a>
+      <a class="nav-link" href="${pageContext.request.contextPath}/notificacionesAbogados.jsp">Notificaciones</a>
     </nav>
     <div class="profile-wrap">
       <button class="profile" id="profileButton"
