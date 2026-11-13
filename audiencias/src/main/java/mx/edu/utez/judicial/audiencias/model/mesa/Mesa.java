@@ -1,93 +1,54 @@
 package mx.edu.utez.judicial.audiencias.model.mesa;
 
+
 public class Mesa {
 
-    private Integer id;
-    private String nombreMesa;
-    private String materia;
-    private Boolean activo;
-    private Integer idUsuario;
-    private String idJuzgado;
-    private String nombreAbogado;
+    private final Integer id;
+    private final String nombreMesa;
+    private final String materia;
+    private final boolean activo;
+    private final Integer idUsuario;
+    private final String idJuzgado;
 
-    public Mesa() {
+    public Mesa(String nombreMesa, String materia, boolean activo, Integer idUsuario, String idJuzgado) {
+        this(null, nombreMesa, materia, activo, idUsuario, idJuzgado);
     }
 
-    public Mesa(String nombreMesa, String materia, Boolean activo, Integer idUsuario, String idJuzgado) {
-        this.nombreMesa = nombreMesa;
-        this.materia = materia;
-        this.activo = activo;
-        this.idUsuario = idUsuario;
-        this.idJuzgado = idJuzgado;
-    }
-
-    public Mesa(Integer id, String nombreMesa, String materia, Boolean activo, Integer idUsuario, String idJuzgado) {
+    public Mesa(Integer id, String nombreMesa, String materia, boolean activo, Integer idUsuario,
+                String idJuzgado) {
         this.id = id;
         this.nombreMesa = nombreMesa;
         this.materia = materia;
         this.activo = activo;
         this.idUsuario = idUsuario;
         this.idJuzgado = idJuzgado;
-    }
-
-    public Mesa(Integer id, String nombreMesa, String materia, Boolean activo, Integer idUsuario, String idJuzgado, String nombreAbogado) {
-        this(id, nombreMesa, materia, activo, idUsuario, idJuzgado);
-        this.nombreAbogado = nombreAbogado;
     }
 
     public Integer getId() {
         return id;
     }
 
-    public void setId(Integer id) {
-        this.id = id;
-    }
-
     public String getNombreMesa() {
         return nombreMesa;
-    }
-
-    public void setNombreMesa(String nombreMesa) {
-        this.nombreMesa = nombreMesa;
     }
 
     public String getMateria() {
         return materia;
     }
 
-    public void setMateria(String materia) {
-        this.materia = materia;
-    }
-
-    public Boolean getActivo() {
+    public boolean isActivo() {
         return activo;
-    }
-
-    public void setActivo(Boolean activo) {
-        this.activo = activo;
     }
 
     public Integer getIdUsuario() {
         return idUsuario;
     }
 
-    public void setIdUsuario(Integer idUsuario) {
-        this.idUsuario = idUsuario;
-    }
-
     public String getIdJuzgado() {
         return idJuzgado;
     }
 
-    public void setIdJuzgado(String idJuzgado) {
-        this.idJuzgado = idJuzgado;
-    }
-
-    public String getNombreAbogado() {
-        return nombreAbogado;
-    }
-
-    public void setNombreAbogado(String nombreAbogado) {
-        this.nombreAbogado = nombreAbogado;
+    public boolean tieneAbogadoAsignado() {
+        return idUsuario != null;
     }
 }
