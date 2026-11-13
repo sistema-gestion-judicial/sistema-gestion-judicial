@@ -32,15 +32,12 @@ final class RouteRules {
     }
 
     /**
-     * The judicial body administrator only reaches an explicit list of paths. For the other
-     * roles, paths without a rule here are open to every signed-in user.
+     * Paths without a rule here are open to every signed-in user.
      */
     static boolean canAccess(String path, UserRole role) {
-        if (role == UserRole.JUDICIAL_BODY_ADMIN) {
-            return JUDICIAL_BODY_ADMIN_PATHS.contains(path);
-        }
+        // DEMO (temporary): the judicial body administrator reaches every page the Oficial de Partes reaches
         if (path.equals(NEW_REQUEST_PATH)) {
-            return role == UserRole.CLERK;
+            return role == UserRole.CLERK || role == UserRole.JUDICIAL_BODY_ADMIN;
         }
         if (CATALOG_PATHS.contains(path)) {
             return false;

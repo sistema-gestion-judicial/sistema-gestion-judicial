@@ -35,7 +35,8 @@
 
     <ul class="app-nav">
       <c:choose>
-        <c:when test="${navRole == 'CLERK'}">
+        <%-- DEMO (temporary): the judicial body administrator gets the Oficial de Partes menu --%>
+        <c:when test="${navRole == 'CLERK' or navRole == 'JUDICIAL_BODY_ADMIN'}">
           <li>
             <a class="app-nav-link ${activeNav == 'new-request' ? 'active' : ''}" href="${ctx}/demand-requests/new">
               <i class="bi bi-file-earmark-plus"></i> Registrar solicitud
