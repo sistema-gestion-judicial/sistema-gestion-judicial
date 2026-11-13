@@ -123,4 +123,13 @@ class RouteRulesTest {
         assertFalse(RouteRules.isOpenWithTemporaryPassword("/demand-requests"));
         assertFalse(RouteRules.isOpenWithTemporaryPassword("/users/new"));
     }
+
+    @Test
+    void onlyTheJudicialBodyAdministratorManagesJudicialDistricts() {
+        for (String path : new String[] {"/judicial-districts", "/judicial-districts/new"}) {
+            assertTrue(RouteRules.canAccess(path, UserRole.JUDICIAL_BODY_ADMIN), path);
+            assertFalse(RouteRules.canAccess(path, UserRole.COURT_ADMIN), path);
+            assertFalse(RouteRules.canAccess(path, UserRole.CLERK), path);
+        }
+    }
 }
