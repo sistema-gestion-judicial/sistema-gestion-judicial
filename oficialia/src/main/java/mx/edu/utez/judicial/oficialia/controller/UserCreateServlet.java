@@ -19,7 +19,7 @@ import mx.edu.utez.judicial.oficialia.service.UserService;
 @WebServlet("/users/new")
 public class UserCreateServlet extends HttpServlet {
 
-    private static final String VIEW = "/WEB-INF/views/users/new.jsp";
+    private static final String VIEW = "/WEB-INF/views/users/new-user.jsp";
 
     private final UserService userService = new UserService();
 
