@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<taglib xmlns="https://jakarta.ee/xml/ns/jakartaee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="https://jakarta.ee/xml/ns/jakartaee https://jakarta.ee/xml/ns/jakartaee/web-jsptaglibrary_3_0.xsd"
+        version="3.0">
+  <tlib-version>1.0</tlib-version>
+  <short-name>f</short-name>
+  <uri>http://utez.edu.mx/tocas/format</uri>
+  <function>
+    <name>dateNum</name>
+    <function-class>mx.edu.utez.judicial.tocas.service.FormatUtils</function-class>
+    <function-signature>java.lang.String dateNum(java.time.LocalDate)</function-signature>
+  </function>
+  <function>
+    <name>dateShort</name>
+    <function-class>mx.edu.utez.judicial.tocas.service.FormatUtils</function-class>
+    <function-signature>java.lang.String dateShort(java.time.LocalDate)</function-signature>
+  </function>
+  <function>
+    <name>dayNum</name>
+    <function-class>mx.edu.utez.judicial.tocas.service.FormatUtils</function-class>
+    <function-signature>java.lang.String dayNum(java.time.LocalDate)</function-signature>
+  </function>
+  <function>
+    <name>monthAbbr</name>
+    <function-class>mx.edu.utez.judicial.tocas.service.FormatUtils</function-class>
+    <function-signature>java.lang.String monthAbbr(java.time.LocalDate)</function-signature>
+  </function>
+  <function>
+    <name>monthYear</name>
+    <function-class>mx.edu.utez.judicial.tocas.service.FormatUtils</function-class>
+    <function-signature>java.lang.String monthYear(java.time.LocalDate)</function-signature>
+  </function>
+  <function>
+    <name>monthName</name>
+    <function-class>mx.edu.utez.judicial.tocas.service.FormatUtils</function-class>
+    <function-signature>java.lang.String monthName(java.time.LocalDate)</function-signature>
+  </function>
+  <function>
+    <name>longDay</name>
+    <function-class>mx.edu.utez.judicial.tocas.service.FormatUtils</function-class>
+    <function-signature>java.lang.String longDay(java.time.LocalDate)</function-signature>
+  </function>
+  <function>
+    <name>isoMonth</name>
+    <function-class>mx.edu.utez.judicial.tocas.service.FormatUtils</function-class>
+    <function-signature>java.lang.String isoMonth(java.time.LocalDate)</function-signature>
+  </function>
+  <function>
+    <name>time12</name>
+    <function-class>mx.edu.utez.judicial.tocas.service.FormatUtils</function-class>
+    <function-signature>java.lang.String time12(java.time.LocalTime)</function-signature>
+  </function>
+  <function>
+    <name>dateTime24</name>
+    <function-class>mx.edu.utez.judicial.tocas.service.FormatUtils</function-class>
+    <function-signature>java.lang.String dateTime24(java.time.LocalDateTime)</function-signature>
+  </function>
+  <function>
+    <name>dateTime12</name>
+    <function-class>mx.edu.utez.judicial.tocas.service.FormatUtils</function-class>
+    <function-signature>java.lang.String dateTime12(java.time.LocalDateTime)</function-signature>
+  </function>
+  <function>
+    <name>hearingType</name>
+    <function-class>mx.edu.utez.judicial.tocas.service.FormatUtils</function-class>
+    <function-signature>java.lang.String hearingType(java.lang.String)</function-signature>
+  </function>
+  <function>
+    <name>appealStatus</name>
+    <function-class>mx.edu.utez.judicial.tocas.service.FormatUtils</function-class>
+    <function-signature>java.lang.String appealStatus(java.lang.String)</function-signature>
+  </function>
+  <function>
+    <name>hearingStatus</name>
+    <function-class>mx.edu.utez.judicial.tocas.service.FormatUtils</function-class>
+    <function-signature>java.lang.String hearingStatus(java.lang.String)</function-signature>
+  </function>
+  <function>
+    <name>resolutionStatus</name>
+    <function-class>mx.edu.utez.judicial.tocas.service.FormatUtils</function-class>
+    <function-signature>java.lang.String resolutionStatus(java.lang.String)</function-signature>
+  </function>
+  <function>
+    <name>firstName</name>
+    <function-class>mx.edu.utez.judicial.tocas.service.FormatUtils</function-class>
+    <function-signature>java.lang.String firstName(java.lang.String)</function-signature>
+  </function>
+  <function>
+    <name>fileSize</name>
+    <function-class>mx.edu.utez.judicial.tocas.service.FormatUtils</function-class>
+    <function-signature>java.lang.String fileSize(long)</function-signature>
+  </function>
+</taglib>
