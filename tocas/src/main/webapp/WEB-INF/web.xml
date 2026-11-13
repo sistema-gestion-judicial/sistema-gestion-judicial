@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns="https://jakarta.ee/xml/ns/jakartaee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="https://jakarta.ee/xml/ns/jakartaee https://jakarta.ee/xml/ns/jakartaee/web-app_6_0.xsd"
+         version="6.0">
+  <display-name>SSCT - Seguimiento y Control de Tocas</display-name>
+
+  <!-- Filter order matters: encoding first, then session check -->
+  <filter>
+    <filter-name>EncodingFilter</filter-name>
+    <filter-class>mx.edu.utez.judicial.tocas.filter.EncodingFilter</filter-class>
+  </filter>
+  <filter-mapping>
+    <filter-name>EncodingFilter</filter-name>
+    <url-pattern>/*</url-pattern>
+  </filter-mapping>
+  <filter>
+    <filter-name>AuthFilter</filter-name>
+    <filter-class>mx.edu.utez.judicial.tocas.filter.AuthFilter</filter-class>
+  </filter>
+  <filter-mapping>
+    <filter-name>AuthFilter</filter-name>
+    <url-pattern>/*</url-pattern>
+  </filter-mapping>
+
+  <session-config>
+    <session-timeout>30</session-timeout>
+    <cookie-config>
+      <http-only>true</http-only>
+    </cookie-config>
+  </session-config>
+
+  <jsp-config>
+    <jsp-property-group>
+      <url-pattern>*.jsp</url-pattern>
+      <page-encoding>UTF-8</page-encoding>
+      <trim-directive-whitespaces>true</trim-directive-whitespaces>
+    </jsp-property-group>
+  </jsp-config>
+
+  <error-page>
+    <error-code>404</error-code>
+    <location>/WEB-INF/views/error.jsp</location>
+  </error-page>
+  <error-page>
+    <error-code>500</error-code>
+    <location>/WEB-INF/views/error.jsp</location>
+  </error-page>
+</web-app>
