@@ -57,6 +57,11 @@
           ${navCaseFiles}
         </c:when>
         <c:otherwise>
+          <li>
+            <a class="app-nav-link ${activeNav == 'districts' ? 'active' : ''}" href="${ctx}/judicial-districts">
+              <i class="bi bi-geo-alt"></i> Distritos judiciales
+            </a>
+          </li>
           ${navCourts}
         </c:otherwise>
       </c:choose>
