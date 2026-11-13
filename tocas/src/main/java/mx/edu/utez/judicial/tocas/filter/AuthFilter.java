@@ -1,13 +1,16 @@
 package mx.edu.utez.judicial.tocas.filter;
 
-import jakarta.servlet.*;
+import jakarta.servlet.Filter;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
-
 import java.io.IOException;
 
-/** Only logged-in users can reach the application (except login and static files). */
+/** Only logged-in users can reach the application (except login, the health check and static files). */
 public class AuthFilter implements Filter {
     @Override
     public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain) throws IOException, ServletException {
@@ -26,7 +29,9 @@ public class AuthFilter implements Filter {
 
         HttpSession session = request.getSession(false);
         boolean loggedIn = session != null && session.getAttribute("user") != null;
-        if (loggedIn || path.equals("/login")) {
+        // The health check must answer without a session (deploy scripts and other systems call it)
+        boolean isPublic = path.equals("/login") || path.equals("/api/v1/health");
+        if (loggedIn || isPublic) {
             chain.doFilter(req, res);
             return;
         }
