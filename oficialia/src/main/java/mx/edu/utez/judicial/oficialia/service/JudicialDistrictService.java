@@ -8,6 +8,7 @@ import mx.edu.utez.judicial.oficialia.dao.DuplicateCodeException;
 import mx.edu.utez.judicial.oficialia.dao.DuplicateNameException;
 import mx.edu.utez.judicial.oficialia.dao.OficialiaDaos;
 import mx.edu.utez.judicial.oficialia.exception.AccessDeniedException;
+import mx.edu.utez.judicial.oficialia.exception.NotFoundException;
 import mx.edu.utez.judicial.oficialia.model.JudicialDistrict;
 import mx.edu.utez.judicial.oficialia.model.JudicialDistrictForm;
 import mx.edu.utez.judicial.oficialia.model.User;
@@ -64,11 +65,11 @@ public class JudicialDistrictService {
      *
      * @throws AccessDeniedException when the user is not the Administrador del órgano judicial
      */
-    public Registration register(User user, JudicialDistrictForm form) {
+    public Saving register(User user, JudicialDistrictForm form) {
         requireJudicialBodyAdmin(user);
         Map<String, String> errors = validate(form);
         if (!errors.isEmpty()) {
-            return Registration.rejected(errors);
+            return Saving.rejected(errors);
         }
         JudicialDistrict district =
             new JudicialDistrict(form.getCode(), form.getName(), form.getSeatMunicipality(), true);
@@ -76,27 +77,67 @@ public class JudicialDistrictService {
             catalogDao.insertJudicialDistrict(district);
         } catch (DuplicateCodeException e) {
             // Another registration took it between the check and the insert
-            return Registration.rejected(Map.of("code", CODE_TAKEN));
+            return Saving.rejected(Map.of("code", CODE_TAKEN));
         } catch (DuplicateNameException e) {
-            return Registration.rejected(Map.of("name", NAME_TAKEN));
+            return Saving.rejected(Map.of("name", NAME_TAKEN));
         }
-        return Registration.saved(district);
+        return Saving.saved(district);
     }
 
-    /** Outcome of a registration: the saved district, or the field errors that stopped it. */
-    public record Registration(JudicialDistrict district, Map<String, String> errors) {
+    /** Outcome of saving a district: the saved district, or the field errors that stopped it. */
+    public record Saving(JudicialDistrict district, Map<String, String> errors) {
 
-        static Registration saved(JudicialDistrict district) {
-            return new Registration(district, Map.of());
+        static Saving saved(JudicialDistrict district) {
+            return new Saving(district, Map.of());
         }
 
-        static Registration rejected(Map<String, String> errors) {
-            return new Registration(null, errors);
+        static Saving rejected(Map<String, String> errors) {
+            return new Saving(null, errors);
         }
 
         public boolean isSaved() {
             return district != null;
         }
+    }
+
+    /**
+     * The district with that code, to show it in the edit form.
+     *
+     * @throws AccessDeniedException when the user is not the Administrador del órgano judicial
+     * @throws NotFoundException when no district has the code
+     */
+    public JudicialDistrict get(User user, String code) {
+        requireJudicialBodyAdmin(user);
+        return catalogDao.findJudicialDistrict(code)
+            .orElseThrow(() -> new NotFoundException("No existe un distrito judicial con la clave indicada."));
+    }
+
+    /**
+     * Updates the name and the seat of a district. The code is never changed, whatever the form carries.
+     * Nothing is saved when the form has errors or the name already belongs to another district.
+     *
+     * @throws AccessDeniedException when the user is not the Administrador del órgano judicial
+     * @throws NotFoundException when no district has the code
+     */
+    public Saving update(User user, String code, JudicialDistrictForm form) {
+        JudicialDistrict current = get(user, code);
+        Map<String, String> errors = new LinkedHashMap<>(form.validateWithoutCode());
+        if (!errors.containsKey("name") && catalogDao.findJudicialDistricts().stream()
+                .anyMatch(other -> !other.getCode().equals(code)
+                    && CatalogNames.sameName(other.getName(), form.getName()))) {
+            errors.put("name", NAME_TAKEN);
+        }
+        if (!errors.isEmpty()) {
+            return Saving.rejected(errors);
+        }
+        try {
+            catalogDao.updateJudicialDistrict(code, form.getName(), form.getSeatMunicipality());
+        } catch (DuplicateNameException e) {
+            // Another update took the name between the check and the write
+            return Saving.rejected(Map.of("name", NAME_TAKEN));
+        }
+        return Saving.saved(new JudicialDistrict(code, form.getName(), form.getSeatMunicipality(),
+            current.isActive()));
     }
 
     /**

@@ -22,6 +22,15 @@ public class JudicialDistrictForm {
     private String name = "";
     private String seatMunicipality = "";
 
+    /** A form that starts with the current values of the district. */
+    public static JudicialDistrictForm of(JudicialDistrict district) {
+        JudicialDistrictForm form = new JudicialDistrictForm();
+        form.setCode(district.getCode());
+        form.setName(district.getName());
+        form.setSeatMunicipality(district.getSeatMunicipality());
+        return form;
+    }
+
     /** The code is kept in upper case, like the ones already in the catalog (CVA, YAU, JOJ, CUA). */
     public String getCode() {
         return code;
@@ -56,6 +65,13 @@ public class JudicialDistrictForm {
             errors.put("code", "La clave debe tener de " + MIN_CODE_LENGTH + " a " + MAX_CODE_LENGTH
                 + " caracteres, solo letras y números, sin espacios.");
         }
+        errors.putAll(validateWithoutCode());
+        return errors;
+    }
+
+    /** Same as {@link #validate()} for an update, where the code is locked and is not checked (DFR 2.3). */
+    public Map<String, String> validateWithoutCode() {
+        Map<String, String> errors = new LinkedHashMap<>();
         if (name.isEmpty()) {
             errors.put("name", "Escriba el nombre del distrito judicial.");
         } else if (name.length() > MAX_NAME_LENGTH) {
