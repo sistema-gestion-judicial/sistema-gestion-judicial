@@ -87,4 +87,13 @@ class RouteRulesTest {
         assertTrue(RouteRules.canAccess("/any-future-page", UserRole.COURT_ADMIN));
         assertTrue(RouteRules.canAccess("/demand-requests-report", UserRole.CLERK));
     }
+
+    @Test
+    void onlyTheJudicialBodyAdministratorManagesJudicialDistricts() {
+        for (String path : new String[] {"/judicial-districts", "/judicial-districts/new"}) {
+            assertTrue(RouteRules.canAccess(path, UserRole.JUDICIAL_BODY_ADMIN), path);
+            assertFalse(RouteRules.canAccess(path, UserRole.COURT_ADMIN), path);
+            assertFalse(RouteRules.canAccess(path, UserRole.CLERK), path);
+        }
+    }
 }

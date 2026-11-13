@@ -1,10 +1,12 @@
 package mx.edu.utez.judicial.oficialia.dao;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
 import mx.edu.utez.judicial.oficialia.model.Court;
+import mx.edu.utez.judicial.oficialia.model.JudicialDistrict;
 import mx.edu.utez.judicial.oficialia.model.SubjectMatter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -42,5 +44,35 @@ class JdbcCatalogDaoTest {
         assertEquals(List.of("CIV", "FAM", "MER", "PEN"), matters.stream().map(SubjectMatter::getCode).toList());
         assertEquals(List.of("Civil", "Familiar", "Mercantil", "Penal"),
             matters.stream().map(SubjectMatter::getName).toList());
+    }
+
+    @Test
+    void readsTheJudicialDistrictsOrderedByName() {
+        assertEquals(List.of("CUA", "CVA", "JOJ", "YAU"),
+            dao.findJudicialDistricts().stream().map(JudicialDistrict::getCode).toList());
+        JudicialDistrict cuautla = dao.findJudicialDistrict("CUA").orElseThrow();
+        assertEquals("Distrito judicial de Cuautla", cuautla.getName());
+        assertEquals("Cuautla", cuautla.getSeatMunicipality());
+        assertTrue(cuautla.isActive());
+        assertTrue(dao.findJudicialDistrict("ZZZ").isEmpty());
+    }
+
+    @Test
+    void savesANewDistrictAsActive() {
+        dao.insertJudicialDistrict(new JudicialDistrict("TEP", "Distrito judicial de Tetecala", "Tetecala", true));
+
+        JudicialDistrict saved = dao.findJudicialDistrict("TEP").orElseThrow();
+        assertEquals("Tetecala", saved.getSeatMunicipality());
+        assertTrue(saved.isActive());
+        assertEquals(5, dao.findJudicialDistricts().size());
+    }
+
+    @Test
+    void tellsWhetherTheCodeOrTheNameWasRepeated() {
+        assertThrows(DuplicateCodeException.class, () -> dao.insertJudicialDistrict(
+            new JudicialDistrict("CVA", "Un nombre distinto", "Cuernavaca", true)));
+        assertThrows(DuplicateNameException.class, () -> dao.insertJudicialDistrict(
+            new JudicialDistrict("NEW", "distrito judicial de cuáutla", "Cuautla", true)));
+        assertEquals(4, dao.findJudicialDistricts().size());
     }
 }
