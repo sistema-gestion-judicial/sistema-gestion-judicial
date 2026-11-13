@@ -15,7 +15,8 @@ import mx.edu.utez.judicial.oficialia.util.SessionCookie;
 
 /**
  * Reads every request as UTF-8, sends anyone without a session to the login page, ends the
- * session of accounts that are no longer active and stops users whose role cannot open the page.
+ * session of accounts that are no longer active, keeps users who still have a temporary password on the
+ * page that replaces it and stops users whose role cannot open the page.
  */
 @WebFilter("/*")
 public class AuthFilter extends HttpFilter {
@@ -48,6 +49,10 @@ public class AuthFilter extends HttpFilter {
         }
         // Without this, the back button could show a private page from the browser's copy after signing out
         response.setHeader("Cache-Control", "no-store");
+        if (user.isMustChangePassword() && !RouteRules.isOpenWithTemporaryPassword(path)) {
+            response.sendRedirect(request.getContextPath() + "/password/change");
+            return;
+        }
         if (!RouteRules.canAccess(path, user.getRole())) {
             ErrorView.forbidden(request, response, "Su perfil no tiene acceso a esta sección.");
             return;

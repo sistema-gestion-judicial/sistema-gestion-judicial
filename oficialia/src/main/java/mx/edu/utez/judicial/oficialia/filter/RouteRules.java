@@ -18,13 +18,22 @@ final class RouteRules {
     // The system API skips the session check because ApiKeyFilter guards /api/v1/* with X-Api-Key
     private static final List<String> PUBLIC_FOLDERS = List.of("/assets/", "/webjars/", "/api/v1/");
     private static final String NEW_REQUEST_PATH = "/demand-requests/new";
+    private static final String PASSWORD_CHANGE_PATH = "/password/change";
+    // The users of a court are managed only by its administrator (RF 1.4)
+    private static final Set<String> COURT_ADMIN_PATHS = Set.of("/users", "/users/new");
     // The catalogs are managed only by the judicial body administrator (DFR 2.1)
     private static final Set<String> CATALOG_PATHS = Set.of("/judicial-districts", "/judicial-districts/new");
     // "/" and "/index.jsp" only redirect to the home page
     private static final Set<String> JUDICIAL_BODY_ADMIN_PATHS = Stream.concat(
-        Stream.of("/home", "/logout", "/", "/index.jsp"), CATALOG_PATHS.stream()).collect(Collectors.toSet());
+        Stream.of("/home", "/logout", "/", "/index.jsp", PASSWORD_CHANGE_PATH), CATALOG_PATHS.stream())
+        .collect(Collectors.toSet());
 
     private RouteRules() {
+    }
+
+    /** While the password is temporary, the only pages open are the one that replaces it and sign out. */
+    static boolean isOpenWithTemporaryPassword(String path) {
+        return path.equals(PASSWORD_CHANGE_PATH) || path.equals("/logout");
     }
 
     static boolean isPublic(String path) {
@@ -41,6 +50,9 @@ final class RouteRules {
         }
         if (path.equals(NEW_REQUEST_PATH)) {
             return role == UserRole.CLERK;
+        }
+        if (COURT_ADMIN_PATHS.contains(path)) {
+            return role == UserRole.COURT_ADMIN;
         }
         if (CATALOG_PATHS.contains(path)) {
             return false;
