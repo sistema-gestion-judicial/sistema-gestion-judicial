@@ -9,7 +9,7 @@ public class Case {
     private final String matter;
     private final String defendant;
     private final String plaintiff;
-    private final boolean active;
+    private final boolean status;
     private final LocalDateTime createdAt;
     private final LocalDateTime closedAt;
 
@@ -19,14 +19,14 @@ public class Case {
     }
 
     public Case(Integer id, String caseNumber, String courtId, String matter, String defendant,
-                String plaintiff, boolean active, LocalDateTime createdAt, LocalDateTime closedAt) {
+                String plaintiff, boolean status, LocalDateTime createdAt, LocalDateTime closedAt) {
         this.id = id;
         this.caseNumber = caseNumber;
         this.courtId = courtId;
         this.matter = matter;
         this.defendant = defendant;
         this.plaintiff = plaintiff;
-        this.active = active;
+        this.status = status;
         this.createdAt = createdAt;
         this.closedAt = closedAt;
     }
@@ -55,8 +55,8 @@ public class Case {
         return plaintiff;
     }
 
-    public boolean isActive() {
-        return active;
+    public boolean isStatus() {
+        return status;
     }
 
     public LocalDateTime getCreatedAt() {
