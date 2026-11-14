@@ -28,7 +28,7 @@ public final class HearingsDaos {
     }
 
     /**Returns the user DAO connected to MySQL. */
-    public static UserDao usuarioDao() {
+    public static UserDao userDao() {
         if (USER_DAO == null) {
             throw new IllegalStateException("AUDIENCIAS_DB_URL is not configured.");
         }

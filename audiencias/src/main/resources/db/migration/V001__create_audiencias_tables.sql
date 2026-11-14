@@ -37,12 +37,12 @@ CREATE TABLE desks (
                        active    TINYINT(1) NOT NULL DEFAULT 1,
                        user_id   INT NULL,
                        court_id  VARCHAR(2) NULL,
+                       CONSTRAINT uq_desks_user UNIQUE (user_id),
                        CONSTRAINT fk_desk_lawyer
                            FOREIGN KEY (user_id) REFERENCES users (id)
                                ON UPDATE CASCADE ON DELETE SET NULL
 );
 
-CREATE INDEX idx_desks_user ON desks (user_id);
 CREATE INDEX idx_desks_matter ON desks (matter);
 CREATE INDEX idx_desks_court ON desks (court_id);
 
