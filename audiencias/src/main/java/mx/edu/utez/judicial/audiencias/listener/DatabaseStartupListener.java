@@ -6,12 +6,12 @@ import jakarta.servlet.annotation.WebListener;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import mx.edu.utez.judicial.audiencias.DAO.AudienciasDaos;
+import mx.edu.utez.judicial.audiencias.DAO.HearingsDaos;
 import mx.edu.utez.judicial.common.db.Database;
 import mx.edu.utez.judicial.common.db.SqlMigrator;
 
 /**
- * Aplica los scripts de migracion de la base de datos de Audiencias al arrancar la aplicación.
+ * Apply the Audiences database migration scripts when the application starts.
  */
 @WebListener
 public class DatabaseStartupListener implements ServletContextListener {
@@ -24,17 +24,17 @@ public class DatabaseStartupListener implements ServletContextListener {
 
     @Override
     public void contextInitialized(ServletContextEvent event) {
-        AudienciasDaos.database().ifPresentOrElse(this::prepare,
-            () -> LOG.info("AUDIENCIAS_DB_URL no está configurada: migraciones omitidas"));
+        HearingsDaos.database().ifPresentOrElse(this::prepare,
+            () -> LOG.info("AUDIENCIAS_DB_URL is not configured: migrations skipped"));
     }
 
     private void prepare(Database database) {
         try {
             new SqlMigrator(database, getClass().getClassLoader()).migrate("db/migration", MIGRATIONS);
-            LOG.info("Base de datos de Audiencias preparada y migraciones aplicadas correctamente.");
+            LOG.info("Audiences database prepared and migrations applied correctly.");
         } catch (Exception e) {
-            LOG.log(Level.SEVERE, "No se pudo preparar la base de datos de Audiencias: " + rootCause(e).getMessage(), e);
-            throw new IllegalStateException("No se pudo preparar la base de datos de Audiencias", e);
+            LOG.log(Level.SEVERE, "The Audiences database could not be prepared: " + rootCause(e).getMessage(), e);
+            throw new IllegalStateException("The Audiences database could not be prepared.", e);
         }
     }
 

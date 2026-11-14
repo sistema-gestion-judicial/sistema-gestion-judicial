@@ -7,11 +7,11 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import mx.edu.utez.judicial.audiencias.DAO.AudienciasDaos;
+import mx.edu.utez.judicial.audiencias.DAO.HearingsDaos;
 import mx.edu.utez.judicial.common.api.ApiJson;
 
 /**
- * Permite verificar si la aplicación de Audiencias está desplegada y si alcanza su base de datos.
+ * Allows you to verify whether the Audiences application is deployed and whether it can reach its database.
  */
 @WebServlet("/api/v1/health")
 public class HealthServlet extends HttpServlet {
@@ -19,7 +19,7 @@ public class HealthServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
-        String database = AudienciasDaos.database()
+        String database = HearingsDaos.database()
             .map(db -> db.isReachable() ? "UP" : "DOWN")
             .orElse("NOT_CONFIGURED");
 
