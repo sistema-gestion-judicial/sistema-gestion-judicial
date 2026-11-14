@@ -4,7 +4,7 @@ Monorepo de los sistemas del órgano judicial del Proyecto Integrador (UTEZ, 4°
 
 | Módulo | Sistema |
 | --- | --- |
-| `oficialia` | SCD-2026, Oficialía de Partes. **Se mudó a [eizybam/sistema-gestion-judicial-oficialia](https://github.com/eizybam/sistema-gestion-judicial-oficialia)**: esta copia está congelada |
+| `oficialia` | SCD-2026, Oficialía de Partes |
 | `peritos` | Peritos |
 | `audiencias` | Audiencias |
 | `tocas` | Tocas (segunda instancia) |
