@@ -1,10 +1,14 @@
 package mx.edu.utez.judicial.oficialia.service;
 
 import java.time.Duration;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Optional;
 import mx.edu.utez.judicial.oficialia.dao.OficialiaDaos;
 import mx.edu.utez.judicial.oficialia.dao.UserDao;
+import mx.edu.utez.judicial.oficialia.model.PasswordChangeForm;
 import mx.edu.utez.judicial.oficialia.model.SignInResult;
+import mx.edu.utez.judicial.oficialia.model.User;
 import mx.edu.utez.judicial.oficialia.model.UserAccount;
 
 /**
@@ -59,6 +63,27 @@ public class AuthService {
     /** Tells whether the account still exists and can keep using the system. */
     public boolean isActive(String email) {
         return userDao.findByEmail(email).map(UserAccount::active).orElse(false);
+    }
+
+    /**
+     * Replaces the temporary password the user received when they were registered (RF 1.4). Nothing changes
+     * when the form has errors or the new password is the same one.
+     *
+     * @return the field errors, empty when the password was changed
+     */
+    public Map<String, String> changeTemporaryPassword(User user, PasswordChangeForm form) {
+        Map<String, String> errors = new LinkedHashMap<>(form.validate());
+        Optional<UserAccount> account = userDao.findByEmail(user.getEmail());
+        if (account.isEmpty()) {
+            errors.put("newPassword", "No se encontró su cuenta.");
+        } else if (!errors.containsKey("newPassword")
+                && PasswordHasher.matches(form.getNewPassword(), account.get().passwordHash())) {
+            errors.put("newPassword", "La nueva contraseña debe ser distinta de la temporal.");
+        }
+        if (errors.isEmpty()) {
+            userDao.updatePasswordHash(user.getEmail(), PasswordHasher.hash(form.getNewPassword()));
+        }
+        return errors;
     }
 
     private static SignInResult locked(Duration remaining) {

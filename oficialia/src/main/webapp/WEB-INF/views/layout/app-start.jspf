@@ -47,9 +47,9 @@
         </c:when>
         <c:when test="${navRole == 'COURT_ADMIN'}">
           <li>
-            <span class="app-nav-link is-soon" title="Disponible en un siguiente avance">
-              <i class="bi bi-people"></i> Usuarios <span class="soon-tag">Pronto</span>
-            </span>
+            <a class="app-nav-link ${activeNav == 'users' ? 'active' : ''}" href="${ctx}/users">
+              <i class="bi bi-people"></i> Usuarios
+            </a>
           </li>
           ${navCourts}
           ${navRequests}

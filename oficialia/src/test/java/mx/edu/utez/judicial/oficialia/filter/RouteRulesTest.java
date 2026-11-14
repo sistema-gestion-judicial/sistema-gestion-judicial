@@ -100,6 +100,31 @@ class RouteRulesTest {
     }
 
     @Test
+    void onlyTheCourtAdministratorManagesUsers() {
+        for (String path : new String[] {"/users", "/users/new"}) {
+            assertTrue(RouteRules.canAccess(path, UserRole.COURT_ADMIN), path);
+            assertFalse(RouteRules.canAccess(path, UserRole.CLERK), path);
+            assertFalse(RouteRules.canAccess(path, UserRole.JUDICIAL_BODY_ADMIN), path);
+        }
+    }
+
+    @Test
+    void everyRoleReachesThePasswordChangePage() {
+        for (UserRole role : UserRole.values()) {
+            assertTrue(RouteRules.canAccess("/password/change", role), role.name());
+        }
+    }
+
+    @Test
+    void withATemporaryPasswordOnlyThePasswordChangeAndSignOutAreOpen() {
+        assertTrue(RouteRules.isOpenWithTemporaryPassword("/password/change"));
+        assertTrue(RouteRules.isOpenWithTemporaryPassword("/logout"));
+        assertFalse(RouteRules.isOpenWithTemporaryPassword("/home"));
+        assertFalse(RouteRules.isOpenWithTemporaryPassword("/demand-requests"));
+        assertFalse(RouteRules.isOpenWithTemporaryPassword("/users/new"));
+    }
+
+    @Test
     void onlyTheJudicialBodyAdministratorManagesJudicialDistricts() {
         for (String path : new String[] {"/judicial-districts", "/judicial-districts/new"}) {
             assertTrue(RouteRules.canAccess(path, UserRole.JUDICIAL_BODY_ADMIN), path);
