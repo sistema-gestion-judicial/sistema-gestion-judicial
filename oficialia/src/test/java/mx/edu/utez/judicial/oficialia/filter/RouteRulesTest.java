@@ -132,4 +132,11 @@ class RouteRulesTest {
             assertFalse(RouteRules.canAccess(path, UserRole.CLERK), path);
         }
     }
+
+    @Test
+    void everyRoleLooksUpTheCourtsCatalog() {
+        for (UserRole role : UserRole.values()) {
+            assertTrue(RouteRules.canAccess("/courts", role), role.name());
+        }
+    }
 }
