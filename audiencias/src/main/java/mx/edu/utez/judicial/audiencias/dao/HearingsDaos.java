@@ -1,8 +1,8 @@
-package mx.edu.utez.judicial.audiencias.DAO;
+package mx.edu.utez.judicial.audiencias.dao;
 
 import java.util.Optional;
-import mx.edu.utez.judicial.audiencias.DAO.usuario.JdbcUserDao;
-import mx.edu.utez.judicial.audiencias.DAO.usuario.UserDao;
+import mx.edu.utez.judicial.audiencias.dao.user.JdbcUserDao;
+import mx.edu.utez.judicial.audiencias.dao.user.UserDao;
 import mx.edu.utez.judicial.common.db.Database;
 import mx.edu.utez.judicial.common.db.DatabaseConfig;
 
@@ -15,7 +15,7 @@ public final class HearingsDaos {
     private static final Optional<Database> DATABASE =
         DatabaseConfig.fromEnvironment("AUDIENCIAS").map(Database::new);
 
-    private static final UserDao USUARIO_DAO = DATABASE
+    private static final UserDao USER_DAO = DATABASE
         .<UserDao>map(JdbcUserDao::new)
         .orElse(null);
 
@@ -29,9 +29,9 @@ public final class HearingsDaos {
 
     /**Returns the user DAO connected to MySQL. */
     public static UserDao usuarioDao() {
-        if (USUARIO_DAO == null) {
-            throw new IllegalStateException("AUDIENCIAS_DB_URL no está configurada.");
+        if (USER_DAO == null) {
+            throw new IllegalStateException("AUDIENCIAS_DB_URL is not configured.");
         }
-        return USUARIO_DAO;
+        return USER_DAO;
     }
 }

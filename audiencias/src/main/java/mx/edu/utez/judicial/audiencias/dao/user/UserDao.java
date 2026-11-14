@@ -1,6 +1,6 @@
-package mx.edu.utez.judicial.audiencias.DAO.usuario;
+package mx.edu.utez.judicial.audiencias.dao.user;
 
-import mx.edu.utez.judicial.audiencias.model.usuario.User;
+import mx.edu.utez.judicial.audiencias.model.user.User;
 
 import java.util.List;
 import java.util.Optional;

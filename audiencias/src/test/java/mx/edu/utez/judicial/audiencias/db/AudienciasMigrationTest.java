@@ -13,9 +13,9 @@ class AudienciasMigrationTest {
     void migrationScriptExistsOnClasspathAndIsNotEmpty() throws Exception {
         String path = "db/migration/V001__create_audiencias_tables.sql";
         try (InputStream stream = getClass().getClassLoader().getResourceAsStream(path)) {
-            assertNotNull(stream, "El script de migracion no se encontro en el classpath: " + path);
+            assertNotNull(stream, "The migration script was not found on the classpath:" + path);
             String content = new String(stream.readAllBytes(), StandardCharsets.UTF_8);
-            assertFalse(content.isBlank(), "El script de migracion esta vacio");
+            assertFalse(content.isBlank(), "The migration script is empty");
         }
     }
 }

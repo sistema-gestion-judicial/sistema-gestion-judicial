@@ -1,8 +1,8 @@
-package mx.edu.utez.judicial.audiencias.DAO.usuario;
+package mx.edu.utez.judicial.audiencias.dao.user;
 
-import mx.edu.utez.judicial.audiencias.DAO.DataAccessException;
-import mx.edu.utez.judicial.audiencias.model.usuario.Role;
-import mx.edu.utez.judicial.audiencias.model.usuario.User;
+import mx.edu.utez.judicial.audiencias.dao.DataAccessException;
+import mx.edu.utez.judicial.audiencias.model.user.Role;
+import mx.edu.utez.judicial.audiencias.model.user.User;
 
 import mx.edu.utez.judicial.common.db.Database;
 
