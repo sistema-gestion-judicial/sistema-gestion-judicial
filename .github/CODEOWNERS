@@ -1,0 +1,12 @@
+# Default owner for anything not listed below
+*                   @sistema-gestion-judicial/arquitectura
+
+/oficialia/     @sistema-gestion-judicial/oficialia
+/peritos/           @sistema-gestion-judicial/peritos
+/audiencias/        @sistema-gestion-judicial/audiencias
+/tocas/             @sistema-gestion-judicial/tocas
+
+/pom.xml            @sistema-gestion-judicial/arquitectura
+/common/            @sistema-gestion-judicial/arquitectura
+/contracts/         @sistema-gestion-judicial/arquitectura
+/.github/           @sistema-gestion-judicial/arquitectura

@@ -1,0 +1,50 @@
+name: deploy-oficialia
+
+on:
+  push:
+    branches: [main]
+    paths: ['oficialia/**', 'common/**', 'pom.xml', '.github/workflows/deploy-oficialia.yaml']
+  workflow_dispatch:            # "Run workflow" button for a manual redeploy
+
+concurrency:
+  group: deploy-oficialia       # two merges in a row deploy one after the other, never at once
+  cancel-in-progress: false
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: corretto, java-version: '21', cache: maven }
+      - run: ./mvnw -B -pl oficialia -am verify
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://sgj-oficialia-ad65e5f5fb37.herokuapp.com
+    env:
+      APP: sgj-oficialia
+      URL: https://sgj-oficialia-ad65e5f5fb37.herokuapp.com
+      HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Log in to Heroku's registry
+        run: echo "$HEROKU_API_KEY" | docker login registry.heroku.com -u _ --password-stdin
+      - name: Build      # --provenance=false avoids the 405 on push, like BUILDX_NO_DEFAULT_ATTE
+        run: docker build --provenance=false -f oficialia/Dockerfile -t registry.heroku.com/$APP/web .
+      - name: Push
+        run: docker push registry.heroku.com/$APP/web
+      - name: Release
+        run: |
+          command -v heroku || curl -fsSL https://cli-assets.heroku.com/install.sh | sh
+          heroku container:release web --app $APP
+      - name: Check production
+        run: |
+          for i in $(seq 1 30); do
+            [ "$(curl -s -o /dev/null -w '%{http_code}' $URL/api/v1/health)" = 200 ] && break; sleep 5
+          done
+          curl -fsS $URL/api/v1/health
+          test "$(curl -s --path-as-is -o /dev/null -w '%{http_code}' $URL/assets/../demand-requests)" = 302
