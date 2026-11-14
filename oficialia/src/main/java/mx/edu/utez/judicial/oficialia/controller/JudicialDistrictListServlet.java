@@ -12,7 +12,8 @@ import mx.edu.utez.judicial.oficialia.model.User;
 import mx.edu.utez.judicial.oficialia.service.JudicialDistrictService;
 
 /**
- * Catalog of judicial districts (DFR 2.1, 2.3): a registered or updated district shows up here.
+ * Catalog of judicial districts (DFR 2.1 to 2.3), filtered by text and status and split in pages: a
+ * registered or updated district shows up here.
  */
 @WebServlet("/judicial-districts")
 public class JudicialDistrictListServlet extends HttpServlet {
@@ -25,13 +26,28 @@ public class JudicialDistrictListServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         User user = (User) request.getSession().getAttribute(AuthFilter.SESSION_USER);
+        String query = request.getParameter("q") == null ? "" : request.getParameter("q").trim();
+        String status = request.getParameter("status");
+        Boolean active = "active".equals(status) ? Boolean.TRUE : "inactive".equals(status) ? Boolean.FALSE : null;
         try {
-            request.setAttribute("districts", districtService.list(user));
+            request.setAttribute("page", districtService.search(user, query, active, parsePage(request)));
         } catch (AccessDeniedException e) {
             ErrorView.forbidden(request, response, e.getMessage());
             return;
         }
+        request.setAttribute("query", query);
+        request.setAttribute("selectedStatus", active == null ? "" : status);
+        request.setAttribute("filtered", !query.isEmpty() || active != null);
         DemandRequestListServlet.moveFlashMessage(request);
         request.getRequestDispatcher(VIEW).forward(request, response);
+    }
+
+    /** A missing or invalid page number shows the first page. */
+    private static int parsePage(HttpServletRequest request) {
+        try {
+            return Integer.parseInt(request.getParameter("page"));
+        } catch (NumberFormatException e) {
+            return 1;
+        }
     }
 }
