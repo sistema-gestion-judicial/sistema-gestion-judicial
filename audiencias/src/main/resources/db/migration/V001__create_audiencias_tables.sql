@@ -88,23 +88,3 @@ CREATE INDEX idx_hearings_desk ON hearings (desk_id);
 CREATE INDEX idx_hearings_case ON hearings (case_id);
 CREATE INDEX idx_hearings_lawyer ON hearings (lawyer_id);
 
-
-INSERT INTO users (professional_license, role, status, email, password, full_name, phone) VALUES
-                                                                                              (NULL, 'ADMINISTRATOR', 1, 'admin.audiencias@utez.edu.mx', 'admin123', 'Administrador General Audiencias', '7771234567'),
-                                                                                              ('12345678', 'LAWYER', 1, 'abogado.civil@utez.edu.mx', 'abogado123', 'Lic. Carlos Mendoza Ramos', '7772345678'),
-                                                                                              ('23456789', 'LAWYER', 1, 'abogado.familiar@utez.edu.mx', 'abogado123', 'Lic. Ana Gómez Peralta', '7773456789'),
-                                                                                              ('34567890', 'LAWYER', 1, 'abogado.mercantil@utez.edu.mx', 'abogado123', 'Lic. Roberto Silva Fuentes', '7774567890'),
-                                                                                              ('45678901', 'LAWYER', 1, 'abogado.penal@utez.edu.mx', 'abogado123', 'Lic. Diana Morales Vega', '7775678901');
-
-INSERT INTO desks (desk_name, matter, active, user_id, court_id) VALUES
-                                                                     ('Mesa 1', 'Civil', 1, 2, '12'),
-                                                                     ('Mesa 2', 'Familiar', 1, 3, '12'),
-                                                                     ('Mesa 3', 'Mercantil', 1, 4, '12'),
-                                                                     ('Mesa 4', 'Penal', 1, 5, '12');
-
--- Test case synchronized with Oficialía's case number format
-INSERT INTO cases (case_number, court_id, matter, defendant, plaintiff, status) VALUES
-    ('2026/00431/12', '12', 'Penal', 'Demandado Desconocido', 'Juan Ruiz Hernández', 1);
-
-INSERT INTO hearings (hearing_date, status, desk_id, case_id, lawyer_id, courtroom, notes) VALUES
-    ('2026-11-20 10:00:00', 'PENDING', 4, 1, 5, 'Sala 1 - Oralidad Penal', 'Audiencia inicial de formulación de imputación');
