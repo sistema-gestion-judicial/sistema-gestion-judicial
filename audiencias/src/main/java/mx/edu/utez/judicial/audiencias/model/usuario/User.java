@@ -2,6 +2,7 @@ package mx.edu.utez.judicial.audiencias.model.usuario;
 
 public class User {
 
+    private Integer id;
     private String professionalLicense;
     private Role role;
     private Boolean status;
@@ -22,19 +23,23 @@ public class User {
         this.fullName = fullName;
     }
 
-    public User(String email, String fullName, Role role, Boolean status) {
+    public User(Integer id,String email, String fullName, Role role, Boolean status) {
+        this.id=id;
         this.role = role;
         this.status = status;
         this.email = email;
         this.fullName = fullName;
     }
 
-    public User(String fullName, String professionalLicense, boolean status, String matter) {
+    public User(Integer id,String fullName, String professionalLicense, boolean status, String matter) {
+        this.id = id;
         this.professionalLicense = professionalLicense;
         this.fullName = fullName;
         this.status = status;
         this.matter = matter;
     }
+
+
 
     public String getProfessionalLicense() {
         return professionalLicense;
@@ -89,6 +94,14 @@ public class User {
 
     public void setPhone(String phone) {
         this.phone = phone;
+    }
+
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
     }
 
 }

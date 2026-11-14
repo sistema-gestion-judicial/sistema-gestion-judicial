@@ -19,7 +19,7 @@ public class JdbcUserDao implements UserDao {
     }
 
     public Optional<User> findByEmail(String email) {
-        String sql = "SELECT email, full_name, role, status FROM users WHERE email = ?";
+        String sql = "SELECT id,email, full_name, role, status FROM users WHERE email = ?";
         try (Connection con = database.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
 
@@ -27,6 +27,7 @@ public class JdbcUserDao implements UserDao {
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     User user = new User(
+                        rs.getInt("id"),
                         rs.getString("email"),
                         rs.getString("full_name"),
                         Role.valueOf(rs.getString("role")),
@@ -59,7 +60,7 @@ public class JdbcUserDao implements UserDao {
     }
 
     @Override
-    public User update(User user, int id) {
+    public User update(User user) {
         String sql = "UPDATE users SET professional_license = ?, role = ?, status = ?, " +
             "email = ?, full_name = ?, phone = ? WHERE id = ?";
 
@@ -80,10 +81,10 @@ public class JdbcUserDao implements UserDao {
             } else {
                 ps.setNull(6, Types.VARCHAR);
             }
-            ps.setInt(7, id);
+            ps.setInt(7, user.getId());
 
             if (ps.executeUpdate() == 0) {
-                throw new DataAccessException("User not found with id " + id, null);
+                throw new DataAccessException("User not found with id " + user.getId(), null);
             }
             return user;
         } catch (SQLException e) {
@@ -93,7 +94,7 @@ public class JdbcUserDao implements UserDao {
 
     @Override
     public List<User> findLawyers() {
-        String sql = "SELECT u.full_name, u.professional_license, u.status, d.matter " +
+        String sql = "SELECT u.id,u.full_name, u.professional_license, u.status, d.matter " +
             "FROM users u " +
             "LEFT JOIN desks d ON u.id = d.user_id " +
             "WHERE u.role = 'LAWYER'";
@@ -104,6 +105,7 @@ public class JdbcUserDao implements UserDao {
 
             while (rs.next()) {
                 lawyers.add(new User(
+                    rs.getInt("id"),
                     rs.getString("full_name"),
                     rs.getString("professional_license"),
                     rs.getBoolean("status"),

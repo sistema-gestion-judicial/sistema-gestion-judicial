@@ -9,7 +9,7 @@ public interface UserDao {
 
     Optional<User> findByEmail(String email);
 
-    User update(User usuario,int id);
+    User update(User usuario);
 
     List<User> findLawyers();
 
