@@ -41,6 +41,7 @@
               <th>Nombre</th>
               <th>Municipio sede</th>
               <th>Estado</th>
+              <th class="text-end">Acciones</th>
             </tr>
           </thead>
           <tbody>
@@ -53,6 +54,14 @@
                   <span class="badge-mor ${district.active ? 'status-admissible' : 'status-inadmissible'}">
                     <span class="dot"></span> <c:out value="${district.active ? 'Activo' : 'Inactivo'}" />
                   </span>
+                </td>
+                <td class="text-end text-nowrap">
+                  <c:url var="editUrl" value="/judicial-districts/edit">
+                    <c:param name="code" value="${district.code}" />
+                  </c:url>
+                  <a class="fw-bold text-decoration-none" href="${editUrl}">
+                    <i class="bi bi-pencil me-1"></i> Editar
+                  </a>
                 </td>
               </tr>
             </c:forEach>

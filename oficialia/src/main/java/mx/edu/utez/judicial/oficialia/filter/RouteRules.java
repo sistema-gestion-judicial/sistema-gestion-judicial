@@ -22,7 +22,8 @@ final class RouteRules {
     // The users of a court are managed only by its administrator (RF 1.4)
     private static final Set<String> COURT_ADMIN_PATHS = Set.of("/users", "/users/new");
     // The catalogs are managed only by the judicial body administrator (DFR 2.1)
-    private static final Set<String> CATALOG_PATHS = Set.of("/judicial-districts", "/judicial-districts/new");
+    private static final Set<String> CATALOG_PATHS =
+        Set.of("/judicial-districts", "/judicial-districts/new", "/judicial-districts/edit");
     // "/" and "/index.jsp" only redirect to the home page
     private static final Set<String> JUDICIAL_BODY_ADMIN_PATHS = Stream.concat(
         Stream.of("/home", "/logout", "/", "/index.jsp", PASSWORD_CHANGE_PATH), CATALOG_PATHS.stream())

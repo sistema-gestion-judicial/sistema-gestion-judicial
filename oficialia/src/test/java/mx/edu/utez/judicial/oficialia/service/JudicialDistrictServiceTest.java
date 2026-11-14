@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import mx.edu.utez.judicial.oficialia.dao.InMemoryCatalogDao;
 import mx.edu.utez.judicial.oficialia.exception.AccessDeniedException;
+import mx.edu.utez.judicial.oficialia.exception.NotFoundException;
 import mx.edu.utez.judicial.oficialia.model.JudicialDistrict;
 import mx.edu.utez.judicial.oficialia.model.JudicialDistrictForm;
 import mx.edu.utez.judicial.oficialia.model.User;
@@ -92,7 +93,78 @@ class JudicialDistrictServiceTest {
                 () -> service.register(other, form("TEP", "Distrito judicial de Tetecala", "Tetecala")));
             assertThrows(AccessDeniedException.class, () -> service.list(other));
             assertThrows(AccessDeniedException.class, () -> service.requireAccess(other));
+            assertThrows(AccessDeniedException.class, () -> service.get(other, "CUA"));
+            assertThrows(AccessDeniedException.class,
+                () -> service.update(other, "CUA", form("CUA", "Otro nombre", "Cuautla")));
         }
         assertTrue(catalog.findJudicialDistrict("TEP").isEmpty());
+        assertEquals("Distrito judicial de Cuautla", catalog.findJudicialDistrict("CUA").orElseThrow().getName());
+    }
+
+    @Test
+    void updatesTheNameAndTheSeatAndKeepsTheCodeAndTheStatus() {
+        var saving = service.update(admin, "CUA", form("CUA", "Distrito judicial Oriente", "Cuautla de Morelos"));
+
+        assertTrue(saving.isSaved());
+        JudicialDistrict updated = catalog.findJudicialDistrict("CUA").orElseThrow();
+        assertEquals("Distrito judicial Oriente", updated.getName());
+        assertEquals("Cuautla de Morelos", updated.getSeatMunicipality());
+        assertTrue(updated.isActive());
+        assertEquals(4, catalog.findJudicialDistricts().size());
+    }
+
+    @Test
+    void neverChangesTheCodeEvenWhenTheFormCarriesAnotherOne() {
+        service.update(admin, "CUA", form("HACK", "Distrito judicial Oriente", "Cuautla"));
+
+        assertTrue(catalog.findJudicialDistrict("HACK").isEmpty());
+        assertEquals("Distrito judicial Oriente", catalog.findJudicialDistrict("CUA").orElseThrow().getName());
+    }
+
+    @Test
+    void theCourtsOfTheDistrictShowTheNewName() {
+        service.update(admin, "CUA", form("CUA", "Distrito judicial Oriente", "Cuautla"));
+
+        assertEquals("Distrito judicial Oriente", catalog.findCourt("12").orElseThrow().getJudicialDistrict());
+        assertEquals("Distrito judicial de Cuernavaca", catalog.findCourt("01").orElseThrow().getJudicialDistrict());
+    }
+
+    @Test
+    void acceptsKeepingTheSameNameWhileChangingTheSeat() {
+        var saving = service.update(admin, "CUA", form("CUA", "distrito judicial de cuautla", "Cuautla de Morelos"));
+
+        assertTrue(saving.isSaved());
+        assertEquals("Cuautla de Morelos", catalog.findJudicialDistrict("CUA").orElseThrow().getSeatMunicipality());
+    }
+
+    @Test
+    void rejectsANameThatBelongsToAnotherDistrict() {
+        var clash = service.update(admin, "CVA", form("CVA", "distrito judicial de yautepec", "Cuernavaca"));
+
+        assertFalse(clash.isSaved());
+        assertEquals(Map.of("name", "Este nombre ya pertenece a otro distrito judicial."), clash.errors());
+        assertEquals("Distrito judicial de Cuernavaca", catalog.findJudicialDistrict("CVA").orElseThrow().getName());
+    }
+
+    @Test
+    void updatingDoesNotAskForTheCode() {
+        var saving = service.update(admin, "CUA", form("", "Distrito judicial Oriente", "Cuautla"));
+
+        assertTrue(saving.isSaved());
+    }
+
+    @Test
+    void savesNothingWhenARequiredFieldIsMissingOnUpdate() {
+        var saving = service.update(admin, "CUA", form("CUA", "  ", ""));
+
+        assertFalse(saving.isSaved());
+        assertEquals(List.of("name", "seatMunicipality"), List.copyOf(saving.errors().keySet()));
+        assertEquals("Distrito judicial de Cuautla", catalog.findJudicialDistrict("CUA").orElseThrow().getName());
+    }
+
+    @Test
+    void reportsAnUnknownDistrict() {
+        assertThrows(NotFoundException.class, () -> service.get(admin, "ZZZ"));
+        assertThrows(NotFoundException.class, () -> service.update(admin, "ZZZ", form("ZZZ", "Nombre", "Sede")));
     }
 }

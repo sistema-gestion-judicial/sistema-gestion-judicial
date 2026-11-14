@@ -69,6 +69,43 @@ public class JdbcCatalogDao implements CatalogDao {
         }
     }
 
+    /**
+     * Courts keep a text copy of the district name (courts.judicial_district, from V001), so it is renamed in
+     * the same transaction and no court is left with the old name.
+     */
+    @Override
+    public void updateJudicialDistrict(String code, String name, String seatMunicipality) {
+        try (Connection connection = database.getConnection()) {
+            connection.setAutoCommit(false);
+            try {
+                try (PreparedStatement statement = connection.prepareStatement(
+                         "UPDATE judicial_districts SET name = ?, seat_municipality = ? WHERE code = ?")) {
+                    statement.setString(1, name);
+                    statement.setString(2, seatMunicipality);
+                    statement.setString(3, code);
+                    statement.executeUpdate();
+                }
+                try (PreparedStatement statement = connection.prepareStatement(
+                         "UPDATE courts SET judicial_district = ? WHERE district_code = ?")) {
+                    statement.setString(1, name);
+                    statement.setString(2, code);
+                    statement.executeUpdate();
+                }
+                connection.commit();
+            } catch (SQLException e) {
+                connection.rollback();
+                throw e;
+            }
+        } catch (SQLIntegrityConstraintViolationException e) {
+            if (e.getErrorCode() == MYSQL_DUPLICATE_ENTRY) {
+                throw new DuplicateNameException(name, e);
+            }
+            throw new DataAccessException("Could not update the judicial district " + code, e);
+        } catch (SQLException e) {
+            throw new DataAccessException("Could not update the judicial district " + code, e);
+        }
+    }
+
     @Override
     public List<Court> findCourts() {
         return queryCourts(SELECT_COURTS + " ORDER BY c.name", null);

@@ -12,7 +12,7 @@ import mx.edu.utez.judicial.oficialia.model.User;
 import mx.edu.utez.judicial.oficialia.service.JudicialDistrictService;
 
 /**
- * Catalog of judicial districts (DFR 2.1): a registered district shows up here.
+ * Catalog of judicial districts (DFR 2.1, 2.3): a registered or updated district shows up here.
  */
 @WebServlet("/judicial-districts")
 public class JudicialDistrictListServlet extends HttpServlet {

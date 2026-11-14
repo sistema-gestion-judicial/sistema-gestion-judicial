@@ -34,4 +34,33 @@ class InMemoryCatalogDaoTest {
             new JudicialDistrict("NEW", "Distrito judicial de Cuernavaca", "Cuernavaca", true)));
         assertTrue(dao.findJudicialDistrict("NEW").isEmpty());
     }
+
+    @Test
+    void updatesTheNameAndTheSeatOfADistrictAndRenamesItsCourts() {
+        dao.updateJudicialDistrict("CUA", "Distrito judicial Oriente", "Cuautla de Morelos");
+
+        JudicialDistrict updated = dao.findJudicialDistrict("CUA").orElseThrow();
+        assertEquals("Distrito judicial Oriente", updated.getName());
+        assertEquals("Cuautla de Morelos", updated.getSeatMunicipality());
+        assertTrue(updated.isActive());
+        assertEquals("Distrito judicial Oriente", dao.findCourt("12").orElseThrow().getJudicialDistrict());
+        assertEquals("Distrito judicial de Cuernavaca", dao.findCourt("01").orElseThrow().getJudicialDistrict());
+    }
+
+    @Test
+    void refusesToRenameADistrictWithTheNameOfAnotherButAllowsItsOwn() {
+        assertThrows(DuplicateNameException.class,
+            () -> dao.updateJudicialDistrict("CUA", "distrito judicial de cuernavaca", "Cuautla"));
+
+        dao.updateJudicialDistrict("CUA", "DISTRITO JUDICIAL DE CUAUTLA", "Cuautla");
+        assertEquals("DISTRITO JUDICIAL DE CUAUTLA", dao.findJudicialDistrict("CUA").orElseThrow().getName());
+    }
+
+    @Test
+    void updatingAnUnknownDistrictDoesNothing() {
+        dao.updateJudicialDistrict("ZZZ", "Nombre", "Sede");
+
+        assertTrue(dao.findJudicialDistrict("ZZZ").isEmpty());
+        assertEquals(4, dao.findJudicialDistricts().size());
+    }
 }

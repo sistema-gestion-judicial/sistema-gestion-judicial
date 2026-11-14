@@ -25,6 +25,14 @@ public interface CatalogDao {
      */
     void insertJudicialDistrict(JudicialDistrict district);
 
+    /**
+     * Changes the name and the seat of a district; its code and status stay as they are. The courts of the
+     * district show the new name from then on. Does nothing when the code is unknown.
+     *
+     * @throws DuplicateNameException when another district already has the name
+     */
+    void updateJudicialDistrict(String code, String name, String seatMunicipality);
+
     List<Court> findCourts();
 
     Optional<Court> findCourt(String code);

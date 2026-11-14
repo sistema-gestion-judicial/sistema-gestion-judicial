@@ -75,4 +75,25 @@ class JdbcCatalogDaoTest {
             new JudicialDistrict("NEW", "distrito judicial de cuáutla", "Cuautla", true)));
         assertEquals(4, dao.findJudicialDistricts().size());
     }
+
+    @Test
+    void updatesTheDistrictAndTheNameThatItsCourtsShow() {
+        dao.updateJudicialDistrict("CUA", "Distrito judicial Oriente", "Cuautla de Morelos");
+
+        JudicialDistrict updated = dao.findJudicialDistrict("CUA").orElseThrow();
+        assertEquals("Distrito judicial Oriente", updated.getName());
+        assertEquals("Cuautla de Morelos", updated.getSeatMunicipality());
+        assertTrue(updated.isActive());
+        assertEquals("Distrito judicial Oriente", dao.findCourt("12").orElseThrow().getJudicialDistrict());
+    }
+
+    @Test
+    void keepsEverythingWhenTheNewNameBelongsToAnotherDistrict() {
+        assertThrows(DuplicateNameException.class,
+            () -> dao.updateJudicialDistrict("CUA", "distrito judicial de cuernavaca", "Otra sede"));
+
+        JudicialDistrict unchanged = dao.findJudicialDistrict("CUA").orElseThrow();
+        assertEquals("Distrito judicial de Cuautla", unchanged.getName());
+        assertEquals("Cuautla", unchanged.getSeatMunicipality());
+    }
 }
