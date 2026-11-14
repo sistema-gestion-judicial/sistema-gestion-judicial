@@ -42,6 +42,7 @@ public class JdbcUserDao implements UserDao {
         }
     }
 
+    @Override
     public String authenticate(String email) {
         String sql = "SELECT password FROM users WHERE email = ?";
         try (Connection con = database.getConnection();

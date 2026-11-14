@@ -15,4 +15,5 @@ public interface UserDao {
 
     int insert(User user,String pass);
 
+    String authenticate(String email);
 }
