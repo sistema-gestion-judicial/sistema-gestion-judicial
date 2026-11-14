@@ -44,6 +44,13 @@
           </li>
           ${navRequests}
           ${navCaseFiles}
+          <c:if test="${navRole == 'JUDICIAL_BODY_ADMIN'}">
+            <li>
+              <a class="app-nav-link ${activeNav == 'districts' ? 'active' : ''}" href="${ctx}/judicial-districts">
+                <i class="bi bi-geo-alt"></i> Distritos judiciales
+              </a>
+            </li>
+          </c:if>
           ${navCourts}
         </c:when>
         <c:when test="${navRole == 'COURT_ADMIN'}">

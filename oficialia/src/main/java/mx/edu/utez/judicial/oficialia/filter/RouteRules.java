@@ -52,7 +52,7 @@ final class RouteRules {
             return role == UserRole.COURT_ADMIN;
         }
         if (CATALOG_PATHS.contains(path)) {
-            return false;
+            return role == UserRole.JUDICIAL_BODY_ADMIN;
         }
         return true;
     }
