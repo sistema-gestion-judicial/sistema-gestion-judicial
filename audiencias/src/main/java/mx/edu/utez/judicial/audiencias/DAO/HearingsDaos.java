@@ -7,8 +7,8 @@ import mx.edu.utez.judicial.common.db.Database;
 import mx.edu.utez.judicial.common.db.DatabaseConfig;
 
 /**
- * Provee acceso centralizado a la base de datos de Audiencias y a sus Daos.
- * Lee las variables de entorno AUDIENCIAS_DB_URL, AUDIENCIAS_DB_USER, AUDIENCIAS_DB_PASSWORD.
+ * Provides centralized access to the Audiences database and its DAOs.
+ * Reads the environment variables AUDIENCIAS_DB_URL, AUDIENCIAS_DB_USER, and AUDIENCIAS_DB_PASSWORD.
  */
 public final class HearingsDaos {
 
@@ -22,12 +22,12 @@ public final class HearingsDaos {
     private HearingsDaos() {
     }
 
-    /** Retorna la instancia de base de datos cuando AUDIENCIAS_DB_URL está configurada. */
+    /**Returns the database instance when AUDIENCIAS_DB_URL is configured. */
     public static Optional<Database> database() {
         return DATABASE;
     }
 
-    /** Retorna el DAO de usuarios conectado a MySQL. */
+    /**Returns the user DAO connected to MySQL. */
     public static UserDao usuarioDao() {
         if (USUARIO_DAO == null) {
             throw new IllegalStateException("AUDIENCIAS_DB_URL no está configurada.");
