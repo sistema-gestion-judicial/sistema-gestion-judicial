@@ -4,10 +4,14 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
 import mx.edu.utez.judicial.oficialia.config.AuthSettings;
 import mx.edu.utez.judicial.oficialia.dao.InMemoryUserDao;
+import mx.edu.utez.judicial.oficialia.dao.UserDao;
 import mx.edu.utez.judicial.oficialia.model.SignInResult;
 import mx.edu.utez.judicial.oficialia.model.SignInResult.Status;
 import mx.edu.utez.judicial.oficialia.model.User;
@@ -93,6 +97,34 @@ class AuthServiceTest {
         assertTrue(service.isActive(EMAIL));
         assertFalse(service.isActive(INACTIVE_EMAIL));
         assertFalse(service.isActive("nobody@utez.edu.mx"));
+    }
+
+    @Test
+    void doesNotReadTheAccountOnEveryPageAfterSigningIn() {
+        AtomicInteger reads = new AtomicInteger();
+        InMemoryUserDao accounts = new InMemoryUserDao(List.of(account(EMAIL, true)));
+        UserDao countingDao = new UserDao() {
+            @Override
+            public Optional<UserAccount> findByEmail(String email) {
+                reads.incrementAndGet();
+                return accounts.findByEmail(email);
+            }
+
+            @Override
+            public void updatePasswordHash(String email, String passwordHash) {
+                accounts.updatePasswordHash(email, passwordHash);
+            }
+        };
+        AuthService cached = new AuthService(countingDao,
+            new LoginAttemptTracker(() -> Instant.parse("2026-11-09T10:00:00Z")),
+            new ActiveAccountCache(() -> Instant.parse("2026-11-09T10:00:00Z"), Duration.ofSeconds(60)));
+
+        assertEquals(Status.SIGNED_IN, cached.signIn(EMAIL, PASSWORD).status());
+        for (int page = 0; page < 10; page++) {
+            assertTrue(cached.isActive(EMAIL));
+        }
+
+        assertEquals(1, reads.get(), "only the sign in reads the account");
     }
 
     private void failAttempts(String email, int times) {

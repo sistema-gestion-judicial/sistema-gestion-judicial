@@ -18,14 +18,21 @@ public class AuthService {
 
     private final UserDao userDao;
     private final LoginAttemptTracker attemptTracker;
+    private final ActiveAccountCache activeAccounts;
 
     public AuthService() {
-        this(OficialiaDaos.users(), LoginAttemptTracker.getInstance());
+        this(OficialiaDaos.users(), LoginAttemptTracker.getInstance(), ActiveAccountCache.getInstance());
     }
 
+    /** Without the cache: every {@link #isActive(String)} reads the account. */
     public AuthService(UserDao userDao, LoginAttemptTracker attemptTracker) {
+        this(userDao, attemptTracker, ActiveAccountCache.disabled());
+    }
+
+    public AuthService(UserDao userDao, LoginAttemptTracker attemptTracker, ActiveAccountCache activeAccounts) {
         this.userDao = userDao;
         this.attemptTracker = attemptTracker;
+        this.activeAccounts = activeAccounts;
     }
 
     public SignInResult signIn(String email, String password) {
@@ -53,12 +60,18 @@ public class AuthService {
         if (!account.get().active()) {
             return SignInResult.inactiveAccount();
         }
+        // The first page after signing in does not need to read the account again
+        activeAccounts.remember(email);
         return SignInResult.signedIn(account.get().user());
     }
 
-    /** Tells whether the account still exists and can keep using the system. */
+    /**
+     * Tells whether the account still exists and can keep using the system. A recent confirmation is reused
+     * ({@link ActiveAccountCache}), so this runs on every page without a query each time.
+     */
     public boolean isActive(String email) {
-        return userDao.findByEmail(email).map(UserAccount::active).orElse(false);
+        return activeAccounts.isActive(email,
+            normalized -> userDao.findByEmail(normalized).map(UserAccount::active).orElse(false));
     }
 
     private static SignInResult locked(Duration remaining) {
