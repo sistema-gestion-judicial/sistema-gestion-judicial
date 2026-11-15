@@ -56,6 +56,23 @@ public class JdbcUserDao implements UserDao {
         }
     }
 
+    /**
+     * Replaces the password of an account. The user just chose it, so it no longer has to be changed at the next
+     * sign in. Does nothing when the e-mail is unknown.
+     */
+    @Override
+    public void updatePasswordHash(String email, String passwordHash) {
+        String sql = "UPDATE users SET password_hash = ?, must_change_password = FALSE WHERE email = ?";
+        try (Connection connection = database.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, passwordHash);
+            statement.setString(2, EmailValidator.normalize(email));
+            statement.executeUpdate();
+        } catch (SQLException e) {
+            throw new DataAccessException("Could not update the password", e);
+        }
+    }
+
     public int count() {
         try (Connection connection = database.getConnection();
              PreparedStatement statement = connection.prepareStatement("SELECT COUNT(*) FROM users");

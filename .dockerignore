@@ -5,3 +5,5 @@
 .env
 docker/mysql
 docs
+# Local SMTP credentials must never end up inside an image or the WAR
+oficialia/src/main/resources/mail.properties

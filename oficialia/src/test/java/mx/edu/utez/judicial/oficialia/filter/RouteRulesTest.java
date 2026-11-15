@@ -21,6 +21,13 @@ class RouteRulesTest {
     }
 
     @Test
+    void opensThePasswordRecoveryPagesForPeopleWhoCannotSignIn() {
+        assertTrue(RouteRules.isPublic("/password-recovery"));
+        assertTrue(RouteRules.isPublic("/password-recovery/code"));
+        assertTrue(RouteRules.isPublic("/password-recovery/reset"));
+    }
+
+    @Test
     void opensTheSystemApiGuardedByItsKeyFilter() {
         assertTrue(RouteRules.isPublic("/api/v1/courts"));
     }
@@ -36,6 +43,8 @@ class RouteRulesTest {
         assertFalse(RouteRules.isPublic("/login-history"));
         assertFalse(RouteRules.isPublic("/login/anything"));
         assertFalse(RouteRules.isPublic("/assets"));
+        assertFalse(RouteRules.isPublic("/password-recovery/other"));
+        assertFalse(RouteRules.isPublic("/password-recovery-admin"));
     }
 
     @Test

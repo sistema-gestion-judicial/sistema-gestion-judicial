@@ -10,4 +10,7 @@ import mx.edu.utez.judicial.oficialia.model.UserAccount;
 public interface UserDao {
 
     Optional<UserAccount> findByEmail(String email);
+
+    /** Replaces the stored password hash of an account; does nothing when the email is unknown. */
+    void updatePasswordHash(String email, String passwordHash);
 }

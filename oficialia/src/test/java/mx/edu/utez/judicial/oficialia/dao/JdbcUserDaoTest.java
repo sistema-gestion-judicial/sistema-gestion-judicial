@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.Statement;
 import mx.edu.utez.judicial.common.db.Database;
 import mx.edu.utez.judicial.oficialia.model.NewUserAccount;
@@ -63,6 +64,33 @@ class JdbcUserDaoTest {
         }
 
         assertFalse(dao.findByEmail("ana@utez.edu.mx").orElseThrow().active());
+    }
+
+    @Test
+    void replacesThePasswordHashAndNoLongerAsksToChangeIt() throws Exception {
+        String newHash = "600000:bmV3c2FsdA==:bmV3aGFzaA==";
+        dao.insert(new NewUserAccount("Ana", "Ruiz", "ana@utez.edu.mx", UserRole.CLERK, "12", HASH, true, true));
+
+        dao.updatePasswordHash("  ANA@utez.edu.mx ", newHash);
+
+        assertEquals(newHash, dao.findByEmail("ana@utez.edu.mx").orElseThrow().passwordHash());
+        try (Connection connection = database.getConnection();
+             Statement statement = connection.createStatement();
+             ResultSet rows = statement.executeQuery(
+                 "SELECT must_change_password FROM users WHERE email = 'ana@utez.edu.mx'")) {
+            assertTrue(rows.next());
+            assertFalse(rows.getBoolean(1));
+        }
+    }
+
+    @Test
+    void updatingThePasswordOfAnUnknownEmailDoesNothing() {
+        dao.insert(new NewUserAccount("Ana", "Ruiz", "ana@utez.edu.mx", UserRole.CLERK, "12", HASH, true, true));
+
+        dao.updatePasswordHash("nadie@utez.edu.mx", "600000:bmV3c2FsdA==:bmV3aGFzaA==");
+
+        assertEquals(HASH, dao.findByEmail("ana@utez.edu.mx").orElseThrow().passwordHash());
+        assertEquals(1, dao.count());
     }
 
     @Test

@@ -1,0 +1,27 @@
+# SMTP settings of Oficialía. Copy this file as mail.properties (same folder) and fill in your values.
+# The real mail.properties is NOT versioned (.gitignore). Never commit a password.
+#
+# Every value can be overridden with an environment variable, which wins over this file (this is how Docker and
+# Heroku receive them): OFICIALIA_MAIL_HOST, OFICIALIA_MAIL_PORT, OFICIALIA_MAIL_USER, OFICIALIA_MAIL_PASSWORD,
+# OFICIALIA_MAIL_FROM, OFICIALIA_MAIL_FROM_NAME, OFICIALIA_MAIL_AUTH, OFICIALIA_MAIL_STARTTLS.
+#
+# Without a host no e-mail is sent. To read the messages (the recovery code) in the Tomcat log while developing,
+# set mail.log.only=true or OFICIALIA_MAIL_LOG_ONLY=true. Never do it in production: the log would show the codes.
+#
+# For Gmail use a personal account with 2-step verification and an "app password" (16 characters).
+# Institutional accounts usually block SMTP (error 535).
+
+mail.smtp.host=smtp.gmail.com
+mail.smtp.port=587
+mail.smtp.user=your.account@gmail.com
+mail.smtp.password=APP_PASSWORD_16_CHARACTERS
+mail.smtp.auth=true
+mail.smtp.starttls.enable=true
+mail.smtp.connectiontimeout=10000
+mail.smtp.timeout=10000
+mail.smtp.writetimeout=10000
+
+mail.from=your.account@gmail.com
+mail.from.name=SCD-2026 Oficialía de Partes
+
+# mail.log.only=true
