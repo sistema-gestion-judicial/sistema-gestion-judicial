@@ -13,7 +13,6 @@
     </p>
   </div>
   <div class="d-flex flex-column align-items-end gap-3">
-    <%@ include file="/WEB-INF/views/layout/user-chip.jspf" %>
     <a class="btn btn-primary" href="${ctx}/users/new">
       <i class="bi bi-person-plus me-1"></i> Registrar usuario
     </a>
@@ -38,11 +37,19 @@
 </c:if>
 
 <div class="card-mor overflow-hidden">
+  <div class="card-mor-header">
+    <div>
+      <h2 class="card-mor-title">Usuarios del juzgado</h2>
+      <p class="card-mor-subtitle">Cuentas de los oficiales de partes y administradores.</p>
+    </div>
+    <p class="card-mor-count"><c:out value="${users.size()}" /> registros</p>
+  </div>
   <c:choose>
     <c:when test="${empty users}">
-      <div class="p-5 text-center">
-        <i class="bi bi-people fs-1 text-secondary"></i>
-        <p class="mt-2 mb-0">Todavía no hay usuarios registrados en este juzgado.</p>
+      <div class="empty-state">
+        <span class="empty-state-icon" aria-hidden="true"></span>
+        <p class="empty-state-title">Todavía no hay usuarios</p>
+        <p class="empty-state-text">Registre a los oficiales de partes de este juzgado.</p>
       </div>
     </c:when>
     <c:otherwise>
@@ -74,8 +81,8 @@
           </tbody>
         </table>
       </div>
-      <div class="px-3 py-3 border-top text-secondary small">
-        <c:out value="${users.size()}" /> usuarios en el juzgado
+      <div class="card-mor-footer">
+        Mostrando <c:out value="${users.size()}" /> de <c:out value="${users.size()}" />
       </div>
     </c:otherwise>
   </c:choose>

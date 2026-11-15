@@ -15,7 +15,6 @@
       Primero capture los datos mínimos para verificar que la demanda no esté activa en otro juzgado.
     </p>
   </div>
-  <%@ include file="/WEB-INF/views/layout/user-chip.jspf" %>
 </header>
 
 <ol class="stepper">

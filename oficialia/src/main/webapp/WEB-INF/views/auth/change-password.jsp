@@ -20,7 +20,7 @@
   <section class="login-panel">
     <div class="card-mor login-card">
       <h2 class="mb-3">Cambiar contraseña</h2>
-      <p class="text-secondary mb-4">
+      <p class="login-intro">
         Entró con una contraseña temporal. Escriba la nueva contraseña: debe tener al menos 8 caracteres,
         con letras y números.
       </p>

@@ -10,7 +10,6 @@
     <h1 class="page-title">Inicio</h1>
     <p class="page-subtitle">Administración del órgano judicial.</p>
   </div>
-  <%@ include file="/WEB-INF/views/layout/user-chip.jspf" %>
 </header>
 
 <div class="card-mor p-5 text-center">

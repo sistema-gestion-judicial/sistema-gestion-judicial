@@ -13,7 +13,6 @@
       El usuario se registra como Oficial de Partes de <c:out value="${sessionScope.currentUser.courtName}" />.
     </p>
   </div>
-  <%@ include file="/WEB-INF/views/layout/user-chip.jspf" %>
 </header>
 
 <div class="row g-4">

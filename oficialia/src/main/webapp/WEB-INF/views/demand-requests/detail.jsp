@@ -19,7 +19,6 @@
       <c:out value="${demandRequest.courtName}" />.
     </p>
   </div>
-  <%@ include file="/WEB-INF/views/layout/user-chip.jspf" %>
 </header>
 
 <c:if test="${not empty flashWarning}">

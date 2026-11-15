@@ -31,6 +31,21 @@ public class User {
         return fullName;
     }
 
+    /** First letters of the first two words of the name, shown in the avatar ("Laura Méndez" gives "LM"). */
+    public String getInitials() {
+        if (fullName == null || fullName.isBlank()) {
+            return "";
+        }
+        StringBuilder initials = new StringBuilder();
+        for (String word : fullName.trim().split("\\s+")) {
+            initials.appendCodePoint(Character.toUpperCase(word.codePointAt(0)));
+            if (initials.length() >= 2) {
+                break;
+            }
+        }
+        return initials.toString();
+    }
+
     public UserRole getRole() {
         return role;
     }
