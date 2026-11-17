@@ -94,25 +94,30 @@ public class JdbcUserDao implements UserDao {
     }
 
     @Override
-    public List<User> findLawyers() {
+    public List<User> findLawyers(Role role) {
         String sql = "SELECT u.id,u.full_name, u.professional_license, u.status, d.matter " +
             "FROM users u " +
             "LEFT JOIN desks d ON u.id = d.user_id " +
-            "WHERE u.role = 'LAWYER'";
+            "WHERE u.role = ?";
         List<User> lawyers = new ArrayList<>();
         try (Connection con = database.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
+             PreparedStatement ps = con.prepareStatement(sql)){
 
-            while (rs.next()) {
-                lawyers.add(new User(
-                    rs.getInt("id"),
-                    rs.getString("full_name"),
-                    rs.getString("professional_license"),
-                    rs.getBoolean("status"),
-                    rs.getString("matter")
-                ));
+             ps.setString(1,role.name());
+
+            try (ResultSet rs = ps.executeQuery()){
+                while (rs.next()) {
+                    lawyers.add(new User(
+                        rs.getInt("id"),
+                        rs.getString("full_name"),
+                        rs.getString("professional_license"),
+                        rs.getBoolean("status"),
+                        rs.getString("matter")
+                    ));
+                }
             }
+
+
         } catch (SQLException e) {
             throw new DataAccessException("Failed to execute query", e);
         }
