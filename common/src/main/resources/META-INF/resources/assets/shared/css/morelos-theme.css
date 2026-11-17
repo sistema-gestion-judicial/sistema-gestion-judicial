@@ -143,6 +143,27 @@ h5, .h5 { font-size: 18px; line-height: 28px; font-weight: 700; }
   --bs-btn-focus-shadow-rgb: 46, 59, 43;
 }
 
+/* "SecondaryButton": light glass button for Cancelar and other low-emphasis actions */
+.btn-secondary {
+  --bs-btn-color: var(--mor-primary);
+  --bs-btn-bg: rgba(255, 255, 255, 0.5);
+  --bs-btn-border-color: var(--mor-white);
+  --bs-btn-hover-color: var(--mor-primary);
+  --bs-btn-hover-bg: var(--mor-primary-surface);
+  --bs-btn-hover-border-color: var(--mor-white);
+  --bs-btn-active-color: var(--mor-primary-pressed);
+  --bs-btn-active-bg: #d3dbce;
+  --bs-btn-active-border-color: var(--mor-white);
+  --bs-btn-disabled-color: #6b6f72;
+  --bs-btn-disabled-bg: rgba(228, 233, 224, 0.2);
+  --bs-btn-disabled-border-color: #a9aeaa;
+  --bs-btn-disabled-opacity: 1;
+  --bs-btn-focus-shadow-rgb: 46, 59, 43;
+  --bs-btn-border-radius: 14px;
+  min-width: 140px;
+  box-shadow: 0 4px 12px rgba(46, 59, 43, 0.1), inset 0 1px 1px rgba(255, 255, 255, 0.8);
+}
+
 .btn-link {
   --bs-btn-color: var(--mor-primary);
   --bs-btn-hover-color: var(--mor-primary-hover);
@@ -294,7 +315,8 @@ textarea.form-control {
   line-height: 28px;
 }
 
-.card-mor.is-locked {
+.card-mor.is-locked,
+.section-card.is-locked {
   opacity: 0.75;
 }
 
@@ -676,14 +698,28 @@ textarea.form-control {
   margin: 0;
 }
 
+/* "Volver a ...": bold underlined link with the arrow of the design */
 .back-link {
   display: inline-flex;
-  gap: 8px;
+  gap: 6px;
   align-items: center;
-  color: var(--mor-text);
+  color: var(--mor-primary);
   font-weight: 700;
   font-size: 16px;
+  line-height: 24px;
   text-decoration: underline;
+  white-space: nowrap;
+}
+
+.back-link::before {
+  content: "";
+  width: 24px;
+  height: 24px;
+  background: url("../img/icon-back.svg") center / 24px 24px no-repeat;
+}
+
+.back-link .bi {
+  display: none;
 }
 
 /* "Perfil": pill with the initials, the name and the role */
@@ -953,6 +989,337 @@ textarea.form-control {
   width: 56px;
   height: 1.5px;
   background: var(--mor-field-border);
+}
+
+/* ---- Record pages ("Detalle | Nuevo estilo") ------------------------------ */
+
+/* Title of one record: beige rule, title with its status badge and a summary line */
+.page-head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px 24px;
+  margin-bottom: 16px;
+}
+
+.page-head-main {
+  position: relative;
+  padding-top: 23px;
+}
+
+.page-head-main::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 70px;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--mor-secondary);
+}
+
+.page-head-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+}
+
+.page-title.is-record {
+  font-size: 36px;
+  line-height: 46px;
+  margin: 0;
+}
+
+.page-head .page-subtitle {
+  margin-top: 6px;
+}
+
+.page-head-side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 16px;
+}
+
+/* Section card: radius 8 and a 60px green band with the section title */
+.section-card {
+  background: var(--mor-white);
+  border: 1px solid var(--mor-card-border);
+  border-radius: var(--mor-radius-sm);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+}
+
+.section-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 60px;
+  margin: -1px -1px 0;
+  padding: 13px 24px;
+  background: var(--mor-primary-surface);
+  border: 1px solid var(--mor-primary-light);
+  border-radius: var(--mor-radius-sm) var(--mor-radius-sm) 0 0;
+}
+
+.section-card-title {
+  margin: 0;
+  font-family: var(--mor-font-title);
+  font-size: 24px;
+  line-height: 32px;
+  font-weight: 700;
+}
+
+.section-card-body {
+  padding: 24px;
+}
+
+.section-card-footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 24px 24px;
+  border-top: 1px solid var(--mor-line);
+}
+
+.section-subtitle {
+  margin-bottom: 16px;
+  font-size: 18px;
+  line-height: 28px;
+  font-weight: 700;
+}
+
+.section-card-text {
+  margin: 0;
+  color: var(--mor-text-muted);
+}
+
+.section-divider {
+  margin: 16px 0;
+  border: 0;
+  border-top: 1px solid var(--mor-line);
+  opacity: 1;
+}
+
+/* Label over value ("Estado / Finalizada") */
+.field-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px 24px;
+  margin: 0;
+  font-size: 16px;
+  line-height: 24px;
+}
+
+.field-list.is-stacked {
+  grid-template-columns: 1fr;
+}
+
+.field-list dt {
+  font-weight: 400;
+  color: var(--mor-text-muted);
+}
+
+.field-list dd {
+  margin: 0;
+  font-weight: 700;
+  color: var(--mor-text);
+  overflow-wrap: anywhere;
+}
+
+/* Document row: file icon, name and details, and an "Abrir" button */
+.doc-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.doc-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 0;
+  border-top: 1px solid var(--mor-line);
+}
+
+.doc-row:first-child {
+  padding-top: 0;
+  border-top: 0;
+}
+
+.doc-row:last-child {
+  padding-bottom: 0;
+}
+
+.doc-row-icon {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  background: url("../img/icon-file.svg") center / 18.33px 23px no-repeat;
+}
+
+.doc-row-body {
+  flex-grow: 1;
+  min-width: 0;
+}
+
+.doc-row-title {
+  margin: 0;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.doc-row-meta {
+  margin: 0;
+  color: var(--mor-text-muted);
+}
+
+.doc-row .btn {
+  flex-shrink: 0;
+  min-width: 112px;
+}
+
+/* "Seguimiento": steps joined by a line, done in green, pending in grey */
+.steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: 16px;
+  line-height: 24px;
+}
+
+.step {
+  position: relative;
+  padding: 0 0 32px 32px;
+}
+
+.step:last-child {
+  padding-bottom: 0;
+}
+
+.step::before {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 0;
+  width: 18px;
+  height: 18px;
+  background: url("../img/icon-step-pending.svg") center / 18px 18px no-repeat;
+}
+
+.step::after {
+  content: "";
+  position: absolute;
+  top: 24px;
+  bottom: 0;
+  left: 8px;
+  width: 2px;
+  background: var(--mor-line);
+}
+
+.step:last-child::after {
+  display: none;
+}
+
+.step.is-done::before {
+  background:
+    url("../img/icon-step-check.svg") center / 7.6px 6.2px no-repeat,
+    url("../img/icon-step-done.svg") center / 18px 18px no-repeat;
+}
+
+.step.is-done::after {
+  background: var(--mor-primary);
+}
+
+.step.is-current::before {
+  background:
+    url("../img/icon-step-dot.svg") center / 6px 6px no-repeat,
+    url("../img/icon-step-current.svg") center / 18px 18px no-repeat;
+}
+
+.step-title,
+.step-text {
+  margin: 0;
+  color: var(--mor-text-muted);
+}
+
+.step.is-done .step-title {
+  font-weight: 700;
+  color: var(--mor-text);
+}
+
+/* Dialog ("Diálogo | Concluir toca"): green title band, close icon and a divided footer */
+.modal-mor .modal-dialog {
+  max-width: 600px;
+}
+
+.modal-mor .modal-content {
+  background: var(--mor-white);
+  border: 0;
+  border-radius: var(--mor-radius-sm);
+  box-shadow: 0 8px 12px rgba(31, 36, 38, 0.3);
+  overflow: hidden;
+}
+
+.modal-mor .modal-header {
+  min-height: 64px;
+  padding: 0 12px 0 24px;
+  background: var(--mor-primary-surface);
+  border: 0;
+}
+
+.modal-mor .modal-title {
+  font-family: var(--mor-font-title);
+  font-size: 24px;
+  line-height: 32px;
+  font-weight: 700;
+}
+
+.modal-mor .btn-close {
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  margin: 0 0 0 auto;
+  opacity: 1;
+  background: url("../img/icon-close.svg") center / 24px 24px no-repeat;
+}
+
+.modal-mor .modal-body {
+  padding: 24px;
+  font-size: 16px;
+}
+
+.modal-mor .modal-footer {
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 24px 24px;
+  border-top: 1px solid var(--mor-line);
+}
+
+.modal-mor .modal-footer > * {
+  margin: 0;
+}
+
+.modal-lead {
+  margin: 0;
+  font-weight: 700;
+}
+
+.modal-lead-sub {
+  margin: 2px 0 0;
+  color: var(--mor-text-muted);
+}
+
+.alert-mor-note {
+  margin: 0;
+  padding: 13px 15px;
+  border: 1px solid var(--mor-secondary-border);
+  border-radius: var(--mor-radius-sm);
+  background: var(--mor-secondary-surface);
+  color: var(--mor-text);
 }
 
 /* ---- Login (split screen) ------------------------------------------------- */
