@@ -58,8 +58,16 @@ public class InMemoryUserDao implements UserDao {
 
     @Override
     public void insert(NewUserAccount account) {
+        insert(account, account.courtCode() == null ? null : courtNameByCode.apply(account.courtCode()));
+    }
+
+    /**
+     * Creates the account with the court name given, for a court that is not in the sample catalog: the
+     * name lookup of this DAO only knows the sample courts, and a court registered while the server runs
+     * must show its own name to its administrator.
+     */
+    public void insert(NewUserAccount account, String courtName) {
         String email = EmailValidator.normalize(account.email());
-        String courtName = account.courtCode() == null ? null : courtNameByCode.apply(account.courtCode());
         User user = new User(email, account.firstName() + " " + account.lastName(), account.role(), courtName,
             account.mustChangePassword());
         if (accountsByEmail.putIfAbsent(email, new UserAccount(user, account.passwordHash(), account.active())) != null) {

@@ -5,12 +5,27 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
+import mx.edu.utez.judicial.oficialia.model.Court;
+import mx.edu.utez.judicial.oficialia.model.CourtAddress;
 import mx.edu.utez.judicial.oficialia.model.JudicialDistrict;
+import mx.edu.utez.judicial.oficialia.model.NewUserAccount;
+import mx.edu.utez.judicial.oficialia.model.UserAccount;
+import mx.edu.utez.judicial.oficialia.model.UserRole;
 import org.junit.jupiter.api.Test;
 
 class InMemoryCatalogDaoTest {
 
-    private final InMemoryCatalogDao dao = new InMemoryCatalogDao();
+    private final InMemoryUserDao users = new InMemoryUserDao(List.<UserAccount>of(), code -> code);
+    private final InMemoryCatalogDao dao = new InMemoryCatalogDao(() -> users);
+
+    private static Court newCourt(String code, int number, String name) {
+        return new Court(code, number, name, "CVA", "Distrito judicial de Cuernavaca",
+            new CourtAddress("Calle Hidalgo 12", "Centro", "62000", "Tetecala", null), List.of("CIV"), true);
+    }
+
+    private static NewUserAccount administrator(String email, String courtCode) {
+        return new NewUserAccount("Laura", "Méndez", email, UserRole.COURT_ADMIN, courtCode, "hash", true, true);
+    }
 
     @Test
     void startsWithTheFourDistrictsOfTheSampleCatalog() {
@@ -62,5 +77,42 @@ class InMemoryCatalogDaoTest {
 
         assertTrue(dao.findJudicialDistrict("ZZZ").isEmpty());
         assertEquals(4, dao.findJudicialDistricts().size());
+    }
+
+    @Test
+    void insertsACourtAndItsAdministratorTogether() {
+        dao.insertCourt(newCourt("20", 20, "Juzgado de Tetecala"), administrator("laura@utez.edu.mx", "20"));
+
+        assertEquals(20, dao.findCourt("20").orElseThrow().getNumber());
+        assertEquals(5, dao.findCourts().size());
+        UserAccount account = users.findByEmail("laura@utez.edu.mx").orElseThrow();
+        assertEquals("Juzgado de Tetecala", account.user().getCourtName());
+        assertEquals(UserRole.COURT_ADMIN, account.user().getRole());
+    }
+
+    @Test
+    void refusesARepeatedCodeNumberOrNameAndKeepsTheCatalogAsItWas() {
+        assertThrows(DuplicateCodeException.class,
+            () -> dao.insertCourt(newCourt("01", 40, "Otro"), administrator("a@utez.edu.mx", "01")));
+        assertThrows(DuplicateNumberException.class,
+            () -> dao.insertCourt(newCourt("40", 12, "Otro"), administrator("b@utez.edu.mx", "40")));
+        assertThrows(DuplicateNameException.class,
+            () -> dao.insertCourt(newCourt("40", 40, "JUZGADO DE CUÁUTLA"), administrator("c@utez.edu.mx", "40")));
+
+        assertEquals(4, dao.findCourts().size());
+        assertTrue(users.findByEmail("a@utez.edu.mx").isEmpty());
+        assertTrue(users.findByEmail("b@utez.edu.mx").isEmpty());
+        assertTrue(users.findByEmail("c@utez.edu.mx").isEmpty());
+    }
+
+    @Test
+    void aRepeatedAdministratorEmailLeavesNoCourtBehind() {
+        dao.insertCourt(newCourt("20", 20, "Juzgado de Tetecala"), administrator("laura@utez.edu.mx", "20"));
+
+        assertThrows(DuplicateEmailException.class,
+            () -> dao.insertCourt(newCourt("21", 21, "Juzgado de Miacatlán"), administrator("LAURA@utez.edu.mx", "21")));
+
+        assertTrue(dao.findCourt("21").isEmpty());
+        assertEquals(5, dao.findCourts().size());
     }
 }
