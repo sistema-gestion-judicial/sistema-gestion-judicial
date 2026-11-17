@@ -107,13 +107,13 @@ public class JdbcUserDao implements UserDao {
 
             try (ResultSet rs = ps.executeQuery()){
                 while (rs.next()) {
-                    lawyers.add(new User(
-                        rs.getInt("id"),
-                        rs.getString("full_name"),
-                        rs.getString("professional_license"),
-                        rs.getBoolean("status"),
-                        rs.getString("matter")
-                    ));
+                    User user = new User();
+                    user.setId(rs.getInt("id"));
+                    user.setFullName(rs.getString("full_name"));
+                    user.setProfessionalLicense(rs.getString("professional_license"));
+                    user.setStatus(rs.getBoolean("status"));
+                    user.setMatter(rs.getString("matter")); // Devuelve null si no tiene escritorio asignado
+                    lawyers.add(user);
                 }
             }
 
