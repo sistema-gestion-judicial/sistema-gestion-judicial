@@ -18,9 +18,9 @@
 </c:set>
 <c:set var="navCourts">
   <li>
-    <span class="app-nav-link is-soon" title="Disponible en un siguiente avance">
-      <i class="bi bi-bank"></i> Juzgados <span class="soon-tag">Pronto</span>
-    </span>
+    <a class="app-nav-link ${activeNav == 'courts' ? 'active' : ''}" href="${ctx}/courts">
+      <i class="bi bi-bank"></i> Juzgados
+    </a>
   </li>
 </c:set>
 <body>
