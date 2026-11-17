@@ -15,6 +15,7 @@ import mx.edu.utez.judicial.oficialia.model.ComplementaryDataForm;
 import mx.edu.utez.judicial.oficialia.model.Court;
 import mx.edu.utez.judicial.oficialia.model.DemandRequest;
 import mx.edu.utez.judicial.oficialia.model.DuplicityCheckForm;
+import mx.edu.utez.judicial.oficialia.model.DuplicityWarning;
 import mx.edu.utez.judicial.oficialia.model.Party;
 import mx.edu.utez.judicial.oficialia.model.PartyRole;
 import mx.edu.utez.judicial.oficialia.model.RequestFolio;
@@ -29,6 +30,7 @@ import mx.edu.utez.judicial.oficialia.util.CatalogNames;
  */
 public class DemandRequestRegistrationService {
 
+    static final String CONTINUED = "Continuó con el registro";
     static final String INACTIVE_MATTER = "Seleccione una materia activa.";
 
     private final CatalogDao catalogDao;
@@ -62,8 +64,9 @@ public class DemandRequestRegistrationService {
     }
 
     /**
-     * Registers the request with a new folio and the status pending. Nothing is saved when either step has
-     * errors.
+     * Registers the request with a new folio and the status pending. When the duplicity check finds a demand,
+     * the request keeps the warning and that the clerk continued, because Oficialía must receive every
+     * writ. Nothing is saved when either step has errors.
      *
      * @throws AccessDeniedException when the user is not an Oficial de Partes
      */
@@ -80,11 +83,14 @@ public class DemandRequestRegistrationService {
         if (!errors.isEmpty()) {
             return Registration.rejected(errors);
         }
+        DuplicityWarning warning = duplicityService.findMatch(parties)
+            .map(match -> new DuplicityWarning(match.getCourtName(), match.getMatter(), CONTINUED))
+            .orElse(null);
         LocalDate today = LocalDate.now(clock);
         String folio = RequestFolio.of(demandRequestDao.lastFolioNumber(today.getYear()) + 1, today.getYear());
         DemandRequest request = new DemandRequest(folio, today, court.getName(), court.getCode(),
             parties.getMatter(), plaintiff(parties, data), defendant(parties, data),
-            data.getLegalRepresentative(), user.getFullName(), data.getAnnexes(), null,
+            data.getLegalRepresentative(), user.getFullName(), data.getAnnexes(), warning,
             data.getPresentationTypeValue(), data.observationsOrNull());
         demandRequestDao.insert(request);
         return Registration.saved(request);

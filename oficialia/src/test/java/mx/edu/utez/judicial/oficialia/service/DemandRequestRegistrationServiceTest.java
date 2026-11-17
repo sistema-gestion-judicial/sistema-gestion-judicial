@@ -116,6 +116,16 @@ class DemandRequestRegistrationServiceTest {
     }
 
     @Test
+    void registersWithTheWarningWhenTheClerkContinuesAfterAMatch() {
+        DemandRequest saved = service.register(clerk, parties("Familiar", "TOSA850312ML4"), data()).request();
+
+        assertEquals("Juzgado de Jojutla", saved.getDuplicityWarning().getCourtName());
+        assertEquals("Familiar", saved.getDuplicityWarning().getMatter());
+        assertEquals("Continuó con el registro", saved.getDuplicityWarning().getDecision());
+        assertEquals(RequestStatus.PENDING, saved.getStatus());
+    }
+
+    @Test
     void savesNothingWithoutAnyIdentifiedParty() {
         DuplicityCheckForm nobody = parties("Civil", "DILR900101AB1");
         nobody.setPlaintiffAnonymous(true);
