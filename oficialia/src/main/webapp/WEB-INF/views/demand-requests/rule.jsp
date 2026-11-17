@@ -18,7 +18,6 @@
       <c:out value="${demandRequest.folio}" /> · <c:out value="${demandRequest.partiesText}" />
     </p>
   </div>
-  <%@ include file="/WEB-INF/views/layout/user-chip.jspf" %>
 </header>
 
 <div class="row g-4">

@@ -11,7 +11,6 @@
     <h1 class="page-title">Registrar distrito judicial</h1>
     <p class="page-subtitle">El distrito queda activo y disponible para asignarle juzgados.</p>
   </div>
-  <%@ include file="/WEB-INF/views/layout/user-chip.jspf" %>
 </header>
 
 <div class="row g-4">

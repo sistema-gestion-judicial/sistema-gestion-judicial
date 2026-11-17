@@ -1,54 +1,72 @@
 /*
- * Shared visual theme for the four systems (Gobierno de Morelos identity, Figma design).
+ * Shared visual theme for the four systems, taken from the 2026 Figma design system
+ * ("guía de estilos", sidebar layout, list, login and empty state frames).
  * Loaded after Bootstrap. Change it only through a pull request approved by "arquitectura".
  */
 
 :root {
+  /* Color styles of the Figma file */
   --mor-primary: #2e3b2b;
-  --mor-primary-hover: #3b4a37;
+  --mor-primary-hover: #3a5235;
+  --mor-primary-pressed: #141c12;
   --mor-primary-light: #6f7f6a;
   --mor-primary-surface: #e4e9e0;
+  --mor-primary-band: #d7dfd0;
   --mor-background: #ebeade;
+  --mor-page-bg: #f4f3eb;
   --mor-secondary: #c69c6d;
+  --mor-secondary-border: #e3cdb0;
   --mor-secondary-surface: #f5ede1;
   --mor-text: #1f2326;
   --mor-text-muted: #55585a;
   --mor-line: #d9d6d2;
-  --mor-field-border: #8a8d8e;
+  --mor-card-border: #b1b1b1;
+  --mor-field-border: #5a6657;
   --mor-white: #ffffff;
   --mor-info-text: #1e5594;
   --mor-info-bg: #e4eef8;
   --mor-info-border: #b9d0e8;
-  --mor-success-text: #23683b;
-  --mor-success-bg: #e3f3e6;
-  --mor-success-border: #b8dcc1;
-  --mor-warning-text: #7a4a12;
+  --mor-success-text: #25613b;
+  --mor-success-dot: #2f7a4b;
+  --mor-success-bg: #e1f2e7;
+  --mor-success-border: #a9d9ba;
+  --mor-warning-text: #1f2326;
   --mor-warning-bg: #f5ede1;
-  --mor-warning-border: #e2cba9;
-  --mor-danger: #b42318;
+  --mor-warning-border: #e3cdb0;
+  --mor-danger: #b3261e;
+  --mor-disabled-bg: #dad8ca;
+  --mor-disabled-text: #7a7d73;
+
+  /* Text styles */
   --mor-font-title: "Merriweather", Georgia, serif;
   --mor-font-body: "Roboto", system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  /* Radii and effects */
   --mor-radius: 12px;
   --mor-radius-sm: 8px;
-  --mor-shadow: 0 1px 2px rgba(31, 35, 38, 0.06), 0 4px 14px rgba(31, 35, 38, 0.06);
-  --mor-sidebar-width: 280px;
-  --mor-sidebar-bg:
-    radial-gradient(circle at 15% 85%, rgba(255, 255, 255, 0.06), transparent 35%),
-    radial-gradient(circle at 85% 10%, rgba(255, 255, 255, 0.05), transparent 30%),
-    linear-gradient(165deg, #3d4b39 0%, #2e3b2b 50%, #232d21 100%);
+  --mor-radius-card: 14px;
+  --mor-shadow-card: 0 1px 3px rgba(46, 59, 43, 0.1), 0 1px 0 rgba(46, 59, 43, 0.05);
+  --mor-shadow: 2px 4px 15px rgba(0, 0, 0, 0.12), var(--mor-shadow-card);
+  --mor-shadow-field: 0 1px 0 rgba(46, 59, 43, 0.05), 0 1px 3px rgba(46, 59, 43, 0.1);
+
+  /* Layout of the sidebar frame (1440 px wide): a floating 176 px bar and content from x = 240 */
+  --mor-sidebar-width: 176px;
+  --mor-sidebar-gap: 16px;
+  --mor-content-max: 1144px;
+
 
   --bs-body-font-family: var(--mor-font-body);
   --bs-body-color: var(--mor-text);
-  --bs-body-bg: var(--mor-background);
+  --bs-body-bg: var(--mor-page-bg);
   --bs-border-color: var(--mor-line);
   --bs-link-color: var(--mor-primary);
   --bs-link-hover-color: var(--mor-primary-hover);
   --bs-link-color-rgb: 46, 59, 43;
-  --bs-link-hover-color-rgb: 59, 74, 55;
+  --bs-link-hover-color-rgb: 58, 82, 53;
 }
 
 body {
-  background: var(--mor-background);
+  background: var(--mor-page-bg);
   font-family: var(--mor-font-body);
   color: var(--mor-text);
 }
@@ -58,68 +76,156 @@ h1, h2, h3, h4, h5, .font-title {
   color: var(--mor-text);
 }
 
-/* ---- Buttons ---------------------------------------------------------- */
+/* Titulo 1 to 5 */
+h1, .h1 { font-size: 36px; line-height: 46px; font-weight: 400; }
+h2, .h2 { font-size: 30px; line-height: 40px; font-weight: 400; }
+h3, .h3 { font-size: 24px; line-height: 32px; font-weight: 700; }
+h4, .h4 { font-size: 20px; line-height: 28px; font-weight: 700; }
+h5, .h5 { font-size: 18px; line-height: 28px; font-weight: 700; }
+
+/* ---- Buttons (PrimaryButton and SecondaryButton) ------------------------ */
 
 .btn {
+  --bs-btn-font-family: var(--mor-font-body);
   --bs-btn-font-weight: 700;
+  --bs-btn-font-size: 16px;
+  --bs-btn-line-height: 24px;
+  --bs-btn-border-radius: var(--mor-radius);
+  --bs-btn-padding-y: 11px;
+  --bs-btn-padding-x: 24px;
+  min-height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn-sm {
+  --bs-btn-padding-y: 6px;
+  --bs-btn-padding-x: 14px;
+  --bs-btn-font-size: 15px;
   --bs-btn-border-radius: var(--mor-radius-sm);
-  --bs-btn-padding-y: 0.6rem;
-  --bs-btn-padding-x: 1.25rem;
+  min-height: 36px;
 }
 
 .btn-primary {
+  --bs-btn-color: var(--mor-white);
   --bs-btn-bg: var(--mor-primary);
   --bs-btn-border-color: var(--mor-primary);
+  --bs-btn-hover-color: var(--mor-white);
   --bs-btn-hover-bg: var(--mor-primary-hover);
   --bs-btn-hover-border-color: var(--mor-primary-hover);
-  --bs-btn-active-bg: #232d21;
-  --bs-btn-active-border-color: #232d21;
-  --bs-btn-disabled-bg: var(--mor-primary-light);
-  --bs-btn-disabled-border-color: var(--mor-primary-light);
+  --bs-btn-active-color: var(--mor-white);
+  --bs-btn-active-bg: var(--mor-primary-pressed);
+  --bs-btn-active-border-color: var(--mor-primary-pressed);
+  --bs-btn-disabled-color: var(--mor-disabled-text);
+  --bs-btn-disabled-bg: var(--mor-disabled-bg);
+  --bs-btn-disabled-border-color: var(--mor-disabled-bg);
+  --bs-btn-disabled-opacity: 1;
   --bs-btn-focus-shadow-rgb: 46, 59, 43;
 }
 
-.btn-outline-primary {
-  --bs-btn-color: var(--mor-text);
+.btn-outline-primary,
+.btn-outline-secondary {
+  --bs-btn-color: var(--mor-primary);
   --bs-btn-bg: var(--mor-white);
-  --bs-btn-border-color: var(--mor-text);
-  --bs-btn-hover-color: var(--mor-white);
-  --bs-btn-hover-bg: var(--mor-primary);
+  --bs-btn-border-color: var(--mor-primary);
+  --bs-btn-hover-color: var(--mor-primary);
+  --bs-btn-hover-bg: var(--mor-primary-surface);
   --bs-btn-hover-border-color: var(--mor-primary);
-  --bs-btn-active-bg: var(--mor-primary);
+  --bs-btn-active-color: #1f2a1d;
+  --bs-btn-active-bg: #d3dbce;
   --bs-btn-active-border-color: var(--mor-primary);
+  --bs-btn-disabled-color: #9a9c91;
+  --bs-btn-disabled-bg: var(--mor-white);
+  --bs-btn-disabled-border-color: #d2d0c0;
+  --bs-btn-disabled-opacity: 1;
   --bs-btn-focus-shadow-rgb: 46, 59, 43;
 }
 
 .btn-link {
-  --bs-btn-color: var(--mor-text);
-  --bs-btn-hover-color: var(--mor-primary);
-  --bs-btn-font-weight: 500;
+  --bs-btn-color: var(--mor-primary);
+  --bs-btn-hover-color: var(--mor-primary-hover);
+  --bs-btn-font-weight: 400;
+  text-decoration: underline;
 }
 
-/* ---- Forms ------------------------------------------------------------ */
+/* "Limpiar filtros" and other text links of the design */
+.link-dark,
+.link-mor {
+  color: var(--mor-primary) !important;
+  text-decoration: underline;
+  font-size: 16px;
+  line-height: 24px;
+}
+
+/* Filter icon inside the "Aplicar filtros" button replaces the Bootstrap one */
+.btn .bi-funnel::before {
+  content: "";
+  display: inline-block;
+  width: 21px;
+  height: 21px;
+  background: url("../img/icon-filter.svg") center / contain no-repeat;
+  vertical-align: -4px;
+}
+
+/* ---- Forms -------------------------------------------------------------- */
 
 .form-label {
-  font-size: 0.95rem;
+  font-size: 16px;
+  line-height: 24px;
   color: var(--mor-text);
-  margin-bottom: 0.35rem;
+  margin-bottom: 4px;
 }
 
 .form-control,
 .form-select,
 .input-group-text {
   background-color: var(--mor-white);
-  border-color: var(--mor-field-border);
+  border: 1px solid var(--mor-field-border);
   border-radius: var(--mor-radius-sm);
-  min-height: 46px;
+  min-height: 50px;
+  font-size: 16px;
+  line-height: 24px;
   color: var(--mor-text);
+  box-shadow: var(--mor-shadow-field);
+}
+
+.form-control::placeholder {
+  color: var(--mor-text-muted);
+  opacity: 1;
+}
+
+.form-select {
+  background-image: url("../img/icon-select-arrow.svg");
+  background-size: 14.5px 8.25px;
+  background-position: right 16px center;
+  padding-right: 44px;
+}
+
+textarea.form-control {
+  min-height: 96px;
 }
 
 .form-control:focus,
 .form-select:focus {
   background-color: var(--mor-white);
   border-color: var(--mor-primary);
-  box-shadow: 0 0 0 0.2rem rgba(46, 59, 43, 0.18);
+  box-shadow: 0 0 0 2px var(--mor-primary);
+}
+
+.form-control.is-invalid,
+.form-select.is-invalid,
+.was-validated .form-control:invalid {
+  border: 2px solid var(--mor-danger);
+  background-image: none;
+  padding-right: 0.75rem;
+}
+
+.invalid-feedback {
+  color: var(--mor-danger);
+  font-size: 16px;
+  line-height: 24px;
 }
 
 .form-control[readonly],
@@ -128,6 +234,7 @@ h1, h2, h3, h4, h5, .font-title {
   background-color: var(--mor-primary-surface);
   border-color: var(--mor-line);
   color: var(--mor-text-muted);
+  box-shadow: none;
 }
 
 .form-check-input:checked {
@@ -135,61 +242,159 @@ h1, h2, h3, h4, h5, .font-title {
   border-color: var(--mor-primary);
 }
 
-/* ---- Cards, alerts and badges ----------------------------------------- */
+/* A field with an addon carries one shadow for the whole group */
+.input-group {
+  border-radius: var(--mor-radius-sm);
+  box-shadow: var(--mor-shadow-field);
+}
+
+.input-group > .form-control,
+.input-group > .input-group-text {
+  box-shadow: none;
+}
+
+.login-card .input-group {
+  box-shadow: none;
+}
+
+/* Search field: the design icon sits inside the field */
+.input-group > .input-group-text:has(.bi-search) {
+  border-right: 0;
+  padding-left: 16px;
+  padding-right: 0;
+}
+
+.input-group-text .bi-search::before {
+  content: "";
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  background: url("../img/icon-search.svg") center / contain no-repeat;
+  transform: scaleY(-1);
+}
+
+/* Filters sit on the page background, as in the "Barra de opciones" frame */
+.filter-bar {
+  margin-bottom: 24px;
+}
+
+/* ---- Cards, alerts and badges ------------------------------------------- */
 
 .card-mor {
   background: var(--mor-white);
-  border: 0;
-  border-radius: var(--mor-radius);
+  border: 1px solid var(--mor-card-border);
+  border-radius: var(--mor-radius-card);
   box-shadow: var(--mor-shadow);
 }
 
 .card-mor .card-title {
   font-family: var(--mor-font-title);
   font-weight: 700;
-  font-size: 1.2rem;
+  font-size: 20px;
+  line-height: 28px;
 }
 
 .card-mor.is-locked {
   opacity: 0.75;
 }
 
+/* Green header of the list card ("Encabezado | Listado") */
+.card-mor-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 20px 24px 13px;
+  background: var(--mor-primary-surface);
+  border-bottom: 0.5px solid var(--mor-primary-light);
+  border-radius: var(--mor-radius-card) var(--mor-radius-card) 0 0;
+}
+
+.card-mor-title {
+  margin: 0;
+  font-family: var(--mor-font-title);
+  font-size: 18px;
+  line-height: 28px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.card-mor-subtitle,
+.card-mor-count {
+  margin: 2px 0 0;
+  font-size: 16px;
+  line-height: 24px;
+  color: var(--mor-text-muted);
+}
+
+.card-mor-count {
+  margin: 2px 0 0;
+  white-space: nowrap;
+}
+
+.card-mor-footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 20px 24px;
+  border-top: 0.5px solid #b0b0b0;
+  font-size: 16px;
+  color: var(--mor-text-muted);
+}
+
+.alert-mor-info,
+.alert-mor-success,
+.alert-mor-warning,
+.alert-mor-danger {
+  border: 1px solid;
+  border-radius: var(--mor-radius-sm);
+  font-size: 16px;
+  line-height: 24px;
+}
+
 .alert-mor-info {
   color: var(--mor-info-text);
   background: var(--mor-info-bg);
-  border: 1px solid var(--mor-info-border);
-  border-radius: var(--mor-radius-sm);
+  border-color: var(--mor-info-border);
 }
 
 .alert-mor-success {
   color: var(--mor-success-text);
   background: var(--mor-success-bg);
-  border: 1px solid var(--mor-success-border);
-  border-radius: var(--mor-radius-sm);
+  border-color: var(--mor-success-border);
 }
 
 .alert-mor-warning {
   color: var(--mor-warning-text);
   background: var(--mor-warning-bg);
-  border: 1px solid var(--mor-warning-border);
-  border-radius: var(--mor-radius-sm);
+  border-color: var(--mor-warning-border);
 }
 
+.alert-mor-danger {
+  color: var(--mor-danger);
+  background: #fbeceb;
+  border-color: #efc2bf;
+}
+
+/* "Etiqueta de estado" */
 .badge-mor {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
-  padding: 0.3rem 0.75rem;
-  border-radius: 999px;
-  font-size: 0.875rem;
-  font-weight: 500;
+  gap: 6px;
+  padding: 3px 14px;
+  border-radius: 9999px;
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 400;
   border: 1px solid transparent;
   white-space: nowrap;
 }
 
 .badge-mor .dot {
-  width: 6px;
-  height: 6px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
   background: currentColor;
 }
@@ -206,107 +411,179 @@ h1, h2, h3, h4, h5, .font-title {
   border-color: var(--mor-success-border);
 }
 
+.badge-mor.status-admissible .dot {
+  background: var(--mor-success-dot);
+}
+
 .badge-mor.status-inadmissible {
-  color: var(--mor-warning-text);
-  background: var(--mor-warning-bg);
-  border-color: var(--mor-warning-border);
+  color: var(--mor-text);
+  background: var(--mor-secondary-surface);
+  border-color: var(--mor-secondary-border);
 }
 
 .badge-mor.is-neutral {
-  color: var(--mor-text-muted);
+  color: var(--mor-primary);
   background: var(--mor-primary-surface);
-  border-color: var(--mor-line);
+  border-color: var(--mor-background);
 }
 
-/* ---- Application shell: sidebar + content ----------------------------- */
+/* The beige and neutral labels of the design have no dot */
+.badge-mor.status-inadmissible .dot,
+.badge-mor.is-neutral .dot {
+  display: none;
+}
+
+/* ---- Application shell: floating sidebar + content ----------------------- */
 
 .app-shell {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
   display: grid;
-  grid-template-columns: var(--mor-sidebar-width) 1fr;
+  grid-template-columns: calc(var(--mor-sidebar-width) + var(--mor-sidebar-gap)) minmax(0, 1fr);
   min-height: 100vh;
+  background: var(--mor-page-bg);
+}
+
+/* Lady Justice photo across the top 340 px, fading into the page background */
+.app-shell::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 340px;
+  z-index: -1;
+  background:
+    linear-gradient(to bottom, rgba(244, 243, 235, 0) 60%, var(--mor-page-bg) 100%),
+    url("../img/hero-justice.webp") center / cover no-repeat;
+  pointer-events: none;
+}
+
+/* Diagonal green stripes behind the content */
+.app-shell::after {
+  content: "";
+  position: absolute;
+  top: 318px;
+  left: calc(14.29% + 152px);
+  width: 1128px;
+  height: 752px;
+  z-index: -1;
+  opacity: 0.53;
+  background: url("../img/stripes.webp") center / cover no-repeat;
+  /* On pages taller than the 1024 px frame, the stripes fade out instead of ending in a hard edge */
+  -webkit-mask-image: linear-gradient(to bottom, #000 65%, transparent);
+  mask-image: linear-gradient(to bottom, #000 65%, transparent);
+  pointer-events: none;
 }
 
 .app-sidebar {
   position: sticky;
-  top: 0;
-  height: 100vh;
+  top: 24px;
+  align-self: start;
+  margin: 24px 0 24px var(--mor-sidebar-gap);
+  width: var(--mor-sidebar-width);
+  height: calc(100vh - 48px);
+  min-height: 560px;
   display: flex;
   flex-direction: column;
-  padding: 1.5rem 1rem;
-  background: var(--mor-sidebar-bg);
-  color: var(--mor-white);
+  padding: 23px 5px 20px;
+  background: rgba(228, 233, 224, 0.6);
+  border: 0.5px solid var(--mor-text-muted);
+  border-radius: var(--mor-radius-sm);
+  color: var(--mor-text);
+  overflow: hidden;
+  z-index: 1;
+}
+
+.app-sidebar::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 393px;
+  opacity: 0.88;
+  background: url("../img/stripes-sidebar.webp") -505px -237px / 673.6px 630px no-repeat;
+  pointer-events: none;
+  z-index: -1;
 }
 
 .app-brand {
   display: flex;
-  gap: 1rem;
+  flex-direction: column;
   align-items: center;
-  padding: 0 0.5rem 1.25rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+  text-align: center;
+  padding-bottom: 20px;
+  margin: 0 17px;
+  border-bottom: 1px solid rgba(111, 127, 106, 0.5);
 }
 
 .app-brand-logo {
-  flex: 0 0 64px;
-  width: 64px;
-  height: 64px;
-  border-radius: var(--mor-radius);
-  background: var(--mor-secondary-surface);
-  color: var(--mor-primary);
-  display: grid;
-  place-items: center;
-  font-family: var(--mor-font-title);
-  font-weight: 700;
+  width: 88px;
+  height: 88px;
+  background: url("../img/logo-scales.svg") center / contain no-repeat;
 }
 
 .app-brand-name {
+  margin-top: -8px;
   font-family: var(--mor-font-title);
-  font-weight: 700;
-  line-height: 1.3;
-  font-size: 0.98rem;
+  font-size: 28px;
+  line-height: 36px;
+  color: var(--mor-primary);
 }
 
 .app-brand-area {
-  font-size: 0.85rem;
-  color: rgba(255, 255, 255, 0.78);
-  margin-top: 0.25rem;
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--mor-text-muted);
 }
 
 .app-nav {
   list-style: none;
-  padding: 1.25rem 0 0;
+  padding: 28px 0 0;
   margin: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
+  gap: 5px;
 }
 
 .app-nav-link {
   display: flex;
   align-items: center;
-  gap: 0.9rem;
-  padding: 0.8rem 1rem;
-  border-radius: var(--mor-radius);
+  gap: 12px;
+  min-height: 56px;
+  padding: 8px 12px 8px 18px;
+  border-radius: 16px;
   border: 1px solid transparent;
-  color: var(--mor-white);
+  color: var(--mor-text);
   text-decoration: none;
-  font-family: var(--mor-font-title);
-  font-size: 1rem;
+  font-family: var(--mor-font-body);
+  font-size: 15px;
+  line-height: 20px;
 }
 
 .app-nav-link .bi {
-  font-size: 1.35rem;
-  opacity: 0.9;
+  flex: 0 0 22px;
+  font-size: 22px;
+  line-height: 1;
+  color: var(--mor-primary);
 }
 
 .app-nav-link:hover {
-  color: var(--mor-white);
-  background: rgba(255, 255, 255, 0.07);
+  color: var(--mor-text);
+  background: rgba(228, 238, 220, 0.6);
 }
 
+.app-nav-link:focus-visible {
+  outline: 2px solid var(--mor-primary);
+  outline-offset: 2px;
+}
+
+/* "Mis tocas | activo" */
 .app-nav-link.active {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.25);
-  box-shadow: inset 3px 0 0 var(--mor-secondary);
+  background: rgba(228, 238, 220, 0.81);
+  border-color: var(--mor-primary-light);
+  font-size: 16px;
+  font-weight: 700;
 }
 
 .app-nav-link.is-soon {
@@ -314,19 +591,27 @@ h1, h2, h3, h4, h5, .font-title {
   cursor: default;
 }
 
+.app-nav-link.is-soon:hover {
+  background: none;
+}
+
+/* The narrow bar has no room beside the label, so "Pronto" goes under it */
+.app-nav-link.is-soon {
+  flex-wrap: wrap;
+  row-gap: 0;
+}
+
 .app-nav-link .soon-tag {
-  margin-left: auto;
-  font-family: var(--mor-font-body);
-  font-size: 0.7rem;
+  flex-basis: 100%;
+  padding-left: 34px;
+  font-size: 11px;
+  line-height: 14px;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  opacity: 0.85;
+  letter-spacing: 0.04em;
 }
 
 .app-sidebar-footer {
   margin-top: auto;
-  padding-top: 1rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.18);
 }
 
 .app-sidebar-footer .app-nav-link {
@@ -335,72 +620,120 @@ h1, h2, h3, h4, h5, .font-title {
   text-align: left;
 }
 
+.app-nav-link .icon-sign-out {
+  flex: 0 0 22px;
+  width: 22px;
+  height: 22px;
+  background: url("../img/icon-sign-out.svg") center / contain no-repeat;
+}
+
 .app-main {
-  padding: 1.5rem 2rem 2.5rem;
+  width: 100%;
+  max-width: calc(var(--mor-content-max) + 48px + 56px);
+  padding: 46px 56px 48px 48px;
   min-width: 0;
+}
+
+/* Greeting and profile on the first row, as in the sidebar frame */
+.app-welcome {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 24px;
+  margin-bottom: 42px;
+}
+
+.app-welcome-text {
+  margin: 40px 0 0 15px;
+  font-size: 18px;
+  line-height: 26px;
+}
+
+.app-welcome-text strong {
+  display: block;
 }
 
 .app-topbar {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  gap: 1.5rem;
-  margin-bottom: 1.5rem;
+  gap: 24px;
+  margin-bottom: 24px;
 }
 
 .page-title {
-  font-size: 2.1rem;
+  font-family: var(--mor-font-title);
+  font-size: 48px;
+  line-height: 60px;
   font-weight: 400;
-  margin: 0.25rem 0 0.35rem;
+  margin: 0 0 4px;
 }
 
 .page-subtitle {
   color: var(--mor-text);
+  font-size: 16px;
+  line-height: 24px;
   margin: 0;
 }
 
 .back-link {
   display: inline-flex;
-  gap: 0.5rem;
+  gap: 8px;
   align-items: center;
   color: var(--mor-text);
   font-weight: 700;
-  font-size: 0.92rem;
+  font-size: 16px;
+  text-decoration: underline;
 }
 
+/* "Perfil": pill with the initials, the name and the role */
 .user-chip {
   display: flex;
   align-items: center;
-  gap: 0.85rem;
-  padding: 0.35rem 1.1rem 0.35rem 0.35rem;
-  border: 1.5px solid var(--mor-primary);
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.35);
+  gap: 14px;
+  min-width: 283px;
+  height: 72px;
+  padding: 0 22px 0 9px;
+  border: 0.5px solid var(--mor-text-muted);
+  border-radius: 40px;
+  background: rgba(228, 233, 224, 0.55);
   white-space: nowrap;
 }
 
 .user-chip-avatar {
-  width: 44px;
-  height: 44px;
+  flex: 0 0 60px;
+  width: 60px;
+  height: 60px;
   border-radius: 50%;
   background: var(--mor-primary);
-  color: var(--mor-white);
+  border: 2px solid var(--mor-primary-light);
+  color: var(--mor-secondary-border);
   display: grid;
   place-items: center;
-  font-size: 1.3rem;
+  font-family: var(--mor-font-title);
+  font-size: 22px;
 }
 
 .user-chip-name {
-  font-weight: 700;
-  line-height: 1.2;
+  font-size: 18px;
+  line-height: 28px;
 }
 
 .user-chip-role {
-  font-size: 0.88rem;
-  color: var(--mor-text-muted);
+  font-size: 16px;
+  line-height: 24px;
+  color: var(--mor-text);
 }
 
-/* ---- Tables ----------------------------------------------------------- */
+.user-chip-chevron {
+  flex: 0 0 24px;
+  width: 24px;
+  height: 24px;
+  margin-left: auto;
+  background: url("../img/icon-chevron-down.svg") center / contain no-repeat;
+}
+
+/* ---- Tables ("Banda columnas" and "Filas") ------------------------------- */
 
 .table-mor {
   margin: 0;
@@ -408,17 +741,27 @@ h1, h2, h3, h4, h5, .font-title {
 }
 
 .table-mor thead th {
-  background: var(--mor-primary-surface);
+  background: var(--mor-primary-band);
+  font-size: 16px;
+  line-height: 24px;
   font-weight: 700;
-  padding: 1rem;
-  border-bottom: 1px solid var(--mor-line);
+  text-transform: uppercase;
+  color: var(--mor-text);
+  padding: 11px 24px 12px;
+  border-bottom: 0;
   white-space: nowrap;
 }
 
 .table-mor tbody td {
-  padding: 0.85rem 1rem;
+  padding: 16px 24px;
+  font-size: 18px;
+  line-height: 28px;
   vertical-align: middle;
   border-color: var(--mor-line);
+}
+
+.table-mor tbody tr:last-child td {
+  border-bottom: 0;
 }
 
 .table-mor .cell-strong {
@@ -426,25 +769,160 @@ h1, h2, h3, h4, h5, .font-title {
   white-space: nowrap;
 }
 
-.table-mor .cell-muted {
+.table-mor .cell-muted,
+.table-mor .cell-secondary {
+  color: var(--mor-text-muted);
+  font-size: 16px;
+  line-height: 24px;
+}
+
+/* Second line under the main value of a cell */
+.cell-sub {
+  display: block;
+  margin-top: 4px;
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 400;
   color: var(--mor-text-muted);
 }
 
-/* ---- Stepper ---------------------------------------------------------- */
+/* "Ver | Acción de fila": 44 px tall, green hover, 2 px focus outline */
+.row-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 10px 12px;
+  border-radius: var(--mor-radius-sm);
+  color: var(--mor-primary);
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.row-action:hover {
+  color: var(--mor-primary);
+  background: var(--mor-primary-surface);
+}
+
+.row-action:focus-visible {
+  outline: 2px solid var(--mor-primary);
+  outline-offset: 0;
+}
+
+.row-action .icon-eye {
+  width: 20px;
+  height: 20px;
+  background: url("../img/icon-eye.svg") center / contain no-repeat;
+}
+
+/* ---- Pagination ----------------------------------------------------------- */
+
+.pagination {
+  --bs-pagination-padding-x: 0;
+  --bs-pagination-padding-y: 0;
+  --bs-pagination-font-size: 16px;
+  --bs-pagination-color: #1b1a19;
+  --bs-pagination-bg: var(--mor-white);
+  --bs-pagination-border-color: var(--mor-field-border);
+  --bs-pagination-border-radius: var(--mor-radius-sm);
+  --bs-pagination-hover-color: var(--mor-primary);
+  --bs-pagination-hover-bg: var(--mor-primary-surface);
+  --bs-pagination-hover-border-color: var(--mor-field-border);
+  --bs-pagination-focus-box-shadow: 0 0 0 2px var(--mor-primary);
+  --bs-pagination-active-color: var(--mor-white);
+  --bs-pagination-active-bg: var(--mor-primary);
+  --bs-pagination-active-border-color: var(--mor-primary);
+  --bs-pagination-disabled-color: #9a9c91;
+  --bs-pagination-disabled-bg: var(--mor-white);
+  --bs-pagination-disabled-border-color: #d2d0c0;
+  gap: 8px;
+  align-items: center;
+}
+
+.pagination .page-link {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--mor-radius-sm) !important;
+  margin: 0 !important;
+  line-height: 24px;
+}
+
+/* Previous and next: green squares with the design arrow */
+.pagination .page-link[aria-label="Anterior"],
+.pagination .page-link[aria-label="Siguiente"] {
+  font-size: 0;
+  background: var(--mor-primary-surface) url("../img/icon-arrow-left.svg") center / 13px 18.5px no-repeat;
+  border-color: var(--mor-primary-light);
+}
+
+.pagination .page-item:first-child {
+  margin-right: 8px;
+}
+
+.pagination .page-item:last-child {
+  margin-left: 8px;
+}
+
+.pagination .page-link[aria-label="Siguiente"] {
+  transform: rotate(180deg);
+}
+
+.pagination .page-item.disabled .page-link[aria-label] {
+  opacity: 0.45;
+}
+
+/* ---- Empty state ("Sin resultados") -------------------------------------- */
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 72px 24px;
+  text-align: center;
+}
+
+.empty-state-icon {
+  width: 56px;
+  height: 56px;
+  background: url("../img/icon-empty-search.svg") center / contain no-repeat;
+}
+
+.empty-state-title {
+  margin: 0;
+  font-family: var(--mor-font-title);
+  font-size: 20px;
+  line-height: 28px;
+  font-weight: 700;
+}
+
+.empty-state-text {
+  margin: -6px 0 4px;
+  font-size: 16px;
+  line-height: 24px;
+  color: var(--mor-text-muted);
+}
+
+/* ---- Stepper -------------------------------------------------------------- */
 
 .stepper {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 12px;
   list-style: none;
   padding: 0;
-  margin: 1rem 0 1.25rem;
+  margin: 16px 0 20px;
 }
 
 .stepper-item {
   display: flex;
   align-items: center;
-  gap: 0.55rem;
+  gap: 9px;
   color: var(--mor-text-muted);
 }
 
@@ -455,7 +933,7 @@ h1, h2, h3, h4, h5, .font-title {
   border: 1.5px solid var(--mor-field-border);
   display: grid;
   place-items: center;
-  font-size: 0.85rem;
+  font-size: 14px;
   font-weight: 700;
 }
 
@@ -477,77 +955,211 @@ h1, h2, h3, h4, h5, .font-title {
   background: var(--mor-field-border);
 }
 
-/* ---- Login (split screen) --------------------------------------------- */
+/* ---- Login (split screen) ------------------------------------------------- */
 
 .login-split {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
   display: grid;
   grid-template-columns: 1fr 1fr;
   min-height: 100vh;
+  background: var(--mor-background);
+}
+
+/* Two stripe layers on the right half, the top one turned upside down */
+.login-split::before,
+.login-split::after {
+  content: "";
+  position: absolute;
+  width: 1128px;
+  height: 752px;
+  z-index: -1;
+  opacity: 0.61;
+  background: url("../img/stripes.webp") center / cover no-repeat;
+  pointer-events: none;
+}
+
+.login-split::before {
+  left: 25%;
+  top: 318px;
+}
+
+.login-split::after {
+  left: 36%;
+  top: -1px;
+  transform: rotate(180deg);
 }
 
 .login-brand {
   position: relative;
+  z-index: 0;
   display: flex;
   flex-direction: column;
-  padding: 3.5rem 4rem 3rem;
-  background: var(--mor-sidebar-bg);
+  padding: 64px;
   color: var(--mor-white);
+  background:
+    linear-gradient(rgba(0, 0, 0, 0.25), rgba(0, 0, 0, 0.25)),
+    url("../img/login-texture.webp") center / cover no-repeat,
+    linear-gradient(to right, #252f23, var(--mor-primary));
 }
 
 .login-brand .app-brand-logo {
-  width: 78px;
-  height: 78px;
+  width: 88px;
+  height: 88px;
+  display: grid;
+  place-items: center;
+  border-radius: 20px;
+  background: var(--mor-secondary-surface);
+  color: #000;
+  font-family: var(--mor-font-title);
+  font-size: 18px;
+  line-height: 28px;
+  font-weight: 700;
 }
 
 .login-brand-body {
   margin-top: auto;
   margin-bottom: auto;
-  max-width: 440px;
+  max-width: 592px;
 }
 
 .login-brand-rule {
-  width: 72px;
-  height: 3px;
+  width: 80px;
+  height: 4px;
+  border-radius: 2px;
   background: var(--mor-secondary);
-  margin-bottom: 1.5rem;
+  margin-bottom: 24px;
 }
 
 .login-brand h1 {
   color: var(--mor-white);
-  font-size: 2.2rem;
-  line-height: 1.25;
+  font-size: 36px;
+  line-height: 46px;
   font-weight: 400;
-  margin-bottom: 0.4rem;
+  margin-bottom: 4px;
 }
 
 .login-brand-area {
-  color: rgba(255, 255, 255, 0.8);
-  font-size: 0.95rem;
-  margin-bottom: 1.25rem;
+  color: var(--mor-primary-surface);
+  font-size: 16px;
+  line-height: 24px;
+  margin-bottom: 20px;
+}
+
+.login-brand-text {
+  max-width: 440px;
+  font-size: 18px;
+  line-height: 28px;
+  margin: 0;
 }
 
 .login-brand-footer {
-  border-top: 1px solid rgba(255, 255, 255, 0.2);
-  padding-top: 1.25rem;
-  font-size: 0.92rem;
-  color: rgba(255, 255, 255, 0.9);
+  border-top: 1px solid rgba(228, 233, 224, 0.3);
+  padding-top: 20px;
+  font-size: 16px;
+  line-height: 24px;
+  color: var(--mor-white);
+}
+
+.login-brand-footer span {
+  color: var(--mor-primary-surface);
 }
 
 .login-panel {
   display: grid;
   place-items: center;
-  padding: 2rem;
+  padding: 32px;
 }
 
 .login-card {
   width: 100%;
-  max-width: 470px;
-  padding: 3rem 2rem 2.5rem;
+  max-width: 520px;
+  padding: 99px 41px;
+  border: 0;
+  border-radius: var(--mor-radius);
+  box-shadow: 3px 4px 20px 3px rgba(31, 35, 38, 0.1);
 }
 
 .login-card h2 {
-  font-size: 2rem;
+  font-size: 36px;
+  line-height: 46px;
   font-weight: 400;
+  margin: 0 0 48px -3px;
+}
+
+.login-card .login-intro {
+  font-size: 16px;
+  line-height: 24px;
+  color: var(--mor-text-muted);
+  margin-bottom: 40px;
+}
+
+/* Login fields are taller, with a 1.5 px border and 18 px text */
+.login-card .form-control {
+  min-height: 58px;
+  border-width: 1.5px;
+  border-radius: var(--mor-radius);
+  font-size: 18px;
+  line-height: 28px;
+  padding-left: 18px;
+  box-shadow: none;
+}
+
+.login-card .form-control.is-invalid {
+  border-width: 2px;
+}
+
+.login-card .password-toggle {
+  min-height: 58px;
+  border: 1.5px solid var(--mor-field-border);
+  border-left: 0;
+  border-radius: 0 var(--mor-radius) var(--mor-radius) 0;
+  color: var(--mor-primary);
+  font-weight: 700;
+  text-decoration: none;
+  background: var(--mor-white);
+}
+
+.login-card .input-group:has(.is-invalid) .password-toggle {
+  border: 2px solid var(--mor-danger);
+  border-left: 0;
+}
+
+.login-card .input-group .form-control:focus + .password-toggle {
+  border-color: var(--mor-primary);
+}
+
+.login-error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--mor-danger);
+  font-size: 16px;
+  line-height: 24px;
+}
+
+.login-error::before {
+  content: "";
+  flex: 0 0 20px;
+  width: 20px;
+  height: 20px;
+  background: url("../img/icon-error.svg") center / contain no-repeat;
+}
+
+.login-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin: 8px 0 24px;
+}
+
+.login-row a {
+  margin-left: auto;
+  color: var(--mor-primary);
+  text-decoration: underline;
+  white-space: nowrap;
 }
 
 @media (max-width: 992px) {
@@ -558,10 +1170,41 @@ h1, h2, h3, h4, h5, .font-title {
 
   .app-sidebar {
     position: static;
+    width: auto;
     height: auto;
+    min-height: 0;
+    margin: 16px 16px 0;
+  }
+
+  .app-sidebar::after {
+    display: none;
+  }
+
+  .app-main {
+    padding: 24px 16px 40px;
   }
 
   .login-brand {
-    padding: 2rem;
+    padding: 32px;
+  }
+
+  .login-card {
+    padding: 48px 24px;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .app-welcome,
+  .app-topbar {
+    flex-wrap: wrap;
+  }
+
+  .user-chip {
+    min-width: 0;
+  }
+
+  .page-title {
+    font-size: 36px;
+    line-height: 46px;
   }
 }

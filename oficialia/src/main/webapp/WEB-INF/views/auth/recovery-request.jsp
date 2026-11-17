@@ -17,7 +17,7 @@
   <section class="login-panel">
     <div class="card-mor login-card">
       <h2 class="mb-4">Recuperar contraseña</h2>
-      <p class="text-secondary mb-4">
+      <p class="login-intro">
         Escriba el correo electrónico de su cuenta. Si está registrado, recibirá un código de verificación.
       </p>
 

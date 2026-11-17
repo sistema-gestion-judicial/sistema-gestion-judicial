@@ -14,7 +14,6 @@
     </p>
   </div>
   <div class="d-flex flex-column align-items-end gap-3">
-    <%@ include file="/WEB-INF/views/layout/user-chip.jspf" %>
     <c:if test="${sessionScope.currentUser.clerk}">
       <a class="btn btn-primary" href="${ctx}/demand-requests/new">
         <i class="bi bi-plus-lg me-1"></i> Registrar solicitud
@@ -29,7 +28,7 @@
   </div>
 </c:if>
 
-<form class="card-mor p-3 mb-4" method="get" action="${ctx}/demand-requests">
+<form class="filter-bar" method="get" action="${ctx}/demand-requests">
   <div class="row g-3 align-items-center">
     <div class="col-lg-5">
       <div class="input-group">
@@ -60,11 +59,20 @@
 </form>
 
 <div class="card-mor overflow-hidden">
+  <div class="card-mor-header">
+    <div>
+      <h2 class="card-mor-title">Solicitudes recibidas</h2>
+      <p class="card-mor-subtitle">Consulta y calificación de las solicitudes de demanda del juzgado.</p>
+    </div>
+    <p class="card-mor-count"><c:out value="${totalCount}" /> registros</p>
+  </div>
   <c:choose>
     <c:when test="${empty demandRequests}">
-      <div class="p-5 text-center">
-        <i class="bi bi-inbox fs-1 text-secondary"></i>
-        <p class="mt-2 mb-0">No se encontraron solicitudes con esos criterios.</p>
+      <div class="empty-state">
+        <span class="empty-state-icon" aria-hidden="true"></span>
+        <p class="empty-state-title">No hay solicitudes con esos filtros</p>
+        <p class="empty-state-text">Pruebe con otro folio, parte o estado, o limpie los filtros.</p>
+        <a class="btn btn-outline-primary" href="${ctx}/demand-requests">Limpiar filtros</a>
       </div>
     </c:when>
     <c:otherwise>
@@ -73,10 +81,8 @@
           <thead>
             <tr>
               <th>Folio</th>
-              <th>Fecha de recepción</th>
-              <th>Materia</th>
               <th>Partes</th>
-              <th>Expediente</th>
+              <th>Materia</th>
               <th>Estado</th>
               <th class="text-end">Acciones</th>
             </tr>
@@ -84,11 +90,18 @@
           <tbody>
             <c:forEach var="demandRequest" items="${demandRequests}">
               <tr>
-                <td class="cell-strong"><c:out value="${demandRequest.folio}" /></td>
-                <td><c:out value="${demandRequest.receivedDateText}" /></td>
-                <td class="cell-muted"><c:out value="${demandRequest.matter}" /></td>
-                <td class="cell-muted"><c:out value="${demandRequest.partiesText}" /></td>
-                <td class="cell-muted"><c:out value="${demandRequest.caseFileText}" /></td>
+                <td>
+                  <span class="cell-strong"><c:out value="${demandRequest.folio}" /></span>
+                  <span class="cell-sub">Recepción: <c:out value="${demandRequest.receivedDateText}" /></span>
+                </td>
+                <td>
+                  <c:out value="${demandRequest.plaintiff.displayName}" />
+                  <span class="cell-sub">vs. <c:out value="${demandRequest.defendant.displayName}" /></span>
+                </td>
+                <td>
+                  <c:out value="${demandRequest.matter}" />
+                  <span class="cell-sub">Expediente: <c:out value="${demandRequest.caseFileText}" /></span>
+                </td>
                 <td>
                   <span class="badge-mor ${demandRequest.status.cssClass}">
                     <span class="dot"></span> <c:out value="${demandRequest.status.label}" />
@@ -98,15 +111,17 @@
                   <c:url var="detailUrl" value="/demand-requests/detail">
                     <c:param name="folio" value="${demandRequest.folio}" />
                   </c:url>
-                  <a class="fw-bold text-decoration-none" href="${detailUrl}">
-                    <i class="bi bi-eye me-1"></i> Ver
+                  <a class="row-action" href="${detailUrl}"
+                     aria-label="Ver solicitud ${demandRequest.folio}">
+                    <span class="icon-eye" aria-hidden="true"></span> Ver
                   </a>
                   <c:if test="${demandRequest.pending and sessionScope.currentUser.clerk}">
                     <c:url var="ruleUrl" value="/demand-requests/rule">
                       <c:param name="folio" value="${demandRequest.folio}" />
                     </c:url>
-                    <a class="fw-bold text-decoration-none ms-3" href="${ruleUrl}">
-                      <i class="bi bi-clipboard-check me-1"></i> Calificar
+                    <a class="row-action" href="${ruleUrl}"
+                       aria-label="Calificar solicitud ${demandRequest.folio}">
+                      <i class="bi bi-clipboard-check" aria-hidden="true"></i> Calificar
                     </a>
                   </c:if>
                 </td>
@@ -115,11 +130,11 @@
           </tbody>
         </table>
       </div>
-      <div class="px-3 py-3 border-top text-secondary small">
-        Mostrando <c:out value="${demandRequests.size()}" /> de <c:out value="${totalCount}" /> solicitudes
-      </div>
     </c:otherwise>
   </c:choose>
+  <div class="card-mor-footer">
+    Mostrando <c:out value="${demandRequests.size()}" /> de <c:out value="${totalCount}" />
+  </div>
 </div>
 
 <%@ include file="/WEB-INF/views/layout/app-end.jspf" %>

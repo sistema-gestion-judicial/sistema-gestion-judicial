@@ -1,14 +1,15 @@
 <%-- Name of the signed-in user, with the court for clerks and the role for administrators.
-     Shown at the top right of every page; it opens the user menu. --%>
+     Shown at the top right of every page, by the greeting; it opens the user menu. --%>
 <div class="dropdown">
   <button type="button" class="user-chip user-chip-button" data-bs-toggle="dropdown" aria-expanded="false">
-    <span class="user-chip-avatar"><i class="bi bi-person"></i></span>
+    <span class="user-chip-avatar" aria-hidden="true"><c:out value="${sessionScope.currentUser.initials}" /></span>
     <span>
       <span class="user-chip-name d-block"><c:out value="${sessionScope.currentUser.fullName}" /></span>
       <span class="user-chip-role d-block">
         <c:out value="${sessionScope.currentUser.clerk ? sessionScope.currentUser.courtName : sessionScope.currentUser.roleLabel}" />
       </span>
     </span>
+    <span class="user-chip-chevron" aria-hidden="true"></span>
   </button>
   <div class="dropdown-menu dropdown-menu-end">
     <form method="post" action="${ctx}/logout" data-sign-out>

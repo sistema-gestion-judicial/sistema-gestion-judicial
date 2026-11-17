@@ -9,7 +9,6 @@
   <div>
     <a class="back-link" href="${ctx}/home"><i class="bi bi-arrow-left"></i> Volver al inicio</a>
   </div>
-  <%@ include file="/WEB-INF/views/layout/user-chip.jspf" %>
 </header>
 
 <div class="card-mor p-5 text-center mx-auto" style="max-width: 640px;">

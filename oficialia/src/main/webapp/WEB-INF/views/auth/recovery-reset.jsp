@@ -10,7 +10,7 @@
   <section class="login-panel">
     <div class="card-mor login-card">
       <h2 class="mb-4">Nueva contraseña</h2>
-      <p class="text-secondary mb-4">
+      <p class="login-intro">
         El código es correcto. Escriba su nueva contraseña: al menos ${passwordMinLength} caracteres, con letras
         y números.
       </p>
