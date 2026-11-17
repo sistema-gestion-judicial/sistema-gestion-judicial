@@ -74,7 +74,7 @@ cambiar una tabla, crea el siguiente (`V003__add_column_x.sql`).
 | `users`, `password_reset_codes` | Cuentas, bloqueo por intentos y códigos de recuperación |
 | `judicial_districts`, `courts`, `subject_matters`, `court_subject_matters` | Catálogos; las materias tienen clave estable (`CIV`, `FAM`…) para la integración |
 | `rejection_reasons` | Motivos de no procedencia |
-| `demand_requests`, `parties`, `annexes` | Solicitudes con sus partes y anexos |
+| `demand_requests`, `parties`, `annexes` | Solicitudes con sus partes y anexos. Desde V007 guardan el tipo de presentación (individual o colectiva), las observaciones, el domicilio de cada parte y el contenido de cada anexo |
 | `duplicity_warning_decisions` | Cada advertencia de duplicidad y si el oficial continuó o canceló (un intento cancelado no tiene folio) |
 | `case_files` | Expedientes `AAAA/NNNNN/JJ`, su mesa, su instancia y su sala |
 | `request_status_history` | Bitácora de cambios de estado de cada solicitud |
@@ -83,6 +83,10 @@ cambiar una tabla, crea el siguiente (`V003__add_column_x.sql`).
 `JdbcDemandRequestDao` llena `case_files`, `duplicity_warning_decisions` y `request_status_history` en la
 misma transacción en que guarda la solicitud. Los datos semilla (catálogos y roles) vienen en los propios
 scripts.
+
+Los anexos se guardan en la base de datos (`annexes.content`, `LONGBLOB`) porque el servidor de la
+aplicación no conserva sus archivos entre despliegues. Se aceptan hasta 10 MB por archivo y 40 MB por
+solicitud. Las consultas de solicitudes no leen esa columna: solo el nombre, el tamaño y el tipo.
 
 ## En la nube
 
