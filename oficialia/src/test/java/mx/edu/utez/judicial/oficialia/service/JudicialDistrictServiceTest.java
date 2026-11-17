@@ -12,6 +12,8 @@ import mx.edu.utez.judicial.oficialia.exception.AccessDeniedException;
 import mx.edu.utez.judicial.oficialia.exception.NotFoundException;
 import mx.edu.utez.judicial.oficialia.model.JudicialDistrict;
 import mx.edu.utez.judicial.oficialia.model.JudicialDistrictForm;
+import mx.edu.utez.judicial.oficialia.model.JudicialDistrictRow;
+import mx.edu.utez.judicial.oficialia.model.ResultPage;
 import mx.edu.utez.judicial.oficialia.model.User;
 import mx.edu.utez.judicial.oficialia.model.UserRole;
 import org.junit.jupiter.api.Test;
@@ -28,6 +30,66 @@ class JudicialDistrictServiceTest {
         form.setName(name);
         form.setSeatMunicipality(seat);
         return form;
+    }
+
+    private List<String> codes(ResultPage<JudicialDistrictRow> page) {
+        return page.getItems().stream().map(JudicialDistrictRow::getCode).toList();
+    }
+
+    @Test
+    void withoutFiltersShowsEveryDistrictWithItsNumberOfCourts() {
+        catalog.insertJudicialDistrict(new JudicialDistrict("TEP", "Distrito judicial de Tetecala", "Tetecala", true));
+
+        ResultPage<JudicialDistrictRow> page = service.search(admin, "", null, 1);
+
+        assertEquals(List.of("CUA", "CVA", "JOJ", "TEP", "YAU"), codes(page));
+        assertEquals(1, page.getItems().get(0).getCourtCount());
+        assertEquals(0, page.getItems().get(3).getCourtCount());
+    }
+
+    @Test
+    void findsTheTextInTheCodeTheNameOrTheSeatIgnoringCaseAndAccents() {
+        assertEquals(List.of("JOJ"), codes(service.search(admin, "joj", null, 1)));
+        assertEquals(List.of("CUA"), codes(service.search(admin, "CUÁUTLA", null, 1)));
+        assertEquals(List.of("YAU"), codes(service.search(admin, "  yautepec ", null, 1)));
+    }
+
+    @Test
+    void filtersByStatus() {
+        catalog.insertJudicialDistrict(new JudicialDistrict("TEP", "Distrito judicial de Tetecala", "Tetecala", false));
+
+        assertEquals(List.of("TEP"), codes(service.search(admin, null, false, 1)));
+        assertEquals(4, service.search(admin, null, true, 1).getTotalItems());
+    }
+
+    @Test
+    void returnsAnEmptyPageWhenNothingMatches() {
+        ResultPage<JudicialDistrictRow> page = service.search(admin, "Tlaxcala", null, 1);
+
+        assertTrue(page.getItems().isEmpty());
+        assertEquals(0, page.getTotalItems());
+        assertEquals(1, page.getTotalPages());
+    }
+
+    @Test
+    void splitsTheCatalogInPagesOfTen() {
+        for (int i = 10; i < 22; i++) {
+            catalog.insertJudicialDistrict(new JudicialDistrict("D" + i, "Distrito de prueba " + i, "Sede", true));
+        }
+
+        ResultPage<JudicialDistrictRow> second = service.search(admin, "", null, 2);
+
+        assertEquals(16, second.getTotalItems());
+        assertEquals(2, second.getTotalPages());
+        assertEquals(6, second.getItems().size());
+        assertEquals(11, second.getFirstItem());
+        assertTrue(second.isLast());
+    }
+
+    @Test
+    void searchingRefusesEveryOtherProfile() {
+        User clerk = new User("l@utez.edu.mx", "Laura Méndez", UserRole.CLERK, "Juzgado de Cuautla");
+        assertThrows(AccessDeniedException.class, () -> service.search(clerk, "", null, 1));
     }
 
     @Test
