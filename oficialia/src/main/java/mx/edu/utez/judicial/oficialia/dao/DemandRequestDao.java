@@ -19,6 +19,11 @@ public interface DemandRequestDao {
     /** The highest folio number of that year (S-000127/2026 is 127), or 0 when the year has none yet. */
     int lastFolioNumber(int year);
 
+    /**
+     * Saves a new request with its parties, annexes, warning decision and first status.
+     *
+     * @throws DuplicateCodeException when another request already has the folio
+     */
     void insert(DemandRequest demandRequest);
 
     void update(DemandRequest demandRequest);
