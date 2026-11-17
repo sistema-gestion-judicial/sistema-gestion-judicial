@@ -5,7 +5,10 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.annotation.MultipartConfig;
+import jakarta.servlet.http.Part;
 import java.io.IOException;
+import java.io.InputStream;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
@@ -13,6 +16,7 @@ import java.util.Optional;
 import java.util.Set;
 import mx.edu.utez.judicial.oficialia.exception.AccessDeniedException;
 import mx.edu.utez.judicial.oficialia.filter.AuthFilter;
+import mx.edu.utez.judicial.oficialia.model.Annex;
 import mx.edu.utez.judicial.oficialia.model.ComplementaryDataForm;
 import mx.edu.utez.judicial.oficialia.model.DemandRequest;
 import mx.edu.utez.judicial.oficialia.model.DuplicityCheckForm;
@@ -26,6 +30,8 @@ import mx.edu.utez.judicial.oficialia.service.DuplicityService;
  * annexes. Step 2 sends the data of step 1 again, so they are checked once more before saving.
  */
 @WebServlet("/demand-requests/new")
+// Each annex up to 10 MB and all of them up to 40 MB, plus room for the fields of the form
+@MultipartConfig(fileSizeThreshold = 1024 * 1024, maxFileSize = 10L * 1024 * 1024, maxRequestSize = 41L * 1024 * 1024)
 public class DemandRequestCreateServlet extends HttpServlet {
 
     private static final String VIEW = "/WEB-INF/views/demand-requests/new.jsp";
@@ -77,7 +83,15 @@ public class DemandRequestCreateServlet extends HttpServlet {
 
     private void register(HttpServletRequest request, HttpServletResponse response, DuplicityCheckForm form)
             throws ServletException, IOException {
-        ComplementaryDataForm data = readData(request);
+        ComplementaryDataForm data;
+        try {
+            data = readData(request);
+        } catch (IllegalStateException e) {
+            // The server refuses a file over the limit before reading the form, so the capture starts again
+            request.setAttribute("annexesTooLarge", true);
+            show(request, response, new DuplicityCheckForm());
+            return;
+        }
         try {
             DemandRequestRegistrationService.Registration registration =
                     registrationService.register(currentUser(request), form, data);
@@ -105,13 +119,22 @@ public class DemandRequestCreateServlet extends HttpServlet {
         }
     }
 
-    private static ComplementaryDataForm readData(HttpServletRequest request) {
+    private static ComplementaryDataForm readData(HttpServletRequest request) throws IOException, ServletException {
         ComplementaryDataForm data = new ComplementaryDataForm();
         readContact(request, "plaintiff", data.getPlaintiff());
         readContact(request, "defendant", data.getDefendant());
         data.setLegalRepresentative(request.getParameter("legalRepresentative"));
         data.setPresentationType(request.getParameter("presentationType"));
         data.setObservations(request.getParameter("observations"));
+        for (Part part : request.getParts()) {
+            String fileName = fileName(part);
+            if ("annexes".equals(part.getName()) && !fileName.isEmpty()) {
+                try (InputStream content = part.getInputStream()) {
+                    String type = part.getContentType() == null ? "application/octet-stream" : part.getContentType();
+                    data.addAnnex(new Annex(fileName, type, content.readAllBytes()));
+                }
+            }
+        }
         return data;
     }
 
@@ -123,6 +146,15 @@ public class DemandRequestCreateServlet extends HttpServlet {
         fields.setMunicipality(request.getParameter(party + "Municipality"));
         fields.setPhone(request.getParameter(party + "Phone"));
         fields.setEmail(request.getParameter(party + "Email"));
+    }
+
+    /** Only the name: some browsers send the whole path of the file. */
+    private static String fileName(Part part) {
+        String name = part.getSubmittedFileName();
+        if (name == null) {
+            return "";
+        }
+        return name.substring(Math.max(name.lastIndexOf('/'), name.lastIndexOf('\\')) + 1).trim();
     }
 
     /** The request is not saved, but the attempt is, with the clerk and the date (DFR 3.1). */
