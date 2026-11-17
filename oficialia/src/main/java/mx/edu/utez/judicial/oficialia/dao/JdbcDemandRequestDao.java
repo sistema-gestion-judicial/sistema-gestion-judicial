@@ -5,6 +5,7 @@ import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.SQLIntegrityConstraintViolationException;
 import java.sql.Timestamp;
 import java.sql.Types;
 import java.time.LocalDate;
@@ -33,6 +34,8 @@ public class JdbcDemandRequestDao implements DemandRequestDao {
 
     private static final String SELECT_REQUESTS = "SELECT r.*, c.name AS court_name FROM demand_requests r "
         + "JOIN courts c ON c.code = r.court_code";
+
+    private static final int MYSQL_DUPLICATE_ENTRY = 1062;
 
     private final Database database;
 
@@ -105,6 +108,12 @@ public class JdbcDemandRequestDao implements DemandRequestDao {
                 connection.rollback();
                 throw e;
             }
+        } catch (SQLIntegrityConstraintViolationException e) {
+            // Two clerks took the same folio at once: the service asks for the next one
+            if (e.getErrorCode() == MYSQL_DUPLICATE_ENTRY && e.getMessage().contains("PRIMARY")) {
+                throw new DuplicateCodeException(request.getFolio(), e);
+            }
+            throw new DataAccessException("Could not save demand request " + request.getFolio(), e);
         } catch (SQLException e) {
             throw new DataAccessException("Could not save demand request " + request.getFolio(), e);
         }

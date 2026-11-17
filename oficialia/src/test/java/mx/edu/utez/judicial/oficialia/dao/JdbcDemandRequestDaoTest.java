@@ -2,6 +2,7 @@ package mx.edu.utez.judicial.oficialia.dao;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.sql.Connection;
@@ -95,6 +96,14 @@ class JdbcDemandRequestDaoTest {
     void findsTheLastFolioNumberOfEachYear() {
         assertEquals(127, dao.lastFolioNumber(2026));
         assertEquals(0, dao.lastFolioNumber(2027));
+    }
+
+    @Test
+    void refusesAFolioThatIsAlreadyTaken() {
+        DemandRequest taken = InMemoryDemandRequestDao.sampleRequests().get(0);
+
+        assertThrows(DuplicateCodeException.class, () -> dao.insert(taken));
+        assertEquals(10, dao.count());
     }
 
     @Test
