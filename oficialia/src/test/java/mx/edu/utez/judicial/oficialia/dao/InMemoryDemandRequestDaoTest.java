@@ -3,7 +3,9 @@ package mx.edu.utez.judicial.oficialia.dao;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import mx.edu.utez.judicial.oficialia.model.CancelledAttempt;
 import mx.edu.utez.judicial.oficialia.model.DemandRequest;
 import org.junit.jupiter.api.Test;
 
@@ -25,5 +27,17 @@ class InMemoryDemandRequestDaoTest {
 
         assertThrows(DuplicateCodeException.class, () -> dao.insert(taken));
         assertEquals(10, dao.findAll().size());
+    }
+
+    @Test
+    void keepsTheCancelledAttempts() {
+        InMemoryDemandRequestDao dao = new InMemoryDemandRequestDao(List.of());
+        CancelledAttempt attempt = new CancelledAttempt("12", "Juzgado de Jojutla", "Familiar", false,
+            "Laura Méndez", LocalDateTime.parse("2026-11-17T12:30"));
+
+        dao.recordCancelledAttempt(attempt);
+
+        assertEquals(List.of(attempt), dao.findCancelledAttempts());
+        assertEquals(0, dao.findAll().size());
     }
 }

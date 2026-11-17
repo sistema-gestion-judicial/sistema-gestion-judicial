@@ -2,6 +2,7 @@ package mx.edu.utez.judicial.oficialia.dao;
 
 import java.util.List;
 import java.util.Optional;
+import mx.edu.utez.judicial.oficialia.model.CancelledAttempt;
 import mx.edu.utez.judicial.oficialia.model.DemandRequest;
 
 /**
@@ -27,4 +28,7 @@ public interface DemandRequestDao {
     void insert(DemandRequest demandRequest);
 
     void update(DemandRequest demandRequest);
+
+    /** Keeps a registration cancelled after a duplicity warning; it has no folio because nothing was saved. */
+    void recordCancelledAttempt(CancelledAttempt attempt);
 }

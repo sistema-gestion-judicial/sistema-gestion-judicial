@@ -13,6 +13,7 @@ import java.util.List;
 import mx.edu.utez.judicial.common.db.Database;
 import java.time.LocalDate;
 import mx.edu.utez.judicial.oficialia.model.Annex;
+import mx.edu.utez.judicial.oficialia.model.CancelledAttempt;
 import mx.edu.utez.judicial.oficialia.model.DemandRequest;
 import mx.edu.utez.judicial.oficialia.model.Party;
 import mx.edu.utez.judicial.oficialia.model.PartyAddress;
@@ -103,6 +104,17 @@ class JdbcDemandRequestDaoTest {
         DemandRequest taken = InMemoryDemandRequestDao.sampleRequests().get(0);
 
         assertThrows(DuplicateCodeException.class, () -> dao.insert(taken));
+        assertEquals(10, dao.count());
+    }
+
+    @Test
+    void keepsACancelledAttemptWithoutFolio() throws Exception {
+        dao.recordCancelledAttempt(new CancelledAttempt("12", "Juzgado de Jojutla", "Familiar", true, "Laura Méndez",
+            LocalDateTime.parse("2026-11-17T12:30")));
+
+        assertEquals(1, count("SELECT COUNT(*) FROM duplicity_warning_decisions WHERE decision = 'CANCEL' "
+            + "AND folio IS NULL AND court_code = '12' AND matched_court = 'Juzgado de Jojutla' "
+            + "AND matched_instance = 'SECOND' AND decided_by = 'Laura Méndez'"));
         assertEquals(10, dao.count());
     }
 

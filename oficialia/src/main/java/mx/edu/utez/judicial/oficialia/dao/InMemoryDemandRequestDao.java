@@ -7,7 +7,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import mx.edu.utez.judicial.oficialia.model.Annex;
+import mx.edu.utez.judicial.oficialia.model.CancelledAttempt;
 import mx.edu.utez.judicial.oficialia.model.DemandRequest;
 import mx.edu.utez.judicial.oficialia.model.DuplicityWarning;
 import mx.edu.utez.judicial.oficialia.model.Party;
@@ -23,6 +25,7 @@ public class InMemoryDemandRequestDao implements DemandRequestDao {
     private static final InMemoryDemandRequestDao INSTANCE = new InMemoryDemandRequestDao(sampleRequests());
 
     private final Map<String, DemandRequest> requestsByFolio = new ConcurrentHashMap<>();
+    private final List<CancelledAttempt> cancelledAttempts = new CopyOnWriteArrayList<>();
 
     public InMemoryDemandRequestDao(List<DemandRequest> requests) {
         requests.forEach(request -> requestsByFolio.put(request.getFolio(), request));
@@ -69,6 +72,16 @@ public class InMemoryDemandRequestDao implements DemandRequestDao {
     public void update(DemandRequest demandRequest) {
         // The object in the map is the one that was changed; a JDBC DAO runs the UPDATE here
         requestsByFolio.put(demandRequest.getFolio(), demandRequest);
+    }
+
+    @Override
+    public void recordCancelledAttempt(CancelledAttempt attempt) {
+        cancelledAttempts.add(attempt);
+    }
+
+    /** The cancelled attempts kept so far, oldest first. */
+    public List<CancelledAttempt> findCancelledAttempts() {
+        return List.copyOf(cancelledAttempts);
     }
 
     /** Sample requests of the demo; also used to fill an empty database. */

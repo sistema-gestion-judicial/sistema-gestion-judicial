@@ -17,6 +17,7 @@ import java.util.Map;
 import java.util.Optional;
 import mx.edu.utez.judicial.common.db.Database;
 import mx.edu.utez.judicial.oficialia.model.Annex;
+import mx.edu.utez.judicial.oficialia.model.CancelledAttempt;
 import mx.edu.utez.judicial.oficialia.model.DemandRequest;
 import mx.edu.utez.judicial.oficialia.model.DuplicityWarning;
 import mx.edu.utez.judicial.oficialia.model.Party;
@@ -224,6 +225,24 @@ public class JdbcDemandRequestDao implements DemandRequestDao {
             statement.setString(5, request.getCapturedBy());
             statement.setTimestamp(6, timestamp(registeredAt(request.getReceivedDate())));
             statement.executeUpdate();
+        }
+    }
+
+    @Override
+    public void recordCancelledAttempt(CancelledAttempt attempt) {
+        String sql = "INSERT INTO duplicity_warning_decisions (folio, court_code, matched_court, matched_matter, "
+            + "matched_instance, decision, decided_by, decided_at) VALUES (NULL, ?, ?, ?, ?, 'CANCEL', ?, ?)";
+        try (Connection connection = database.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, attempt.courtCode());
+            statement.setString(2, attempt.matchedCourt());
+            statement.setString(3, attempt.matchedMatter());
+            statement.setString(4, attempt.matchedInSecondInstance() ? "SECOND" : "FIRST");
+            statement.setString(5, attempt.cancelledBy());
+            statement.setTimestamp(6, timestamp(attempt.cancelledAt()));
+            statement.executeUpdate();
+        } catch (SQLException e) {
+            throw new DataAccessException("Could not record the cancelled attempt of " + attempt.cancelledBy(), e);
         }
     }
 
