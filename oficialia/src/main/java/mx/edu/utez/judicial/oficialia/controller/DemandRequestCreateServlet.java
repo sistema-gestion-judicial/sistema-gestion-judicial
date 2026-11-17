@@ -10,8 +10,11 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import mx.edu.utez.judicial.oficialia.exception.AccessDeniedException;
 import mx.edu.utez.judicial.oficialia.filter.AuthFilter;
+import mx.edu.utez.judicial.oficialia.model.ComplementaryDataForm;
+import mx.edu.utez.judicial.oficialia.model.DemandRequest;
 import mx.edu.utez.judicial.oficialia.model.DuplicityCheckForm;
 import mx.edu.utez.judicial.oficialia.model.DuplicityMatch;
 import mx.edu.utez.judicial.oficialia.model.User;
@@ -19,12 +22,16 @@ import mx.edu.utez.judicial.oficialia.service.DemandRequestRegistrationService;
 import mx.edu.utez.judicial.oficialia.service.DuplicityService;
 
 /**
- * Step 1 of registering a demand request: checks duplicity before the full capture (RF 3.1).
+ * Registers a demand request (DFR 3.1): step 1 checks duplicity, step 2 sends the complementary data and the
+ * annexes. Step 2 sends the data of step 1 again, so they are checked once more before saving.
  */
 @WebServlet("/demand-requests/new")
 public class DemandRequestCreateServlet extends HttpServlet {
 
     private static final String VIEW = "/WEB-INF/views/demand-requests/new.jsp";
+
+    private static final Set<String> STEP_ONE_FIELDS = Set.of("matter", "parties", "plaintiffName", "plaintiffId",
+            "defendantName", "defendantId");
 
     private final DuplicityService duplicityService = new DuplicityService();
     private final DemandRequestRegistrationService registrationService = new DemandRequestRegistrationService();
@@ -42,6 +49,10 @@ public class DemandRequestCreateServlet extends HttpServlet {
         DuplicityCheckForm form = readForm(request);
         if ("cancel".equals(action)) {
             cancel(request, response, form);
+            return;
+        }
+        if ("register".equals(action)) {
+            register(request, response, form);
             return;
         }
 
@@ -62,6 +73,56 @@ public class DemandRequestCreateServlet extends HttpServlet {
             request.setAttribute("verified", true);
         }
         show(request, response, form);
+    }
+
+    private void register(HttpServletRequest request, HttpServletResponse response, DuplicityCheckForm form)
+            throws ServletException, IOException {
+        ComplementaryDataForm data = readData(request);
+        try {
+            DemandRequestRegistrationService.Registration registration =
+                    registrationService.register(currentUser(request), form, data);
+            if (registration.isSaved()) {
+                DemandRequest saved = registration.request();
+                request.getSession().setAttribute(DemandRequestListServlet.FLASH_MESSAGE,
+                        "Se registró la solicitud con el folio " + saved.getFolio()
+                                + " y quedó pendiente de calificación."
+                                + (saved.getDuplicityWarning() == null ? ""
+                                        : " Quedó marcada con advertencia de duplicidad."));
+                response.sendRedirect(request.getContextPath() + "/demand-requests");
+                return;
+            }
+            boolean stepOneValid = registration.errors().keySet().stream().noneMatch(STEP_ONE_FIELDS::contains);
+            request.setAttribute("errors", registration.errors());
+            request.setAttribute("data", data);
+            if (stepOneValid) {
+                request.setAttribute("verified", true);
+                duplicityService.findMatch(form)
+                        .ifPresent(match -> request.setAttribute("continuedWithWarning", match));
+            }
+            show(request, response, form);
+        } catch (AccessDeniedException e) {
+            ErrorView.forbidden(request, response, e.getMessage());
+        }
+    }
+
+    private static ComplementaryDataForm readData(HttpServletRequest request) {
+        ComplementaryDataForm data = new ComplementaryDataForm();
+        readContact(request, "plaintiff", data.getPlaintiff());
+        readContact(request, "defendant", data.getDefendant());
+        data.setLegalRepresentative(request.getParameter("legalRepresentative"));
+        data.setPresentationType(request.getParameter("presentationType"));
+        data.setObservations(request.getParameter("observations"));
+        return data;
+    }
+
+    private static void readContact(HttpServletRequest request, String party,
+            ComplementaryDataForm.ContactFields fields) {
+        fields.setStreet(request.getParameter(party + "Street"));
+        fields.setNeighborhood(request.getParameter(party + "Neighborhood"));
+        fields.setPostalCode(request.getParameter(party + "PostalCode"));
+        fields.setMunicipality(request.getParameter(party + "Municipality"));
+        fields.setPhone(request.getParameter(party + "Phone"));
+        fields.setEmail(request.getParameter(party + "Email"));
     }
 
     /** The request is not saved, but the attempt is, with the clerk and the date (DFR 3.1). */
