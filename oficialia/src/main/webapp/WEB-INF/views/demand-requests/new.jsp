@@ -246,7 +246,7 @@
           <c:otherwise>
             <div class="section-card-body">
               <p class="section-card-text">
-                Domicilio, teléfono y correo de las partes, representante legal, tipo de presentación y anexos.
+                Domicilio, teléfono y correo de las partes, representante legal y tipo de presentación.
                 Se habilitan cuando termine la verificación de duplicidad.
               </p>
             </div>
@@ -254,6 +254,32 @@
         </c:choose>
       </section>
 
+      <%-- The annexes go in their own region, below the form and as wide as it (DFR 3.3.1) --%>
+      <section class="section-card mt-4 ${verified ? '' : 'is-locked'}">
+        <div class="section-card-header">
+          <h2 class="section-card-title">Anexos</h2>
+          <c:if test="${not verified}"><span class="badge-mor is-neutral">Bloqueado</span></c:if>
+        </div>
+        <div class="section-card-body">
+          <c:choose>
+            <c:when test="${verified}">
+              <label for="annexes" class="form-label">Archivos que entrega el demandante *</label>
+              <input type="file" id="annexes" name="annexes" multiple aria-describedby="annexesHelp"
+                     data-max-file-mb="${maxAnnexMb}" data-max-total-mb="${maxTotalAnnexMb}"
+                     class="form-control ${not empty errors.annexes ? 'is-invalid' : ''}">
+              <div class="invalid-feedback" data-annexes-error><c:out value="${errors.annexes}" /></div>
+              <div id="annexesHelp" class="form-text">
+                Cualquier tipo de archivo: documentos, imágenes, audio o video. Digitalice los que llegan en papel.
+                Hasta ${maxAnnexMb} MB cada uno y ${maxTotalAnnexMb} MB en total.
+                <c:if test="${not empty errors}">Por seguridad, vuelva a elegir los archivos.</c:if>
+              </div>
+            </c:when>
+            <c:otherwise>
+              <p class="section-card-text">Se habilitan cuando termine la verificación de duplicidad.</p>
+            </c:otherwise>
+          </c:choose>
+        </div>
+      </section>
     </form>
   </div>
 

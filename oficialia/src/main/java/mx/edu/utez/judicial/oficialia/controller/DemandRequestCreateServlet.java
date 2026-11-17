@@ -187,6 +187,8 @@ public class DemandRequestCreateServlet extends HttpServlet {
         request.setAttribute("maxEmailLength", ComplementaryDataForm.MAX_EMAIL_LENGTH);
         request.setAttribute("maxRepresentativeLength", ComplementaryDataForm.MAX_REPRESENTATIVE_LENGTH);
         request.setAttribute("maxObservationsLength", ComplementaryDataForm.MAX_OBSERVATIONS_LENGTH);
+        request.setAttribute("maxAnnexMb", ComplementaryDataForm.MAX_ANNEX_MB);
+        request.setAttribute("maxTotalAnnexMb", ComplementaryDataForm.MAX_TOTAL_ANNEX_MB);
         request.setAttribute("receivedDate", LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
         request.getRequestDispatcher(VIEW).forward(request, response);
     }
