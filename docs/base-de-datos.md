@@ -66,6 +66,24 @@ Van en `<modulo>/src/main/resources/db/migration/` con número y descripción:
 queda registrado en la tabla `schema_history`. **Nunca edites un script que ya se subió**: para
 cambiar una tabla, crea el siguiente (`V003__add_column_x.sql`).
 
+## Tablas de Oficialía
+
+| Tabla | Qué guarda |
+| --- | --- |
+| `roles` | Los tres perfiles (oficial de partes, administrador de juzgado, administrador del órgano) |
+| `users`, `password_reset_codes` | Cuentas, bloqueo por intentos y códigos de recuperación |
+| `judicial_districts`, `courts`, `subject_matters`, `court_subject_matters` | Catálogos; las materias tienen clave estable (`CIV`, `FAM`…) para la integración |
+| `rejection_reasons` | Motivos de no procedencia |
+| `demand_requests`, `parties`, `annexes` | Solicitudes con sus partes y anexos |
+| `duplicity_warning_decisions` | Cada advertencia de duplicidad y si el oficial continuó o canceló (un intento cancelado no tiene folio) |
+| `case_files` | Expedientes `AAAA/NNNNN/JJ`, su mesa, su instancia y su sala |
+| `request_status_history` | Bitácora de cambios de estado de cada solicitud |
+| `second_instance_transfers` | Bitácora de pases a segunda instancia |
+
+`JdbcDemandRequestDao` llena `case_files`, `duplicity_warning_decisions` y `request_status_history` en la
+misma transacción en que guarda la solicitud. Los datos semilla (catálogos y roles) vienen en los propios
+scripts.
+
 ## En la nube
 
 Cada equipo despliega su módulo donde prefiera, con su propia base en la nube y las mismas variables
