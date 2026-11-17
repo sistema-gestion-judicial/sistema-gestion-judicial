@@ -1,4 +1,4 @@
-// Behaviour of step 1 of the demand request registration.
+// Behaviour of the demand request registration.
 document.addEventListener("DOMContentLoaded", () => {
   // Disables the fields of a party when it is marked as anonymous or unknown
   document.querySelectorAll("[data-party-toggle]").forEach((checkbox) => {
@@ -18,6 +18,33 @@ document.addEventListener("DOMContentLoaded", () => {
       input.value = input.value.toUpperCase();
     });
   });
+
+  // Checks the size of the annexes before sending them: the server refuses them over the limit and the
+  // capture would have to start again
+  const annexes = document.querySelector("[data-max-file-mb]");
+  if (annexes) {
+    const error = document.querySelector("[data-annexes-error]");
+    const maxFile = Number(annexes.dataset.maxFileMb) * 1024 * 1024;
+    const maxTotal = Number(annexes.dataset.maxTotalMb) * 1024 * 1024;
+    annexes.form.addEventListener("submit", (event) => {
+      const files = Array.from(annexes.files);
+      const tooBig = files.find((file) => file.size > maxFile);
+      const total = files.reduce((sum, file) => sum + file.size, 0);
+      let message = "";
+      if (tooBig) {
+        message = `El anexo «${tooBig.name}» pasa de ${annexes.dataset.maxFileMb} MB.`;
+      } else if (total > maxTotal) {
+        message = `Los anexos juntos pasan de ${annexes.dataset.maxTotalMb} MB.`;
+      }
+      if (message) {
+        event.preventDefault();
+        error.textContent = message;
+        annexes.classList.add("is-invalid");
+        annexes.focus();
+      }
+    });
+    annexes.addEventListener("change", () => annexes.classList.remove("is-invalid"));
+  }
 
   // Opens the duplicity warning returned by the server
   const modalElement = document.querySelector("[data-show-on-load]");
