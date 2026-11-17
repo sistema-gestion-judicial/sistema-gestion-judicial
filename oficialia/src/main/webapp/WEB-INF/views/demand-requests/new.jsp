@@ -52,9 +52,10 @@
     <c:if test="${not empty continuedWithWarning}">
       <div class="alert alert-mor-warning d-flex gap-2 align-items-start" role="status">
         <i class="bi bi-exclamation-triangle mt-1"></i>
-        <span>Se guardó su decisión de continuar pese a la advertencia
+        <span>Decidió continuar pese a la advertencia
           (<c:out value="${continuedWithWarning.courtName}" />, <c:out value="${continuedWithWarning.matter}" />).
-          La solicitud quedará marcada como registrada con advertencia.</span>
+          Su decisión se guarda con su nombre y la fecha al registrar, y la solicitud queda marcada como
+          registrada con advertencia.</span>
       </div>
     </c:if>
 
