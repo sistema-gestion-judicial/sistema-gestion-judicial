@@ -16,6 +16,9 @@ public interface DemandRequestDao {
 
     Optional<DemandRequest> findByFolio(String folio);
 
+    /** The highest folio number of that year (S-000127/2026 is 127), or 0 when the year has none yet. */
+    int lastFolioNumber(int year);
+
     void insert(DemandRequest demandRequest);
 
     void update(DemandRequest demandRequest);

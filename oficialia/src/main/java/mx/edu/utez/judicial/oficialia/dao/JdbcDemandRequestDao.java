@@ -70,6 +70,22 @@ public class JdbcDemandRequestDao implements DemandRequestDao {
     }
 
     @Override
+    public int lastFolioNumber(int year) {
+        String sql = "SELECT COALESCE(MAX(CAST(SUBSTRING(folio, 3, 6) AS UNSIGNED)), 0) FROM demand_requests "
+            + "WHERE folio LIKE ?";
+        try (Connection connection = database.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, "S-______/" + year);
+            try (ResultSet rows = statement.executeQuery()) {
+                rows.next();
+                return rows.getInt(1);
+            }
+        } catch (SQLException e) {
+            throw new DataAccessException("Could not read the last folio of " + year, e);
+        }
+    }
+
+    @Override
     public void insert(DemandRequest request) {
         try (Connection connection = database.getConnection()) {
             connection.setAutoCommit(false);

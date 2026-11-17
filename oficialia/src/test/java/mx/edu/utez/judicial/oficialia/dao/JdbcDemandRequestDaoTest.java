@@ -92,6 +92,12 @@ class JdbcDemandRequestDaoTest {
     }
 
     @Test
+    void findsTheLastFolioNumberOfEachYear() {
+        assertEquals(127, dao.lastFolioNumber(2026));
+        assertEquals(0, dao.lastFolioNumber(2027));
+    }
+
+    @Test
     void filtersByCourtAndSavesARuling() {
         assertEquals(9, dao.findByCourt("Juzgado de Cuautla").size());
         assertEquals(10, dao.count());

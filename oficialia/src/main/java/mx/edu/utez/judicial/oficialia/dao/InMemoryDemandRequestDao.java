@@ -12,6 +12,7 @@ import mx.edu.utez.judicial.oficialia.model.DemandRequest;
 import mx.edu.utez.judicial.oficialia.model.DuplicityWarning;
 import mx.edu.utez.judicial.oficialia.model.Party;
 import mx.edu.utez.judicial.oficialia.model.PartyRole;
+import mx.edu.utez.judicial.oficialia.model.RequestFolio;
 
 /**
  * Keeps the demand requests in memory with sample data, shared by every servlet of the application.
@@ -46,6 +47,15 @@ public class InMemoryDemandRequestDao implements DemandRequestDao {
     @Override
     public Optional<DemandRequest> findByFolio(String folio) {
         return folio == null ? Optional.empty() : Optional.ofNullable(requestsByFolio.get(folio.trim()));
+    }
+
+    @Override
+    public int lastFolioNumber(int year) {
+        return requestsByFolio.keySet().stream()
+                .map(folio -> RequestFolio.number(folio, year))
+                .filter(number -> number.isPresent())
+                .mapToInt(number -> number.getAsInt())
+                .max().orElse(0);
     }
 
     @Override
