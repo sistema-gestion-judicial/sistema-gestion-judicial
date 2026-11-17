@@ -2,20 +2,24 @@ package mx.edu.utez.judicial.oficialia.service;
 
 import java.time.Clock;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import mx.edu.utez.judicial.oficialia.dao.CatalogDao;
 import mx.edu.utez.judicial.oficialia.dao.DemandRequestDao;
 import mx.edu.utez.judicial.oficialia.dao.DuplicateCodeException;
 import mx.edu.utez.judicial.oficialia.dao.OficialiaDaos;
 import mx.edu.utez.judicial.oficialia.exception.AccessDeniedException;
+import mx.edu.utez.judicial.oficialia.model.CancelledAttempt;
 import mx.edu.utez.judicial.oficialia.model.ComplementaryDataForm;
 import mx.edu.utez.judicial.oficialia.model.Court;
 import mx.edu.utez.judicial.oficialia.model.DemandRequest;
 import mx.edu.utez.judicial.oficialia.model.DuplicityCheckForm;
+import mx.edu.utez.judicial.oficialia.model.DuplicityMatch;
 import mx.edu.utez.judicial.oficialia.model.DuplicityWarning;
 import mx.edu.utez.judicial.oficialia.model.Party;
 import mx.edu.utez.judicial.oficialia.model.PartyRole;
@@ -105,6 +109,24 @@ public class DemandRequestRegistrationService {
                 }
             }
         }
+    }
+
+    /**
+     * Keeps the attempt of a clerk who cancelled after a duplicity warning, with the demand found, their name
+     * and the date (DFR 3.1). Nothing is kept when the data no longer matches any demand.
+     *
+     * @return whether an attempt was kept
+     * @throws AccessDeniedException when the user is not an Oficial de Partes
+     */
+    public boolean cancel(User user, DuplicityCheckForm parties) {
+        Court court = courtOf(user);
+        if (!parties.validate().isEmpty()) {
+            return false;
+        }
+        Optional<DuplicityMatch> match = duplicityService.findMatch(parties);
+        match.ifPresent(found -> demandRequestDao.recordCancelledAttempt(
+            CancelledAttempt.of(court.getCode(), found, user.getFullName(), LocalDateTime.now(clock))));
+        return match.isPresent();
     }
 
     private Court courtOf(User user) {

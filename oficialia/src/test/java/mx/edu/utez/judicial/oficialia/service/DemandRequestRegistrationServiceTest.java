@@ -9,6 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.List;
 import mx.edu.utez.judicial.oficialia.dao.InMemoryCatalogDao;
@@ -16,6 +17,7 @@ import mx.edu.utez.judicial.oficialia.dao.InMemoryDemandRequestDao;
 import mx.edu.utez.judicial.oficialia.exception.AccessDeniedException;
 import mx.edu.utez.judicial.oficialia.model.ActiveDemand;
 import mx.edu.utez.judicial.oficialia.model.Annex;
+import mx.edu.utez.judicial.oficialia.model.CancelledAttempt;
 import mx.edu.utez.judicial.oficialia.model.ComplementaryDataForm;
 import mx.edu.utez.judicial.oficialia.model.DemandRequest;
 import mx.edu.utez.judicial.oficialia.model.DuplicityCheckForm;
@@ -202,11 +204,27 @@ class DemandRequestRegistrationServiceTest {
     }
 
     @Test
+    void keepsTheAttemptCancelledAfterAWarning() {
+        assertTrue(service.cancel(clerk, parties("Familiar", "TOSA850312ML4")));
+
+        assertEquals(List.of(new CancelledAttempt("12", "Juzgado de Jojutla", "Familiar", false, "Laura Méndez",
+            LocalDateTime.parse("2026-11-17T12:30"))), requests.findCancelledAttempts());
+        assertEquals(10, requests.findAll().size());
+    }
+
+    @Test
+    void keepsNoAttemptWhenNothingMatches() {
+        assertFalse(service.cancel(clerk, parties("Civil", "DILR900101AB1")));
+        assertTrue(requests.findCancelledAttempts().isEmpty());
+    }
+
+    @Test
     void onlyAnOficialDePartesRegisters() {
         User courtAdmin = new User("a@utez.edu.mx", "Ana Paz", UserRole.COURT_ADMIN, "Juzgado de Cuautla");
 
         assertThrows(AccessDeniedException.class,
             () -> service.register(courtAdmin, parties("Civil", "DILR900101AB1"), data()));
+        assertThrows(AccessDeniedException.class, () -> service.cancel(courtAdmin, parties("Familiar", "TOSA850312ML4")));
         assertThrows(AccessDeniedException.class, () -> service.register(null, parties("Civil", "DILR900101AB1"), data()));
         assertEquals(10, requests.findAll().size());
     }
