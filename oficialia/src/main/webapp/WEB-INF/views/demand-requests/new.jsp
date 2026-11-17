@@ -189,7 +189,26 @@
                 </div>
               </c:if>
 
-              <h3 class="section-subtitle">Representante legal y clasificación</h3>
+              <c:if test="${not form.plaintiffAnonymous}">
+                <h3 class="section-subtitle">Demandante: <c:out value="${form.plaintiffName}" /></h3>
+                <c:set var="party" value="plaintiff" />
+                <c:set var="contact" value="${data.plaintiff}" />
+                <c:set var="required" value="${true}" />
+                <%@ include file="/WEB-INF/views/demand-requests/contact-fields.jspf" %>
+              </c:if>
+
+              <c:if test="${not form.defendantUnknown}">
+                <h3 class="section-subtitle ${form.plaintiffAnonymous ? '' : 'mt-4 pt-4 border-top'}">
+                  Demandado: <c:out value="${form.defendantName}" />
+                </h3>
+                <p class="form-text mt-0 mb-3">Capture su domicilio, teléfono y correo solo si se conocen.</p>
+                <c:set var="party" value="defendant" />
+                <c:set var="contact" value="${data.defendant}" />
+                <c:set var="required" value="${false}" />
+                <%@ include file="/WEB-INF/views/demand-requests/contact-fields.jspf" %>
+              </c:if>
+
+              <h3 class="section-subtitle mt-4 pt-4 border-top">Representante legal y clasificación</h3>
               <div class="row g-3">
                 <div class="col-md-8">
                   <label for="legalRepresentative" class="form-label">

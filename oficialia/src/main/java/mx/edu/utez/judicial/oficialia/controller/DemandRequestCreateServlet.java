@@ -181,6 +181,10 @@ public class DemandRequestCreateServlet extends HttpServlet {
         request.setAttribute("form", form);
         request.setAttribute("matters", registrationService.activeMatterNames());
         request.setAttribute("presentationTypes", PresentationType.values());
+        request.setAttribute("maxStreetLength", ComplementaryDataForm.MAX_STREET_LENGTH);
+        request.setAttribute("maxNeighborhoodLength", ComplementaryDataForm.MAX_NEIGHBORHOOD_LENGTH);
+        request.setAttribute("maxMunicipalityLength", ComplementaryDataForm.MAX_MUNICIPALITY_LENGTH);
+        request.setAttribute("maxEmailLength", ComplementaryDataForm.MAX_EMAIL_LENGTH);
         request.setAttribute("maxRepresentativeLength", ComplementaryDataForm.MAX_REPRESENTATIVE_LENGTH);
         request.setAttribute("maxObservationsLength", ComplementaryDataForm.MAX_OBSERVATIONS_LENGTH);
         request.setAttribute("receivedDate", LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));

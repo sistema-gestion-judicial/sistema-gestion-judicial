@@ -1,0 +1,46 @@
+<%-- Address, phone and email of one party in step 2. Set before including it:
+     party (plaintiff or defendant), contact (the typed values) and required (true for the plaintiff). --%>
+<div class="row g-3">
+  <div class="col-md-8">
+    <label for="${party}Street" class="form-label">Calle y número${required ? ' *' : ''}</label>
+    <input id="${party}Street" name="${party}Street" maxlength="${maxStreetLength}" autocomplete="off"
+           class="form-control ${not empty errors[party += 'Street'] ? 'is-invalid' : ''}"
+           value="${fn:escapeXml(contact.street)}">
+    <div class="invalid-feedback"><c:out value="${errors[party += 'Street']}" /></div>
+  </div>
+  <div class="col-md-4">
+    <label for="${party}Neighborhood" class="form-label">Colonia${required ? ' *' : ''}</label>
+    <input id="${party}Neighborhood" name="${party}Neighborhood" maxlength="${maxNeighborhoodLength}"
+           autocomplete="off" class="form-control ${not empty errors[party += 'Neighborhood'] ? 'is-invalid' : ''}"
+           value="${fn:escapeXml(contact.neighborhood)}">
+    <div class="invalid-feedback"><c:out value="${errors[party += 'Neighborhood']}" /></div>
+  </div>
+  <div class="col-md-4">
+    <label for="${party}PostalCode" class="form-label">Código postal${required ? ' *' : ''}</label>
+    <input id="${party}PostalCode" name="${party}PostalCode" maxlength="5" inputmode="numeric" autocomplete="off"
+           class="form-control ${not empty errors[party += 'PostalCode'] ? 'is-invalid' : ''}"
+           value="${fn:escapeXml(contact.postalCode)}">
+    <div class="invalid-feedback"><c:out value="${errors[party += 'PostalCode']}" /></div>
+  </div>
+  <div class="col-md-8">
+    <label for="${party}Municipality" class="form-label">Municipio${required ? ' *' : ''}</label>
+    <input id="${party}Municipality" name="${party}Municipality" maxlength="${maxMunicipalityLength}"
+           autocomplete="off" class="form-control ${not empty errors[party += 'Municipality'] ? 'is-invalid' : ''}"
+           value="${fn:escapeXml(contact.municipality)}">
+    <div class="invalid-feedback"><c:out value="${errors[party += 'Municipality']}" /></div>
+  </div>
+  <div class="col-md-6">
+    <label for="${party}Phone" class="form-label">Teléfono${required ? ' *' : ''}</label>
+    <input type="tel" id="${party}Phone" name="${party}Phone" maxlength="20" autocomplete="off"
+           placeholder="10 dígitos" class="form-control ${not empty errors[party += 'Phone'] ? 'is-invalid' : ''}"
+           value="${fn:escapeXml(contact.phone)}">
+    <div class="invalid-feedback"><c:out value="${errors[party += 'Phone']}" /></div>
+  </div>
+  <div class="col-md-6">
+    <label for="${party}Email" class="form-label">Correo electrónico${required ? ' *' : ''}</label>
+    <input type="email" id="${party}Email" name="${party}Email" maxlength="${maxEmailLength}" autocomplete="off"
+           class="form-control ${not empty errors[party += 'Email'] ? 'is-invalid' : ''}"
+           value="${fn:escapeXml(contact.email)}">
+    <div class="invalid-feedback"><c:out value="${errors[party += 'Email']}" /></div>
+  </div>
+</div>
