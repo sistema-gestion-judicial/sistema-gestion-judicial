@@ -994,14 +994,35 @@ textarea.form-control {
 .login-brand {
   position: relative;
   z-index: 0;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   padding: 64px;
   color: var(--mor-white);
-  background:
-    linear-gradient(rgba(0, 0, 0, 0.25), rgba(0, 0, 0, 0.25)),
-    url("../img/login-texture.webp") center / cover no-repeat,
-    linear-gradient(to right, #252f23, var(--mor-primary));
+  background: linear-gradient(to right, #252f23, var(--mor-primary));
+}
+
+/* Texture framed like the Figma layer: a 1342 x 1024 box with the image covering it, anchored at the top
+   left of the panel. At the panel's height the image is 1820 wide and starts 239 px (13.13 %) to the left. */
+.login-brand::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  aspect-ratio: 1820 / 1024;
+  transform: translateX(-13.13%);
+  background: url("../img/login-texture.webp") center / 100% 100% no-repeat;
+  z-index: -1;
+}
+
+/* 25 % black over the texture */
+.login-brand::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.25);
+  z-index: -1;
 }
 
 .login-brand .app-brand-logo {
@@ -1066,16 +1087,18 @@ textarea.form-control {
   color: var(--mor-primary-surface);
 }
 
+/* The vertical spacing keeps the Figma values in a 1024 px tall window and shrinks in shorter ones
+   (laptops), so the card fits without scrolling */
 .login-panel {
   display: grid;
   place-items: center;
-  padding: 32px;
+  padding: clamp(16px, calc(6.25vh - 32px), 32px) 32px;
 }
 
 .login-card {
   width: 100%;
   max-width: 520px;
-  padding: 99px 41px;
+  padding: clamp(24px, calc(16.5vh - 70px), 99px) 41px;
   border: 0;
   border-radius: var(--mor-radius);
   box-shadow: 3px 4px 20px 3px rgba(31, 35, 38, 0.1);
@@ -1085,14 +1108,14 @@ textarea.form-control {
   font-size: 36px;
   line-height: 46px;
   font-weight: 400;
-  margin: 0 0 48px -3px;
+  margin: 0 0 clamp(16px, calc(8.3vh - 37px), 48px) -3px;
 }
 
 .login-card .login-intro {
   font-size: 16px;
   line-height: 24px;
   color: var(--mor-text-muted);
-  margin-bottom: 40px;
+  margin-bottom: clamp(16px, calc(6.9vh - 31px), 40px);
 }
 
 /* Login fields are taller, with a 1.5 px border and 18 px text */
