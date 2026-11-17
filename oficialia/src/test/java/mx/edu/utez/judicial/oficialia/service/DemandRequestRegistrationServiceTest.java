@@ -181,6 +181,27 @@ class DemandRequestRegistrationServiceTest {
     }
 
     @Test
+    void takesTheNextFolioWhenAnotherClerkTookItFirst() {
+        InMemoryDemandRequestDao racing = new InMemoryDemandRequestDao(InMemoryDemandRequestDao.sampleRequests()) {
+            private boolean stale = true;
+
+            @Override
+            public int lastFolioNumber(int year) {
+                int last = super.lastFolioNumber(year);
+                if (stale) {
+                    stale = false;
+                    return last - 1;
+                }
+                return last;
+            }
+        };
+        DemandRequestRegistrationService raced = new DemandRequestRegistrationService(catalog, racing, CLOCK);
+
+        assertEquals("S-000128/2026", raced.register(clerk, parties("Civil", "DILR900101AB1"), data())
+            .request().getFolio());
+    }
+
+    @Test
     void onlyAnOficialDePartesRegisters() {
         User courtAdmin = new User("a@utez.edu.mx", "Ana Paz", UserRole.COURT_ADMIN, "Juzgado de Cuautla");
 

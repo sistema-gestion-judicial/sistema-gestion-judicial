@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import mx.edu.utez.judicial.oficialia.dao.CatalogDao;
 import mx.edu.utez.judicial.oficialia.dao.DemandRequestDao;
+import mx.edu.utez.judicial.oficialia.dao.DuplicateCodeException;
 import mx.edu.utez.judicial.oficialia.dao.OficialiaDaos;
 import mx.edu.utez.judicial.oficialia.exception.AccessDeniedException;
 import mx.edu.utez.judicial.oficialia.model.ComplementaryDataForm;
@@ -32,6 +33,8 @@ public class DemandRequestRegistrationService {
 
     static final String CONTINUED = "Continuó con el registro";
     static final String INACTIVE_MATTER = "Seleccione una materia activa.";
+    // Two clerks can take the same folio at once; the second one tries the next numbers
+    private static final int FOLIO_ATTEMPTS = 5;
 
     private final CatalogDao catalogDao;
     private final DemandRequestDao demandRequestDao;
@@ -87,13 +90,21 @@ public class DemandRequestRegistrationService {
             .map(match -> new DuplicityWarning(match.getCourtName(), match.getMatter(), CONTINUED))
             .orElse(null);
         LocalDate today = LocalDate.now(clock);
-        String folio = RequestFolio.of(demandRequestDao.lastFolioNumber(today.getYear()) + 1, today.getYear());
-        DemandRequest request = new DemandRequest(folio, today, court.getName(), court.getCode(),
-            parties.getMatter(), plaintiff(parties, data), defendant(parties, data),
-            data.getLegalRepresentative(), user.getFullName(), data.getAnnexes(), warning,
-            data.getPresentationTypeValue(), data.observationsOrNull());
-        demandRequestDao.insert(request);
-        return Registration.saved(request);
+        for (int attempt = 1; ; attempt++) {
+            String folio = RequestFolio.of(demandRequestDao.lastFolioNumber(today.getYear()) + 1, today.getYear());
+            DemandRequest request = new DemandRequest(folio, today, court.getName(), court.getCode(),
+                parties.getMatter(), plaintiff(parties, data), defendant(parties, data),
+                data.getLegalRepresentative(), user.getFullName(), data.getAnnexes(), warning,
+                data.getPresentationTypeValue(), data.observationsOrNull());
+            try {
+                demandRequestDao.insert(request);
+                return Registration.saved(request);
+            } catch (DuplicateCodeException e) {
+                if (attempt == FOLIO_ATTEMPTS) {
+                    throw e;
+                }
+            }
+        }
     }
 
     private Court courtOf(User user) {
