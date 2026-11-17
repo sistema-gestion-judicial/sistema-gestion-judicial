@@ -10,18 +10,17 @@
     <h1 class="page-title">Juzgados</h1>
     <p class="page-subtitle">Catálogo de juzgados del estado: dirección, distrito y materias que atienden.</p>
   </div>
-  <%@ include file="/WEB-INF/views/layout/user-chip.jspf" %>
 </header>
 
-<form class="card-mor p-3 mb-4" method="get" action="${ctx}/courts">
+<form class="filter-bar" method="get" action="${ctx}/courts">
   <div class="row g-3 align-items-center">
-    <div class="col-lg-4">
+    <div class="col-lg">
       <div class="input-group">
         <span class="input-group-text">
           <i class="bi bi-search"></i>
         </span>
         <input type="search" class="form-control border-start-0" name="q" value="<c:out value='${query}' />"
-               placeholder="Buscar por clave, número, nombre o municipio"
+               placeholder="Clave, número, nombre o municipio"
                aria-label="Buscar por clave, número, nombre o municipio">
       </div>
     </div>
@@ -35,7 +34,7 @@
         </c:forEach>
       </select>
     </div>
-    <div class="col-lg-2">
+    <div class="col-lg-auto">
       <select class="form-select" name="matter" aria-label="Materia">
         <option value="">Materia: Todas</option>
         <c:forEach var="matter" items="${subjectMatters}">
@@ -46,7 +45,7 @@
       </select>
     </div>
     <c:if test="${canSeeInactive}">
-      <div class="col-lg-2">
+      <div class="col-lg-auto">
         <select class="form-select" name="status" aria-label="Estado">
           <option value="">Estado: Todos</option>
           <option value="active" ${selectedStatus == 'active' ? 'selected' : ''}>Activos</option>
@@ -54,7 +53,7 @@
         </select>
       </div>
     </c:if>
-    <div class="col-lg d-flex justify-content-lg-end align-items-center gap-3">
+    <div class="col-lg-auto d-flex justify-content-lg-end align-items-center gap-3">
       <a class="link-dark text-nowrap" href="${ctx}/courts">Limpiar filtros</a>
       <button type="submit" class="btn btn-primary text-nowrap">
         <i class="bi bi-funnel me-1"></i> Aplicar filtros
@@ -64,14 +63,27 @@
 </form>
 
 <div class="card-mor overflow-hidden">
+  <div class="card-mor-header">
+    <div>
+      <h2 class="card-mor-title">Juzgados del estado</h2>
+      <p class="card-mor-subtitle">Dirección, distrito judicial y materias de cada juzgado.</p>
+    </div>
+    <p class="card-mor-count"><c:out value="${page.totalItems}" /> registros</p>
+  </div>
   <c:choose>
     <c:when test="${empty page.items}">
-      <div class="p-5 text-center">
-        <i class="bi bi-bank fs-1 text-secondary"></i>
-        <p class="mt-2 mb-0">
-          <c:out value="${filtered ? 'No se encontraron juzgados con esos criterios.'
-                                   : 'Todavía no hay juzgados registrados.'}" />
-        </p>
+      <div class="empty-state">
+        <span class="empty-state-icon" aria-hidden="true"></span>
+        <c:choose>
+          <c:when test="${filtered}">
+            <p class="empty-state-title">No hay juzgados con esos filtros</p>
+            <p class="empty-state-text">Pruebe con otra clave, distrito o materia, o limpie los filtros.</p>
+            <a class="btn btn-outline-primary" href="${ctx}/courts">Limpiar filtros</a>
+          </c:when>
+          <c:otherwise>
+            <p class="empty-state-title">Todavía no hay juzgados registrados</p>
+          </c:otherwise>
+        </c:choose>
       </div>
     </c:when>
     <c:otherwise>
@@ -80,9 +92,7 @@
           <thead>
             <tr>
               <th>Clave</th>
-              <th class="text-end">Número</th>
-              <th>Nombre</th>
-              <th>Distrito judicial</th>
+              <th>Juzgado</th>
               <th>Dirección</th>
               <th>Materias</th>
               <c:if test="${canSeeInactive}">
@@ -93,17 +103,21 @@
           <tbody>
             <c:forEach var="court" items="${page.items}">
               <tr>
-                <td class="cell-strong"><c:out value="${court.code}" /></td>
-                <td class="text-end"><c:out value="${court.number}" /></td>
-                <td><c:out value="${court.name}" /></td>
-                <td class="cell-muted"><c:out value="${court.judicialDistrict}" /></td>
-                <td class="cell-muted">
+                <td>
+                  <span class="cell-strong"><c:out value="${court.code}" /></span>
+                  <span class="cell-sub">Número <c:out value="${court.number}" /></span>
+                </td>
+                <td>
+                  <c:out value="${court.name}" />
+                  <span class="cell-sub"><c:out value="${court.judicialDistrict}" /></span>
+                </td>
+                <td>
                   <c:out value="${empty court.fullAddress ? '—' : court.fullAddress}" />
                   <c:if test="${not empty court.phone}">
-                    <div class="small"><i class="bi bi-telephone me-1"></i><c:out value="${court.phone}" /></div>
+                    <span class="cell-sub">Tel. <c:out value="${court.phone}" /></span>
                   </c:if>
                 </td>
-                <td class="cell-muted"><c:out value="${empty court.subjectMatters ? '—' : court.subjectMatters}" /></td>
+                <td><c:out value="${empty court.subjectMatters ? '—' : court.subjectMatters}" /></td>
                 <c:if test="${canSeeInactive}">
                   <td>
                     <span class="badge-mor ${court.active ? 'status-admissible' : 'status-inadmissible'}">
@@ -116,14 +130,14 @@
           </tbody>
         </table>
       </div>
-      <div class="px-3 py-3 border-top d-flex flex-wrap justify-content-between align-items-center gap-2">
-        <span class="text-secondary small">
-          <c:out value="${page.firstItem}" />–<c:out value="${page.lastItem}" /> de
-          <c:out value="${page.totalItems}" /> juzgados
+      <div class="card-mor-footer">
+        <span>
+          Mostrando <c:out value="${page.firstItem}" />–<c:out value="${page.lastItem}" />
+          de <c:out value="${page.totalItems}" />
         </span>
         <c:if test="${page.totalPages > 1}">
           <nav aria-label="Páginas de juzgados">
-            <ul class="pagination pagination-sm mb-0">
+            <ul class="pagination mb-0">
               <c:url var="previousUrl" value="/courts">
                 <c:param name="q" value="${query}" />
                 <c:param name="district" value="${selectedDistrict}" />
