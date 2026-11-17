@@ -1,12 +1,14 @@
 package mx.edu.utez.judicial.oficialia.model;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import mx.edu.utez.judicial.oficialia.util.EmailValidator;
 
 /**
  * Step 2 of the registration (DFR 3.1): the address and contact of the parties, the legal representative,
- * how the demand was presented and the observations. The plaintiff's address and contact are
+ * how the demand was presented, the observations and the annexes. The plaintiff's address and contact are
  * required unless the plaintiff is anonymous; the defendant's are captured only when they are known.
  */
 public class ComplementaryDataForm {
@@ -17,6 +19,8 @@ public class ComplementaryDataForm {
     public static final int MAX_EMAIL_LENGTH = 150;
     public static final int MAX_REPRESENTATIVE_LENGTH = 150;
     public static final int MAX_OBSERVATIONS_LENGTH = 500;
+    public static final int MAX_ANNEX_MB = 10;
+    public static final int MAX_TOTAL_ANNEX_MB = 40;
     private static final int PHONE_DIGITS = 10;
 
     private final ContactFields plaintiff = new ContactFields();
@@ -24,6 +28,7 @@ public class ComplementaryDataForm {
     private String legalRepresentative = "";
     private String presentationType = "";
     private String observations = "";
+    private final List<Annex> annexes = new ArrayList<>();
 
     /**
      * Field name to message, in Spanish; empty when the form is valid. The fields of a party that was not
@@ -48,7 +53,26 @@ public class ComplementaryDataForm {
         if (observations.length() > MAX_OBSERVATIONS_LENGTH) {
             errors.put("observations", tooLong(MAX_OBSERVATIONS_LENGTH));
         }
+        validateAnnexes(errors);
         return errors;
+    }
+
+    private void validateAnnexes(Map<String, String> errors) {
+        if (annexes.isEmpty()) {
+            errors.put("annexes", "Adjunte al menos un anexo.");
+            return;
+        }
+        int totalKb = 0;
+        for (Annex annex : annexes) {
+            if (annex.getSizeKb() > MAX_ANNEX_MB * 1024) {
+                errors.put("annexes", "El anexo «" + annex.getFileName() + "» pasa de " + MAX_ANNEX_MB + " MB.");
+                return;
+            }
+            totalKb += annex.getSizeKb();
+        }
+        if (totalKb > MAX_TOTAL_ANNEX_MB * 1024) {
+            errors.put("annexes", "Los anexos juntos pasan de " + MAX_TOTAL_ANNEX_MB + " MB.");
+        }
     }
 
     private static String tooLong(int maxLength) {
@@ -110,6 +134,14 @@ public class ComplementaryDataForm {
     /** The observations to store, or null when none were written. */
     public String observationsOrNull() {
         return observations.isEmpty() ? null : observations;
+    }
+
+    public List<Annex> getAnnexes() {
+        return List.copyOf(annexes);
+    }
+
+    public void addAnnex(Annex annex) {
+        annexes.add(annex);
     }
 
     private static String clean(String value) {

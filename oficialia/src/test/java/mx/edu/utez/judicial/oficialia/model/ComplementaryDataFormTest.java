@@ -19,6 +19,7 @@ class ComplementaryDataFormTest {
         form.getPlaintiff().setEmail("Ana.Torres@Ejemplo.mx");
         form.setLegalRepresentative("Lic. Marcos Rivera Peña");
         form.setPresentationType("INDIVIDUAL");
+        form.addAnnex(new Annex("Demanda.pdf", "application/pdf", new byte[100]));
         return form;
     }
 
@@ -37,8 +38,8 @@ class ComplementaryDataFormTest {
         var errors = new ComplementaryDataForm().validate(true, true);
 
         assertEquals(List.of("plaintiffStreet", "plaintiffNeighborhood", "plaintiffPostalCode",
-            "plaintiffMunicipality", "plaintiffPhone", "plaintiffEmail", "legalRepresentative", "presentationType"),
-            List.copyOf(errors.keySet()));
+            "plaintiffMunicipality", "plaintiffPhone", "plaintiffEmail", "legalRepresentative", "presentationType",
+            "annexes"), List.copyOf(errors.keySet()));
     }
 
     @Test
@@ -46,6 +47,7 @@ class ComplementaryDataFormTest {
         ComplementaryDataForm form = new ComplementaryDataForm();
         form.setLegalRepresentative("Colectivo Vecinos Unidos");
         form.setPresentationType("COLLECTIVE");
+        form.addAnnex(new Annex("Demanda.pdf", "application/pdf", new byte[100]));
 
         assertTrue(form.validate(false, false).isEmpty());
         assertNull(form.plaintiffAddress());
@@ -101,6 +103,19 @@ class ComplementaryDataFormTest {
 
         form.setObservations("o".repeat(ComplementaryDataForm.MAX_OBSERVATIONS_LENGTH + 1));
         assertEquals("No puede pasar de 500 caracteres.", form.validate(true, true).get("observations"));
+    }
+
+    @Test
+    void refusesAnAnnexOverTenMegabytesAndAllOfThemOverForty() {
+        ComplementaryDataForm big = validForm();
+        big.addAnnex(new Annex("Video.mp4", "video/mp4", new byte[10 * 1024 * 1024 + 1]));
+        assertEquals("El anexo «Video.mp4» pasa de 10 MB.", big.validate(true, true).get("annexes"));
+
+        ComplementaryDataForm many = validForm();
+        for (int i = 0; i < 5; i++) {
+            many.addAnnex(new Annex("Foto" + i + ".jpg", "image/jpeg", new byte[9 * 1024 * 1024]));
+        }
+        assertEquals("Los anexos juntos pasan de 40 MB.", many.validate(true, true).get("annexes"));
     }
 
     @Test
