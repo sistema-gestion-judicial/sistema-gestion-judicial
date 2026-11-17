@@ -1,6 +1,7 @@
 package mx.edu.utez.judicial.oficialia.dao;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.sql.Connection;
@@ -9,7 +10,12 @@ import java.sql.Statement;
 import java.time.LocalDateTime;
 import java.util.List;
 import mx.edu.utez.judicial.common.db.Database;
+import java.time.LocalDate;
+import mx.edu.utez.judicial.oficialia.model.Annex;
 import mx.edu.utez.judicial.oficialia.model.DemandRequest;
+import mx.edu.utez.judicial.oficialia.model.Party;
+import mx.edu.utez.judicial.oficialia.model.PartyAddress;
+import mx.edu.utez.judicial.oficialia.model.PartyRole;
 import mx.edu.utez.judicial.oficialia.model.RequestStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -41,6 +47,20 @@ class JdbcDemandRequestDaoTest {
         assertEquals(1, penal.getAnnexes().size());
         assertEquals("Juzgado de Cuernavaca",
             dao.findByFolio("S-000125/2026").orElseThrow().getDuplicityWarning().getCourtName());
+    }
+
+    @Test
+    void readsBackTheAddressOfEachParty() {
+        Party plaintiff = new Party(PartyRole.PLAINTIFF, "Rosa Díaz Luna", "INDIVIDUAL", "DILR900101AB1",
+            "7351234567", "rosa@ejemplo.mx", new PartyAddress("Calle Hidalgo 12", "Centro", "62740", "Cuautla"));
+        dao.insert(new DemandRequest("S-000200/2026", LocalDate.parse("2026-11-17"), "Juzgado de Cuautla", "12",
+            "Civil", plaintiff, Party.unidentified(PartyRole.DEFENDANT), "Lic. Marcos Rivera Peña", "Laura Méndez",
+            List.of(new Annex("Demanda.pdf", 120)), null));
+
+        DemandRequest saved = dao.findByFolio("S-000200/2026").orElseThrow();
+        assertEquals("Calle Hidalgo 12, Centro, C.P. 62740, Cuautla", saved.getPlaintiff().getAddress().getFullText());
+        assertNull(saved.getDefendant().getAddress());
+        assertNull(dao.findByFolio("S-000127/2026").orElseThrow().getPlaintiff().getAddress());
     }
 
     @Test

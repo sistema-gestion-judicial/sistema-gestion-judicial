@@ -19,6 +19,7 @@ import mx.edu.utez.judicial.oficialia.model.Annex;
 import mx.edu.utez.judicial.oficialia.model.DemandRequest;
 import mx.edu.utez.judicial.oficialia.model.DuplicityWarning;
 import mx.edu.utez.judicial.oficialia.model.Party;
+import mx.edu.utez.judicial.oficialia.model.PartyAddress;
 import mx.edu.utez.judicial.oficialia.model.PartyRole;
 import mx.edu.utez.judicial.oficialia.model.RequestStatus;
 
@@ -252,8 +253,11 @@ public class JdbcDemandRequestDao implements DemandRequestDao {
                         continue;
                     }
                     PartyRole role = PartyRole.valueOf(rows.getString("role"));
+                    String street = rows.getString("street");
+                    PartyAddress address = street == null ? null : new PartyAddress(street,
+                        rows.getString("neighborhood"), rows.getString("postal_code"), rows.getString("municipality"));
                     Party party = new Party(role, rows.getString("name"), rows.getString("person_type"),
-                        rows.getString("person_id"), rows.getString("phone"), rows.getString("email"));
+                        rows.getString("person_id"), rows.getString("phone"), rows.getString("email"), address);
                     if (role == PartyRole.PLAINTIFF) {
                         owner.plaintiff = party;
                     } else {
@@ -313,8 +317,9 @@ public class JdbcDemandRequestDao implements DemandRequestDao {
     }
 
     static void insertParty(Connection connection, String folio, Party party) throws SQLException {
-        String sql = "INSERT INTO parties (folio, role, name, person_type, person_id, phone, email) "
-            + "VALUES (?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO parties (folio, role, name, person_type, person_id, phone, email, street, "
+            + "neighborhood, postal_code, municipality) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        PartyAddress address = party.getAddress();
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, folio);
             statement.setString(2, party.getRole().name());
@@ -323,6 +328,10 @@ public class JdbcDemandRequestDao implements DemandRequestDao {
             statement.setString(5, party.getPersonId());
             statement.setString(6, party.getPhone());
             statement.setString(7, party.getEmail());
+            statement.setString(8, address == null ? null : address.getStreet());
+            statement.setString(9, address == null ? null : address.getNeighborhood());
+            statement.setString(10, address == null ? null : address.getPostalCode());
+            statement.setString(11, address == null ? null : address.getMunicipality());
             statement.executeUpdate();
         }
     }

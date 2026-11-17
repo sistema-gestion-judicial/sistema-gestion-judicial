@@ -12,14 +12,22 @@ public class Party {
     private final String personId;
     private final String phone;
     private final String email;
+    private final PartyAddress address;
 
     public Party(PartyRole role, String name, String personType, String personId, String phone, String email) {
+        this(role, name, personType, personId, phone, email, null);
+    }
+
+    /** A party with its address; the address is null when it is not known. */
+    public Party(PartyRole role, String name, String personType, String personId, String phone, String email,
+                 PartyAddress address) {
         this.role = role;
         this.name = name;
         this.personType = personType;
         this.personId = personId;
         this.phone = phone;
         this.email = email;
+        this.address = address;
     }
 
     /** A plaintiff registered as anonymous or a defendant registered as unknown. */
@@ -66,5 +74,10 @@ public class Party {
 
     public String getEmail() {
         return email;
+    }
+
+    /** Null when the address is not known, as for the requests registered before V007. */
+    public PartyAddress getAddress() {
+        return address;
     }
 }
