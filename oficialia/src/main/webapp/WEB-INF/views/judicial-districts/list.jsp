@@ -23,7 +23,7 @@
   </div>
 </c:if>
 
-<form class="card-mor p-3 mb-4" method="get" action="${ctx}/judicial-districts">
+<form class="filter-bar" method="get" action="${ctx}/judicial-districts">
   <div class="row g-3 align-items-center">
     <div class="col-lg-5">
       <div class="input-group">
@@ -52,14 +52,28 @@
 </form>
 
 <div class="card-mor overflow-hidden">
+  <div class="card-mor-header">
+    <div>
+      <h2 class="card-mor-title">Distritos del estado</h2>
+      <p class="card-mor-subtitle">Municipio sede y número de juzgados de cada distrito.</p>
+    </div>
+    <p class="card-mor-count"><c:out value="${page.totalItems}" /> registros</p>
+  </div>
   <c:choose>
     <c:when test="${empty page.items}">
-      <div class="p-5 text-center">
-        <i class="bi bi-geo-alt fs-1 text-secondary"></i>
-        <p class="mt-2 mb-0">
-          <c:out value="${filtered ? 'No se encontraron distritos judiciales con esos criterios.'
-                                   : 'Todavía no hay distritos judiciales registrados.'}" />
-        </p>
+      <div class="empty-state">
+        <span class="empty-state-icon" aria-hidden="true"></span>
+        <c:choose>
+          <c:when test="${filtered}">
+            <p class="empty-state-title">No hay distritos con esos filtros</p>
+            <p class="empty-state-text">Pruebe con otra clave, nombre o municipio, o limpie los filtros.</p>
+            <a class="btn btn-outline-primary" href="${ctx}/judicial-districts">Limpiar filtros</a>
+          </c:when>
+          <c:otherwise>
+            <p class="empty-state-title">Todavía no hay distritos judiciales</p>
+            <p class="empty-state-text">Registre el primer distrito para asignarle juzgados.</p>
+          </c:otherwise>
+        </c:choose>
       </div>
     </c:when>
     <c:otherwise>
@@ -67,8 +81,7 @@
         <table class="table table-mor">
           <thead>
             <tr>
-              <th>Clave</th>
-              <th>Nombre</th>
+              <th>Distrito</th>
               <th>Municipio sede</th>
               <th class="text-end">Juzgados</th>
               <th>Estado</th>
@@ -78,9 +91,11 @@
           <tbody>
             <c:forEach var="district" items="${page.items}">
               <tr>
-                <td class="cell-strong"><c:out value="${district.code}" /></td>
-                <td><c:out value="${district.name}" /></td>
-                <td class="cell-muted"><c:out value="${district.seatMunicipality}" /></td>
+                <td>
+                  <span class="cell-strong"><c:out value="${district.name}" /></span>
+                  <span class="cell-sub">Clave: <c:out value="${district.code}" /></span>
+                </td>
+                <td><c:out value="${district.seatMunicipality}" /></td>
                 <td class="text-end"><c:out value="${district.courtCount}" /></td>
                 <td>
                   <span class="badge-mor ${district.active ? 'status-admissible' : 'status-inadmissible'}">
@@ -91,8 +106,8 @@
                   <c:url var="editUrl" value="/judicial-districts/edit">
                     <c:param name="code" value="${district.code}" />
                   </c:url>
-                  <a class="fw-bold text-decoration-none" href="${editUrl}">
-                    <i class="bi bi-pencil me-1"></i> Editar
+                  <a class="row-action" href="${editUrl}" aria-label="Editar distrito ${district.name}">
+                    <i class="bi bi-pencil" aria-hidden="true"></i> Editar
                   </a>
                 </td>
               </tr>
@@ -100,14 +115,14 @@
           </tbody>
         </table>
       </div>
-      <div class="px-3 py-3 border-top d-flex flex-wrap justify-content-between align-items-center gap-2">
-        <span class="text-secondary small">
-          <c:out value="${page.firstItem}" />–<c:out value="${page.lastItem}" /> de
-          <c:out value="${page.totalItems}" /> distritos judiciales
+      <div class="card-mor-footer">
+        <span>
+          Mostrando <c:out value="${page.firstItem}" />–<c:out value="${page.lastItem}" />
+          de <c:out value="${page.totalItems}" />
         </span>
         <c:if test="${page.totalPages > 1}">
           <nav aria-label="Páginas de distritos judiciales">
-            <ul class="pagination pagination-sm mb-0">
+            <ul class="pagination mb-0">
               <c:url var="previousUrl" value="/judicial-districts">
                 <c:param name="q" value="${query}" />
                 <c:param name="status" value="${selectedStatus}" />
