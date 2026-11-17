@@ -10,8 +10,11 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
 import java.util.Optional;
+import mx.edu.utez.judicial.oficialia.exception.AccessDeniedException;
+import mx.edu.utez.judicial.oficialia.filter.AuthFilter;
 import mx.edu.utez.judicial.oficialia.model.DuplicityCheckForm;
 import mx.edu.utez.judicial.oficialia.model.DuplicityMatch;
+import mx.edu.utez.judicial.oficialia.model.User;
 import mx.edu.utez.judicial.oficialia.service.DemandRequestRegistrationService;
 import mx.edu.utez.judicial.oficialia.service.DuplicityService;
 
@@ -36,14 +39,12 @@ public class DemandRequestCreateServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         String action = request.getParameter("action");
+        DuplicityCheckForm form = readForm(request);
         if ("cancel".equals(action)) {
-            request.getSession().setAttribute(DemandRequestListServlet.FLASH_MESSAGE,
-                    "Se canceló el registro. El intento quedó guardado con su usuario y la fecha.");
-            response.sendRedirect(request.getContextPath() + "/demand-requests");
+            cancel(request, response, form);
             return;
         }
 
-        DuplicityCheckForm form = readForm(request);
         Map<String, String> errors = form.validate();
         if (!errors.isEmpty()) {
             request.setAttribute("errors", errors);
@@ -61,6 +62,24 @@ public class DemandRequestCreateServlet extends HttpServlet {
             request.setAttribute("verified", true);
         }
         show(request, response, form);
+    }
+
+    /** The request is not saved, but the attempt is, with the clerk and the date (DFR 3.1). */
+    private void cancel(HttpServletRequest request, HttpServletResponse response, DuplicityCheckForm form)
+            throws ServletException, IOException {
+        try {
+            boolean kept = registrationService.cancel(currentUser(request), form);
+            request.getSession().setAttribute(DemandRequestListServlet.FLASH_MESSAGE, kept
+                    ? "Se canceló el registro. El intento quedó guardado con su usuario y la fecha."
+                    : "Se canceló el registro.");
+            response.sendRedirect(request.getContextPath() + "/demand-requests");
+        } catch (AccessDeniedException e) {
+            ErrorView.forbidden(request, response, e.getMessage());
+        }
+    }
+
+    private static User currentUser(HttpServletRequest request) {
+        return (User) request.getSession().getAttribute(AuthFilter.SESSION_USER);
     }
 
     private void show(HttpServletRequest request, HttpServletResponse response, DuplicityCheckForm form)
