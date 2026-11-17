@@ -8,11 +8,11 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import mx.edu.utez.judicial.oficialia.model.DuplicityCheckForm;
 import mx.edu.utez.judicial.oficialia.model.DuplicityMatch;
+import mx.edu.utez.judicial.oficialia.service.DemandRequestRegistrationService;
 import mx.edu.utez.judicial.oficialia.service.DuplicityService;
 
 /**
@@ -22,9 +22,9 @@ import mx.edu.utez.judicial.oficialia.service.DuplicityService;
 public class DemandRequestCreateServlet extends HttpServlet {
 
     private static final String VIEW = "/WEB-INF/views/demand-requests/new.jsp";
-    private static final List<String> MATTERS = List.of("Civil", "Familiar", "Mercantil", "Penal");
 
     private final DuplicityService duplicityService = new DuplicityService();
+    private final DemandRequestRegistrationService registrationService = new DemandRequestRegistrationService();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -66,7 +66,7 @@ public class DemandRequestCreateServlet extends HttpServlet {
     private void show(HttpServletRequest request, HttpServletResponse response, DuplicityCheckForm form)
             throws ServletException, IOException {
         request.setAttribute("form", form);
-        request.setAttribute("matters", MATTERS);
+        request.setAttribute("matters", registrationService.activeMatterNames());
         request.setAttribute("receivedDate", LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
         request.getRequestDispatcher(VIEW).forward(request, response);
     }
