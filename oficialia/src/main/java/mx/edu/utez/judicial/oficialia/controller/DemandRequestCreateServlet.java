@@ -21,6 +21,7 @@ import mx.edu.utez.judicial.oficialia.model.ComplementaryDataForm;
 import mx.edu.utez.judicial.oficialia.model.DemandRequest;
 import mx.edu.utez.judicial.oficialia.model.DuplicityCheckForm;
 import mx.edu.utez.judicial.oficialia.model.DuplicityMatch;
+import mx.edu.utez.judicial.oficialia.model.PresentationType;
 import mx.edu.utez.judicial.oficialia.model.User;
 import mx.edu.utez.judicial.oficialia.service.DemandRequestRegistrationService;
 import mx.edu.utez.judicial.oficialia.service.DuplicityService;
@@ -179,6 +180,9 @@ public class DemandRequestCreateServlet extends HttpServlet {
             throws ServletException, IOException {
         request.setAttribute("form", form);
         request.setAttribute("matters", registrationService.activeMatterNames());
+        request.setAttribute("presentationTypes", PresentationType.values());
+        request.setAttribute("maxRepresentativeLength", ComplementaryDataForm.MAX_REPRESENTATIVE_LENGTH);
+        request.setAttribute("maxObservationsLength", ComplementaryDataForm.MAX_OBSERVATIONS_LENGTH);
         request.setAttribute("receivedDate", LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
         request.getRequestDispatcher(VIEW).forward(request, response);
     }

@@ -153,28 +153,89 @@
       </fieldset>
     </form>
 
-    <section class="section-card mt-4 ${verified ? '' : 'is-locked'}">
-      <div class="section-card-header">
-        <h2 class="section-card-title">Datos complementarios</h2>
+    <form id="registerForm" method="post" action="${ctx}/demand-requests/new" enctype="multipart/form-data"
+          novalidate data-unsaved-guard>
+      <%-- Step 1 is sent again so the server checks it once more before saving --%>
+      <c:if test="${verified}">
+        <input type="hidden" name="matter" value="${fn:escapeXml(form.matter)}">
+        <input type="hidden" name="plaintiffType" value="${fn:escapeXml(form.plaintiffType)}">
+        <input type="hidden" name="plaintiffName" value="${fn:escapeXml(form.plaintiffName)}">
+        <input type="hidden" name="plaintiffId" value="${fn:escapeXml(form.plaintiffId)}">
+        <c:if test="${form.plaintiffAnonymous}"><input type="hidden" name="plaintiffAnonymous" value="on"></c:if>
+        <input type="hidden" name="defendantType" value="${fn:escapeXml(form.defendantType)}">
+        <input type="hidden" name="defendantName" value="${fn:escapeXml(form.defendantName)}">
+        <input type="hidden" name="defendantId" value="${fn:escapeXml(form.defendantId)}">
+        <c:if test="${form.defendantUnknown}"><input type="hidden" name="defendantUnknown" value="on"></c:if>
+      </c:if>
+
+      <section class="section-card mt-4 ${verified ? '' : 'is-locked'}">
+        <div class="section-card-header">
+          <h2 class="section-card-title">Datos complementarios</h2>
+          <c:choose>
+            <c:when test="${verified}">
+              <span class="badge-mor status-admissible"><span class="dot"></span> Habilitado</span>
+            </c:when>
+            <c:otherwise>
+              <span class="badge-mor is-neutral">Bloqueado</span>
+            </c:otherwise>
+          </c:choose>
+        </div>
         <c:choose>
           <c:when test="${verified}">
-            <span class="badge-mor status-admissible"><span class="dot"></span> Habilitado</span>
+            <fieldset class="section-card-body">
+              <c:if test="${not empty errors}">
+                <div class="alert alert-mor-warning mb-4" role="alert">
+                  Revise los campos marcados. La solicitud no se registró.
+                </div>
+              </c:if>
+
+              <h3 class="section-subtitle">Representante legal y clasificación</h3>
+              <div class="row g-3">
+                <div class="col-md-8">
+                  <label for="legalRepresentative" class="form-label">
+                    Representante legal o nombre legal del grupo *
+                  </label>
+                  <input id="legalRepresentative" name="legalRepresentative" maxlength="${maxRepresentativeLength}"
+                         autocomplete="off"
+                         class="form-control ${not empty errors.legalRepresentative ? 'is-invalid' : ''}"
+                         value="${fn:escapeXml(data.legalRepresentative)}">
+                  <div class="invalid-feedback"><c:out value="${errors.legalRepresentative}" /></div>
+                </div>
+                <div class="col-md-4">
+                  <label for="presentationType" class="form-label">Tipo de presentación *</label>
+                  <select id="presentationType" name="presentationType"
+                          class="form-select ${not empty errors.presentationType ? 'is-invalid' : ''}">
+                    <option value="">Seleccione</option>
+                    <c:forEach var="type" items="${presentationTypes}">
+                      <option value="${type}" ${data.presentationType == type.name() ? 'selected' : ''}>
+                        <c:out value="${type.label}" />
+                      </option>
+                    </c:forEach>
+                  </select>
+                  <div class="invalid-feedback"><c:out value="${errors.presentationType}" /></div>
+                </div>
+                <div class="col-12">
+                  <label for="observations" class="form-label">Observaciones</label>
+                  <textarea id="observations" name="observations" rows="3" maxlength="${maxObservationsLength}"
+                            class="form-control ${not empty errors.observations ? 'is-invalid' : ''}"
+                  ><c:out value="${data.observations}" /></textarea>
+                  <div class="invalid-feedback"><c:out value="${errors.observations}" /></div>
+                </div>
+              </div>
+            </fieldset>
           </c:when>
           <c:otherwise>
-            <span class="badge-mor is-neutral">Bloqueado</span>
+            <div class="section-card-body">
+              <p class="section-card-text">
+                Domicilio, teléfono y correo de las partes, representante legal, tipo de presentación y anexos.
+                Se habilitan cuando termine la verificación de duplicidad.
+              </p>
+            </div>
           </c:otherwise>
         </c:choose>
-      </div>
-      <div class="section-card-body">
-        <p class="section-card-text">
-          Domicilio, teléfono y correo de las partes, representante legal, tipo de presentación y anexos.
-          <c:choose>
-            <c:when test="${verified}">Esta parte del registro se presenta en el siguiente avance.</c:when>
-            <c:otherwise>Se habilitan cuando termine la verificación de duplicidad.</c:otherwise>
-          </c:choose>
-        </p>
-      </div>
-    </section>
+      </section>
+
+    </form>
   </div>
 
   <div class="col-xl-4 d-flex flex-column gap-4">
@@ -193,8 +254,10 @@
     <div class="d-grid gap-3">
       <c:choose>
         <c:when test="${verified}">
-          <button type="button" class="btn btn-primary" disabled>Registrar solicitud</button>
-          <a class="btn btn-secondary" href="${ctx}/demand-requests">Volver a Solicitudes</a>
+          <button type="submit" class="btn btn-primary" form="registerForm" name="action" value="register">
+            Registrar solicitud
+          </button>
+          <a class="btn btn-secondary" href="${ctx}/demand-requests">Cancelar</a>
         </c:when>
         <c:otherwise>
           <button type="submit" class="btn btn-primary" form="duplicityForm" name="action" value="verify">
