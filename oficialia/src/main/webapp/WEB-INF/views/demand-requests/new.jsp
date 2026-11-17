@@ -35,6 +35,13 @@
 <div class="row g-4">
   <div class="col-xl-8">
 
+    <c:if test="${annexesTooLarge}">
+      <div class="alert alert-mor-danger d-flex gap-2 align-items-start" role="alert">
+        <i class="bi bi-x-circle mt-1"></i>
+        <span>Los anexos pasan del tamaño permitido (${maxAnnexMb} MB cada uno y ${maxTotalAnnexMb} MB en total),
+          por lo que la solicitud no se registró. Capture de nuevo los datos y elija archivos más pequeños.</span>
+      </div>
+    </c:if>
     <c:if test="${verified and empty continuedWithWarning}">
       <div class="alert alert-mor-success d-flex gap-2 align-items-start" role="status">
         <i class="bi bi-check-circle mt-1"></i>
