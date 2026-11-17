@@ -132,4 +132,11 @@ class RouteRulesTest {
             assertFalse(RouteRules.canAccess(path, UserRole.CLERK), path);
         }
     }
+
+    @Test
+    void onlyTheJudicialBodyAdministratorRegistersCourts() {
+        assertTrue(RouteRules.canAccess("/courts/new", UserRole.JUDICIAL_BODY_ADMIN));
+        assertFalse(RouteRules.canAccess("/courts/new", UserRole.COURT_ADMIN));
+        assertFalse(RouteRules.canAccess("/courts/new", UserRole.CLERK));
+    }
 }
