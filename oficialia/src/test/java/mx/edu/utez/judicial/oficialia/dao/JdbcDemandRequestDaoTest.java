@@ -78,6 +78,20 @@ class JdbcDemandRequestDaoTest {
     }
 
     @Test
+    void savesTheBytesOfEachAnnexButListsThemWithoutTheBytes() throws Exception {
+        dao.insert(new DemandRequest("S-000202/2026", LocalDate.parse("2026-11-17"), "Juzgado de Cuautla", "12",
+            "Civil", Party.unidentified(PartyRole.PLAINTIFF), Party.unidentified(PartyRole.DEFENDANT),
+            "Lic. Marcos Rivera Peña", "Laura Méndez",
+            List.of(new Annex("Demanda.pdf", "application/pdf", new byte[2048])), null));
+
+        Annex saved = dao.findByFolio("S-000202/2026").orElseThrow().getAnnexes().get(0);
+        assertEquals("application/pdf", saved.getContentType());
+        assertEquals(2, saved.getSizeKb());
+        assertNull(saved.getContent());
+        assertEquals(2048, count("SELECT LENGTH(content) FROM annexes WHERE folio = 'S-000202/2026'"));
+    }
+
+    @Test
     void filtersByCourtAndSavesARuling() {
         assertEquals(9, dao.findByCourt("Juzgado de Cuautla").size());
         assertEquals(10, dao.count());
