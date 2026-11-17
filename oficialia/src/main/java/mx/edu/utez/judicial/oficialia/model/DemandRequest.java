@@ -25,6 +25,8 @@ public class DemandRequest {
     private final String capturedBy;
     private final List<Annex> annexes;
     private final DuplicityWarning duplicityWarning;
+    private final PresentationType presentationType;
+    private final String observations;
 
     private RequestStatus status = RequestStatus.PENDING;
     private String caseFileNumber;
@@ -36,6 +38,14 @@ public class DemandRequest {
     public DemandRequest(String folio, LocalDate receivedDate, String courtName, String courtCode, String matter,
             Party plaintiff, Party defendant, String legalRepresentative, String capturedBy, List<Annex> annexes,
             DuplicityWarning duplicityWarning) {
+        this(folio, receivedDate, courtName, courtCode, matter, plaintiff, defendant, legalRepresentative, capturedBy,
+            annexes, duplicityWarning, PresentationType.INDIVIDUAL, null);
+    }
+
+    /** A request with how it was presented and the clerk's observations, which can be null (DFR 3.1). */
+    public DemandRequest(String folio, LocalDate receivedDate, String courtName, String courtCode, String matter,
+            Party plaintiff, Party defendant, String legalRepresentative, String capturedBy, List<Annex> annexes,
+            DuplicityWarning duplicityWarning, PresentationType presentationType, String observations) {
         this.folio = folio;
         this.receivedDate = receivedDate;
         this.courtName = courtName;
@@ -47,6 +57,8 @@ public class DemandRequest {
         this.capturedBy = capturedBy;
         this.annexes = List.copyOf(annexes);
         this.duplicityWarning = duplicityWarning;
+        this.presentationType = presentationType;
+        this.observations = observations;
     }
 
     /**
@@ -132,6 +144,14 @@ public class DemandRequest {
 
     public List<Annex> getAnnexes() {
         return annexes;
+    }
+
+    public PresentationType getPresentationType() {
+        return presentationType;
+    }
+
+    public String getObservations() {
+        return observations;
     }
 
     public DuplicityWarning getDuplicityWarning() {
