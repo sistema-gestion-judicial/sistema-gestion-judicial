@@ -21,6 +21,7 @@ import mx.edu.utez.judicial.oficialia.model.DuplicityWarning;
 import mx.edu.utez.judicial.oficialia.model.Party;
 import mx.edu.utez.judicial.oficialia.model.PartyAddress;
 import mx.edu.utez.judicial.oficialia.model.PartyRole;
+import mx.edu.utez.judicial.oficialia.model.PresentationType;
 import mx.edu.utez.judicial.oficialia.model.RequestStatus;
 
 /**
@@ -290,7 +291,8 @@ public class JdbcDemandRequestDao implements DemandRequestDao {
     static void insertRequest(Connection connection, DemandRequest request) throws SQLException {
         String sql = "INSERT INTO demand_requests (folio, received_date, court_code, matter, legal_representative, "
             + "captured_by, duplicity_court, duplicity_matter, duplicity_decision, status, case_file_number, "
-            + "desk_name, rejection_reason, ruled_by, ruled_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            + "desk_name, rejection_reason, ruled_by, ruled_at, presentation_type, observations) "
+            + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         DuplicityWarning warning = request.getDuplicityWarning();
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, request.getFolio());
@@ -312,6 +314,8 @@ public class JdbcDemandRequestDao implements DemandRequestDao {
             } else {
                 statement.setTimestamp(15, Timestamp.valueOf(request.getRuledAt()));
             }
+            statement.setString(16, request.getPresentationType().name());
+            statement.setString(17, request.getObservations());
             statement.executeUpdate();
         }
     }
@@ -363,6 +367,8 @@ public class JdbcDemandRequestDao implements DemandRequestDao {
         private String rejectionReason;
         private String ruledBy;
         private java.time.LocalDateTime ruledAt;
+        private PresentationType presentationType;
+        private String observations;
         private Party plaintiff = Party.unidentified(PartyRole.PLAINTIFF);
         private Party defendant = Party.unidentified(PartyRole.DEFENDANT);
         private final List<Annex> annexes = new ArrayList<>();
@@ -388,12 +394,14 @@ public class JdbcDemandRequestDao implements DemandRequestDao {
             row.ruledBy = rows.getString("ruled_by");
             Timestamp ruledAt = rows.getTimestamp("ruled_at");
             row.ruledAt = ruledAt == null ? null : ruledAt.toLocalDateTime();
+            row.presentationType = PresentationType.valueOf(rows.getString("presentation_type"));
+            row.observations = rows.getString("observations");
             return row;
         }
 
         DemandRequest toDemandRequest() {
             DemandRequest request = new DemandRequest(folio, receivedDate, courtName, courtCode, matter, plaintiff,
-                defendant, legalRepresentative, capturedBy, annexes, duplicityWarning);
+                defendant, legalRepresentative, capturedBy, annexes, duplicityWarning, presentationType, observations);
             if (status == RequestStatus.ADMISSIBLE) {
                 request.recordAdmissible(caseFileNumber, deskName, ruledBy, ruledAt);
             } else if (status == RequestStatus.INADMISSIBLE) {

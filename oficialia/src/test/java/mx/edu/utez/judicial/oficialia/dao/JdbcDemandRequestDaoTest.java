@@ -16,6 +16,7 @@ import mx.edu.utez.judicial.oficialia.model.DemandRequest;
 import mx.edu.utez.judicial.oficialia.model.Party;
 import mx.edu.utez.judicial.oficialia.model.PartyAddress;
 import mx.edu.utez.judicial.oficialia.model.PartyRole;
+import mx.edu.utez.judicial.oficialia.model.PresentationType;
 import mx.edu.utez.judicial.oficialia.model.RequestStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -61,6 +62,19 @@ class JdbcDemandRequestDaoTest {
         assertEquals("Calle Hidalgo 12, Centro, C.P. 62740, Cuautla", saved.getPlaintiff().getAddress().getFullText());
         assertNull(saved.getDefendant().getAddress());
         assertNull(dao.findByFolio("S-000127/2026").orElseThrow().getPlaintiff().getAddress());
+    }
+
+    @Test
+    void readsBackThePresentationTypeAndTheObservations() {
+        dao.insert(new DemandRequest("S-000201/2026", LocalDate.parse("2026-11-17"), "Juzgado de Cuautla", "12",
+            "Civil", Party.unidentified(PartyRole.PLAINTIFF), Party.unidentified(PartyRole.DEFENDANT),
+            "Colectivo Vecinos Unidos", "Laura Méndez", List.of(new Annex("Demanda.pdf", 120)), null,
+            PresentationType.COLLECTIVE, "Entregó los anexos en papel"));
+
+        DemandRequest saved = dao.findByFolio("S-000201/2026").orElseThrow();
+        assertEquals(PresentationType.COLLECTIVE, saved.getPresentationType());
+        assertEquals("Entregó los anexos en papel", saved.getObservations());
+        assertEquals(PresentationType.INDIVIDUAL, dao.findByFolio("S-000127/2026").orElseThrow().getPresentationType());
     }
 
     @Test
