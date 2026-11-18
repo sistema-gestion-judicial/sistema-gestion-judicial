@@ -1,4 +1,4 @@
-package mx.edu.utez.judicial.audiencias.dao;
+package mx.edu.utez.judicial.audiencias.dao.cases;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -11,6 +11,8 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+
+import mx.edu.utez.judicial.audiencias.dao.DataAccessException;
 import mx.edu.utez.judicial.audiencias.model.Case;
 import mx.edu.utez.judicial.common.db.Database;
 
