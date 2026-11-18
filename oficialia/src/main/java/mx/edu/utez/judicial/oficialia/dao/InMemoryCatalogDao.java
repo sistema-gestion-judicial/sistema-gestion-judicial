@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Optional;
 import mx.edu.utez.judicial.oficialia.model.Court;
 import mx.edu.utez.judicial.oficialia.model.CourtAddress;
+import mx.edu.utez.judicial.oficialia.model.CourtChanges;
 import mx.edu.utez.judicial.oficialia.model.JudicialDistrict;
 import mx.edu.utez.judicial.oficialia.model.SubjectMatter;
 import mx.edu.utez.judicial.oficialia.util.CatalogNames;
@@ -83,6 +84,23 @@ public class InMemoryCatalogDao implements CatalogDao {
     @Override
     public synchronized Optional<Court> findCourt(String code) {
         return courts.stream().filter(court -> court.getCode().equals(code)).findFirst();
+    }
+
+    @Override
+    public synchronized void updateCourt(String code, CourtChanges changes) {
+        if (courts.stream().anyMatch(other -> !other.getCode().equals(code)
+                && CatalogNames.sameName(other.getName(), changes.name()))) {
+            throw new DuplicateNameException(changes.name(), null);
+        }
+        String districtName = districts.stream()
+            .filter(district -> district.getCode().equals(changes.districtCode()))
+            .map(JudicialDistrict::getName).findFirst().orElse(changes.districtCode());
+        courts = courts.stream()
+            .map(court -> court.getCode().equals(code)
+                ? new Court(code, court.getNumber(), changes.name(), changes.districtCode(), districtName,
+                    changes.address(), changes.subjectMatterCodes(), court.isActive())
+                : court)
+            .toList();
     }
 
     @Override

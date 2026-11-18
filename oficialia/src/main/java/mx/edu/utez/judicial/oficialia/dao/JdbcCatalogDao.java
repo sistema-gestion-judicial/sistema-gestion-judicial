@@ -13,6 +13,7 @@ import java.util.Optional;
 import mx.edu.utez.judicial.common.db.Database;
 import mx.edu.utez.judicial.oficialia.model.Court;
 import mx.edu.utez.judicial.oficialia.model.CourtAddress;
+import mx.edu.utez.judicial.oficialia.model.CourtChanges;
 import mx.edu.utez.judicial.oficialia.model.JudicialDistrict;
 import mx.edu.utez.judicial.oficialia.model.SubjectMatter;
 
@@ -114,6 +115,61 @@ public class JdbcCatalogDao implements CatalogDao {
     @Override
     public Optional<Court> findCourt(String code) {
         return queryCourts(SELECT_COURTS + " WHERE c.code = ?", code).stream().findFirst();
+    }
+
+    /**
+     * Rewrites the court and the list of its subject matters in one transaction. The court keeps the text copy
+     * of its district name (courts.judicial_district, from V001) in step with the district it now belongs to.
+     * Demand requests keep the matter name they were registered with, so they do not change.
+     */
+    @Override
+    public void updateCourt(String code, CourtChanges changes) {
+        String updateCourt = "UPDATE courts SET name = ?, district_code = ?, "
+            + "judicial_district = (SELECT name FROM judicial_districts WHERE code = ?), street = ?, "
+            + "neighborhood = ?, postal_code = ?, municipality = ?, phone = ? WHERE code = ?";
+        try (Connection connection = database.getConnection()) {
+            connection.setAutoCommit(false);
+            try {
+                try (PreparedStatement statement = connection.prepareStatement(updateCourt)) {
+                    CourtAddress address = changes.address();
+                    statement.setString(1, changes.name());
+                    statement.setString(2, changes.districtCode());
+                    statement.setString(3, changes.districtCode());
+                    statement.setString(4, address.street());
+                    statement.setString(5, address.neighborhood());
+                    statement.setString(6, address.postalCode());
+                    statement.setString(7, address.municipality());
+                    statement.setString(8, address.phone());
+                    statement.setString(9, code);
+                    statement.executeUpdate();
+                }
+                try (PreparedStatement statement = connection.prepareStatement(
+                         "DELETE FROM court_subject_matters WHERE court_code = ?")) {
+                    statement.setString(1, code);
+                    statement.executeUpdate();
+                }
+                try (PreparedStatement statement = connection.prepareStatement(
+                         "INSERT INTO court_subject_matters (court_code, matter_id) "
+                             + "SELECT ?, id FROM subject_matters WHERE code = ?")) {
+                    for (String matterCode : changes.subjectMatterCodes()) {
+                        statement.setString(1, code);
+                        statement.setString(2, matterCode);
+                        statement.executeUpdate();
+                    }
+                }
+                connection.commit();
+            } catch (SQLException e) {
+                connection.rollback();
+                throw e;
+            }
+        } catch (SQLIntegrityConstraintViolationException e) {
+            if (e.getErrorCode() == MYSQL_DUPLICATE_ENTRY) {
+                throw new DuplicateNameException(changes.name(), e);
+            }
+            throw new DataAccessException("Could not update the court " + code, e);
+        } catch (SQLException e) {
+            throw new DataAccessException("Could not update the court " + code, e);
+        }
     }
 
     @Override
