@@ -4,10 +4,17 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.util.List;
+import mx.edu.utez.judicial.common.db.Database;
 import mx.edu.utez.judicial.oficialia.model.Court;
+import mx.edu.utez.judicial.oficialia.model.CourtAddress;
 import mx.edu.utez.judicial.oficialia.model.JudicialDistrict;
+import mx.edu.utez.judicial.oficialia.model.NewUserAccount;
 import mx.edu.utez.judicial.oficialia.model.SubjectMatter;
+import mx.edu.utez.judicial.oficialia.model.UserRole;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -16,11 +23,13 @@ import org.junit.jupiter.api.Test;
  */
 class JdbcCatalogDaoTest {
 
+    private Database database;
     private JdbcCatalogDao dao;
 
     @BeforeEach
     void freshSchema() throws Exception {
-        dao = new JdbcCatalogDao(TestDatabase.migrated());
+        database = TestDatabase.migrated();
+        dao = new JdbcCatalogDao(database);
     }
 
     @Test
@@ -95,5 +104,76 @@ class JdbcCatalogDaoTest {
         JudicialDistrict unchanged = dao.findJudicialDistrict("CUA").orElseThrow();
         assertEquals("Distrito judicial de Cuautla", unchanged.getName());
         assertEquals("Cuautla", unchanged.getSeatMunicipality());
+    }
+
+    private static Court newCourt(String code, int number, String name, List<String> matters) {
+        return new Court(code, number, name, "CVA", "Distrito judicial de Cuernavaca",
+            new CourtAddress("Calle Hidalgo 12", "Centro", "62000", "Tetecala", "7771234567"), matters, true);
+    }
+
+    private static NewUserAccount administrator(String email, String courtCode) {
+        return new NewUserAccount("Laura", "Méndez", email, UserRole.COURT_ADMIN, courtCode, "hash", true, true);
+    }
+
+    private int count(String sql, String value) throws Exception {
+        try (Connection connection = database.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, value);
+            try (ResultSet rows = statement.executeQuery()) {
+                rows.next();
+                return rows.getInt(1);
+            }
+        }
+    }
+
+    @Test
+    void insertsACourtWithItsAddressMattersAndAdministrator() throws Exception {
+        dao.insertCourt(newCourt("20", 20, "Juzgado de Tetecala", List.of("CIV", "FAM")),
+            administrator("laura@utez.edu.mx", "20"));
+
+        Court saved = dao.findCourt("20").orElseThrow();
+        assertEquals(20, saved.getNumber());
+        assertEquals("CVA", saved.getDistrictCode());
+        assertEquals("Distrito judicial de Cuernavaca", saved.getJudicialDistrict());
+        assertEquals("62000", saved.getAddress().postalCode());
+        assertEquals("7771234567", saved.getAddress().phone());
+        assertEquals(List.of("CIV", "FAM"), saved.getSubjectMatterCodes());
+        assertTrue(saved.isActive());
+        assertEquals(1, count("SELECT COUNT(*) FROM users WHERE court_code = ? AND role = 'COURT_ADMIN' "
+            + "AND must_change_password = TRUE", "20"));
+    }
+
+    @Test
+    void tellsWhichUniqueValueWasRepeated() {
+        assertThrows(DuplicateCodeException.class,
+            () -> dao.insertCourt(newCourt("01", 40, "Otro", List.of("CIV")), administrator("a@utez.edu.mx", "01")));
+        assertThrows(DuplicateNumberException.class,
+            () -> dao.insertCourt(newCourt("40", 12, "Otro", List.of("CIV")), administrator("b@utez.edu.mx", "40")));
+        assertThrows(DuplicateNameException.class, () -> dao.insertCourt(
+            newCourt("40", 40, "Juzgado de Cuautla", List.of("CIV")), administrator("c@utez.edu.mx", "40")));
+        assertEquals(4, dao.findCourts().size());
+    }
+
+    @Test
+    void aRepeatedAdministratorEmailRollsEverythingBack() throws Exception {
+        dao.insertCourt(newCourt("20", 20, "Juzgado de Tetecala", List.of("CIV")),
+            administrator("laura@utez.edu.mx", "20"));
+
+        assertThrows(DuplicateEmailException.class, () -> dao.insertCourt(
+            newCourt("21", 21, "Juzgado de Miacatlán", List.of("CIV", "PEN")),
+            administrator("laura@utez.edu.mx", "21")));
+
+        assertTrue(dao.findCourt("21").isEmpty());
+        assertEquals(0, count("SELECT COUNT(*) FROM court_subject_matters WHERE court_code = ?", "21"));
+    }
+
+    @Test
+    void anUnknownSubjectMatterRollsEverythingBack() throws Exception {
+        assertThrows(DataAccessException.class, () -> dao.insertCourt(
+            newCourt("22", 22, "Juzgado de Puente de Ixtla", List.of("CIV", "XXX")),
+            administrator("pedro@utez.edu.mx", "22")));
+
+        assertTrue(dao.findCourt("22").isEmpty());
+        assertEquals(0, count("SELECT COUNT(*) FROM users WHERE court_code = ?", "22"));
     }
 }
