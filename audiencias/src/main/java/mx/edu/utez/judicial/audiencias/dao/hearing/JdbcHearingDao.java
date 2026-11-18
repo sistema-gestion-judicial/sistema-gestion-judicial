@@ -1,4 +1,4 @@
-// JdbcHearingDao.java
+
 package mx.edu.utez.judicial.audiencias.dao.hearing;
 
 import java.sql.Connection;
@@ -14,7 +14,6 @@ import java.util.List;
 import java.util.Optional;
 
 import mx.edu.utez.judicial.audiencias.dao.DataAccessException;
-import mx.edu.utez.judicial.audiencias.dao.HearingDao;
 import mx.edu.utez.judicial.audiencias.model.hearing.Hearing;
 import mx.edu.utez.judicial.audiencias.model.hearing.HearingStatus;
 import mx.edu.utez.judicial.common.db.Database;

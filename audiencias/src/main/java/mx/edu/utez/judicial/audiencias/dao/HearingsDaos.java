@@ -1,4 +1,4 @@
-package mx.edu.utez.judicial.audiencias.dao.hearing;
+package mx.edu.utez.judicial.audiencias.dao;
 
 import java.util.Optional;
 import mx.edu.utez.judicial.audiencias.dao.user.JdbcUserDao;

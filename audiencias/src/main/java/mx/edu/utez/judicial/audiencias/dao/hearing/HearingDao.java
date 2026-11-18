@@ -1,4 +1,4 @@
-package mx.edu.utez.judicial.audiencias.dao;
+package mx.edu.utez.judicial.audiencias.dao.hearing;
 
 import mx.edu.utez.judicial.audiencias.model.hearing.Hearing;
 import mx.edu.utez.judicial.audiencias.model.hearing.HearingStatus;

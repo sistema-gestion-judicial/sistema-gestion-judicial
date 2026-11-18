@@ -1,4 +1,3 @@
-// JdbcDeskDao.java  — nota el catch de SQLIntegrityConstraintViolationException (el UNIQUE user_id)
 package mx.edu.utez.judicial.audiencias.dao.desk;
 
 import java.sql.Connection;
