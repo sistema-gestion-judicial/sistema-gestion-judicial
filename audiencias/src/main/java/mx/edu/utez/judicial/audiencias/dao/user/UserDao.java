@@ -12,13 +12,11 @@ public interface UserDao {
 
     User update(User usuario);
 
-    List<User> findLawyers(Role role);
-
     int insert(User user,String pass);
 
     String authenticate(String email);
 
-    List<User> findActiveLawyers();
+    List<User> findActiveLawyers(Role role);
 
     Optional<User> findById(int id);
 }

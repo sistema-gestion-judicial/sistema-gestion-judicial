@@ -94,11 +94,11 @@ public class JdbcUserDao implements UserDao {
     }
 
     @Override
-    public List<User> findLawyers(Role role) {
+    public List<User> findActiveLawyers(Role role) {
         String sql = "SELECT u.id,u.full_name, u.professional_license, u.status, d.matter " +
             "FROM users u " +
             "LEFT JOIN desks d ON u.id = d.user_id " +
-            "WHERE u.role = ?";
+            "WHERE u.role = ? AND u.status = 1";
         List<User> lawyers = new ArrayList<>();
         try (Connection con = database.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)){
@@ -112,7 +112,7 @@ public class JdbcUserDao implements UserDao {
                     user.setFullName(rs.getString("full_name"));
                     user.setProfessionalLicense(rs.getString("professional_license"));
                     user.setStatus(rs.getBoolean("status"));
-                    user.setMatter(rs.getString("matter")); // Devuelve null si no tiene escritorio asignado
+                    user.setMatter(rs.getString("matter"));
                     lawyers.add(user);
                 }
             }
@@ -122,6 +122,37 @@ public class JdbcUserDao implements UserDao {
             throw new DataAccessException("Failed to execute query", e);
         }
         return lawyers;
+    }
+    @Override
+    public Optional<User> findById(int id){
+        String sql = "SELECT u.id,u.full_name, u.professional_license, u.status, d.matter " +
+            "FROM users u " +
+            "LEFT JOIN desks d ON u.id = d.user_id " +
+            "WHERE u.id = ? ";
+        try {
+
+            try (Connection con = database.getConnection();
+                 PreparedStatement ps = con.prepareStatement(sql);
+
+            ) {
+                ps.setInt(1,id);
+                try(ResultSet rs = ps.executeQuery()){
+                    if(rs.next()){
+                        User user = new User();
+                        user.setId(rs.getInt("id"));
+                        user.setFullName(rs.getString("full_name"));
+                        user.setProfessionalLicense(rs.getString("professional_license"));
+                        user.setStatus(rs.getBoolean("status"));
+                        user.setMatter(rs.getString("matter"));
+                        return Optional.of(user);
+                    }
+                }
+            }
+            return Optional.empty();
+        }catch (SQLException e){
+            throw new DataAccessException("Failed to execute query", e);
+        }
+
     }
 
     @Override
