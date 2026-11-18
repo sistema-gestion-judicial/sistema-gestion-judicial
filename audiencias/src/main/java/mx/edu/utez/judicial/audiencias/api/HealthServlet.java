@@ -7,7 +7,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import mx.edu.utez.judicial.audiencias.dao.HearingsDaos;
+import mx.edu.utez.judicial.audiencias.dao.hearing.HearingsDaos;
 import mx.edu.utez.judicial.common.api.ApiJson;
 
 /**

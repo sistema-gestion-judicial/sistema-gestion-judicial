@@ -1,4 +1,4 @@
-package mx.edu.utez.judicial.audiencias.dao;
+package mx.edu.utez.judicial.audiencias.dao.desk;
 
 import mx.edu.utez.judicial.audiencias.model.Desk;
 
