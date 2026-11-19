@@ -62,6 +62,10 @@ class MigrationUpgradeTest {
         assertEquals("La demanda no trae la firma autógrafa de la promovente.", text(database,
             "SELECT reason FROM request_status_history WHERE folio = 'S-000123/2026' AND to_status = 'INADMISSIBLE'"));
         assertEquals(0, count(database, "SELECT COUNT(*) FROM second_instance_transfers"));
+        // V007: the next case file of a court continues after the ones it already had
+        assertEquals(431, count(database,
+            "SELECT last_sequence FROM case_file_sequences WHERE court_code = '12' AND year = 2026"));
+        assertEquals(0, count(database, "SELECT COUNT(*) FROM audit_log"));
     }
 
     @Test
