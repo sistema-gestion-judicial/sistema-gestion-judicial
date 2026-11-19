@@ -69,6 +69,9 @@ body {
   background: var(--mor-page-bg);
   font-family: var(--mor-font-body);
   color: var(--mor-text);
+  /* Grayscale smoothing, as Figma renders the text; macOS subpixel smoothing makes light text look bold */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 h1, h2, h3, h4, h5, .font-title {
@@ -123,6 +126,26 @@ h5, .h5 { font-size: 18px; line-height: 28px; font-weight: 700; }
   --bs-btn-disabled-border-color: var(--mor-disabled-bg);
   --bs-btn-disabled-opacity: 1;
   --bs-btn-focus-shadow-rgb: 46, 59, 43;
+}
+
+/* PrimaryButton: soft top shine, white rim and a green drop shadow */
+.btn-primary:not(.btn-sm) {
+  --bs-btn-border-color: rgba(255, 255, 255, 0.9);
+  --bs-btn-hover-border-color: rgba(255, 255, 255, 0.9);
+  --bs-btn-active-border-color: rgba(255, 255, 255, 0.9);
+  --bs-btn-bg: rgba(46, 59, 43, 0.92);
+  --bs-btn-border-width: 1.5px;
+  --bs-btn-border-radius: 14px;
+  /* The fill stops inside the rim, so the rim lets the green shadow through like in the design */
+  background-clip: padding-box;
+  background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.044) 0%, rgba(255, 255, 255, 0) 55%);
+  box-shadow: 0 6px 14px rgba(46, 59, 43, 0.28), inset 0 1px 1px rgba(255, 255, 255, 0.35);
+}
+
+.btn-primary:not(.btn-sm):disabled,
+.btn-primary:not(.btn-sm).disabled {
+  background-image: none;
+  box-shadow: none;
 }
 
 .btn-outline-primary,
