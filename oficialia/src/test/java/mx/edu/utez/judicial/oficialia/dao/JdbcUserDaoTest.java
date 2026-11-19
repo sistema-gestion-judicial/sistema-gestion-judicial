@@ -2,6 +2,7 @@ package mx.edu.utez.judicial.oficialia.dao;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -53,8 +54,7 @@ class JdbcUserDaoTest {
         dao.insert(new NewUserAccount("Elena", "Ríos", "admin@utez.edu.mx", UserRole.JUDICIAL_BODY_ADMIN, null, HASH,
             false, true));
 
-        // DEMO (temporary): the judicial body administrator works as the Oficial de Partes of Cuautla
-        assertEquals("Juzgado de Cuautla", dao.findByEmail("admin@utez.edu.mx").orElseThrow().user().getCourtName());
+        assertNull(dao.findByEmail("admin@utez.edu.mx").orElseThrow().user().getCourtName());
         assertTrue(dao.findByEmail("nadie@utez.edu.mx").isEmpty());
     }
 
