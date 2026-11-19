@@ -53,6 +53,11 @@ en la base solo queda su hash. La primera vez que el usuario entra, el sistema l
 (`must_change_password`) y no le deja abrir otra pantalla hasta que lo haga. Sin base de datos, los usuarios
 registrados viven en memoria y se pierden al reiniciar.
 
+Cada página confirma que la cuenta siga activa, pero reutiliza esa respuesta durante un minuto
+(`ActiveAccountCache`). El código que desactive una cuenta debe llamar a
+`ActiveAccountCache.getInstance().forget(email)`, y el que desactive un juzgado a `clear()`, para que la sesión
+se cierre en el siguiente clic y no un minuto después.
+
 En código se usa lo que está en `common`:
 
     DatabaseConfig.fromEnvironment("OFICIALIA")   // lee las variables
