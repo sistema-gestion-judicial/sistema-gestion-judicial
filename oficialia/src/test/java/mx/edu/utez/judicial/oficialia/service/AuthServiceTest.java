@@ -12,11 +12,13 @@ import java.util.concurrent.atomic.AtomicInteger;
 import mx.edu.utez.judicial.oficialia.config.AuthSettings;
 import mx.edu.utez.judicial.oficialia.dao.InMemoryUserDao;
 import mx.edu.utez.judicial.oficialia.dao.UserDao;
+import mx.edu.utez.judicial.oficialia.model.NewUserAccount;
 import mx.edu.utez.judicial.oficialia.model.SignInResult;
 import mx.edu.utez.judicial.oficialia.model.SignInResult.Status;
 import mx.edu.utez.judicial.oficialia.model.User;
 import mx.edu.utez.judicial.oficialia.model.UserAccount;
 import mx.edu.utez.judicial.oficialia.model.UserRole;
+import mx.edu.utez.judicial.oficialia.model.UserSummary;
 import org.junit.jupiter.api.Test;
 
 class AuthServiceTest {
@@ -108,6 +110,16 @@ class AuthServiceTest {
             public Optional<UserAccount> findByEmail(String email) {
                 reads.incrementAndGet();
                 return accounts.findByEmail(email);
+            }
+
+            @Override
+            public List<UserSummary> findByCourt(String courtName) {
+                return accounts.findByCourt(courtName);
+            }
+
+            @Override
+            public void insert(NewUserAccount account) {
+                accounts.insert(account);
             }
 
             @Override
