@@ -2,17 +2,18 @@ package mx.edu.utez.judicial.oficialia.dao;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.util.List;
 import mx.edu.utez.judicial.common.db.Database;
 import mx.edu.utez.judicial.oficialia.model.NewUserAccount;
 import mx.edu.utez.judicial.oficialia.model.UserAccount;
 import mx.edu.utez.judicial.oficialia.model.UserRole;
+import mx.edu.utez.judicial.oficialia.model.UserSummary;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -52,7 +53,8 @@ class JdbcUserDaoTest {
         dao.insert(new NewUserAccount("Elena", "Ríos", "admin@utez.edu.mx", UserRole.JUDICIAL_BODY_ADMIN, null, HASH,
             false, true));
 
-        assertNull(dao.findByEmail("admin@utez.edu.mx").orElseThrow().user().getCourtName());
+        // DEMO (temporary): the judicial body administrator works as the Oficial de Partes of Cuautla
+        assertEquals("Juzgado de Cuautla", dao.findByEmail("admin@utez.edu.mx").orElseThrow().user().getCourtName());
         assertTrue(dao.findByEmail("nadie@utez.edu.mx").isEmpty());
     }
 
@@ -100,5 +102,34 @@ class JdbcUserDaoTest {
         dao.insert(new NewUserAccount("Ana", "Ruiz", "ana@utez.edu.mx", UserRole.CLERK, "12", HASH, false, true));
         assertThrows(DataAccessException.class, () -> dao.insert(
             new NewUserAccount("Otra", "Ana", "ANA@utez.edu.mx", UserRole.CLERK, "12", HASH, false, true)));
+    }
+
+    @Test
+    void reportsARepeatedEmailAsADuplicate() {
+        dao.insert(new NewUserAccount("Ana", "Ruiz", "ana@utez.edu.mx", UserRole.CLERK, "12", HASH, false, true));
+
+        assertThrows(DuplicateEmailException.class, () -> dao.insert(
+            new NewUserAccount("Otra", "Ana", "ANA@utez.edu.mx", UserRole.CLERK, "12", HASH, false, true)));
+    }
+
+    @Test
+    void keepsThePhoneAndTheTemporaryPasswordFlagOfARegisteredClerk() {
+        dao.insert(new NewUserAccount("Ana", "Ruiz", "ana@utez.edu.mx", "7771234567", UserRole.CLERK, "12", HASH,
+            true, true));
+
+        assertTrue(dao.findByEmail("ana@utez.edu.mx").orElseThrow().user().isMustChangePassword());
+        assertEquals("7771234567", dao.findByCourt("Juzgado de Cuautla").get(0).getPhone());
+    }
+
+    @Test
+    void listsOnlyTheUsersOfTheCourtByName() {
+        dao.insert(new NewUserAccount("Zoe", "Mar", "zoe@utez.edu.mx", UserRole.CLERK, "12", HASH, true, true));
+        dao.insert(new NewUserAccount("Ana", "Ruiz", "ana@utez.edu.mx", UserRole.COURT_ADMIN, "12", HASH, true, true));
+        dao.insert(new NewUserAccount("Luz", "Paz", "luz@utez.edu.mx", UserRole.CLERK, "07", HASH, true, true));
+        dao.insert(new NewUserAccount("Elena", "R", "admin@utez.edu.mx", UserRole.JUDICIAL_BODY_ADMIN, null, HASH,
+            false, true));
+
+        assertEquals(List.of("Ana Ruiz", "Zoe Mar"),
+            dao.findByCourt("Juzgado de Cuautla").stream().map(UserSummary::getFullName).toList());
     }
 }

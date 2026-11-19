@@ -5,16 +5,25 @@ package mx.edu.utez.judicial.oficialia.model;
  */
 public class User {
 
+    /** DEMO (temporary): court the judicial body administrator works in while showing the clerk workflow. */
+    static final String DEMO_COURT_NAME = "Juzgado de Cuautla";
+
     private final String email;
     private final String fullName;
     private final UserRole role;
     private final String courtName;
+    private final boolean mustChangePassword;
 
     public User(String email, String fullName, UserRole role, String courtName) {
+        this(email, fullName, role, courtName, false);
+    }
+
+    public User(String email, String fullName, UserRole role, String courtName, boolean mustChangePassword) {
         this.email = email;
         this.fullName = fullName;
         this.role = role;
         this.courtName = courtName;
+        this.mustChangePassword = mustChangePassword;
     }
 
     public String getEmail() {
@@ -23,6 +32,21 @@ public class User {
 
     public String getFullName() {
         return fullName;
+    }
+
+    /** First letters of the first two words of the name, shown in the avatar ("Laura Méndez" gives "LM"). */
+    public String getInitials() {
+        if (fullName == null || fullName.isBlank()) {
+            return "";
+        }
+        StringBuilder initials = new StringBuilder();
+        for (String word : fullName.trim().split("\\s+")) {
+            initials.appendCodePoint(Character.toUpperCase(word.codePointAt(0)));
+            if (initials.length() >= 2) {
+                break;
+            }
+        }
+        return initials.toString();
     }
 
     public UserRole getRole() {
@@ -34,11 +58,31 @@ public class User {
     }
 
     public String getCourtName() {
+        // DEMO (temporary): the judicial body administrator works as the Oficial de Partes of Cuautla
+        if (courtName == null && role == UserRole.JUDICIAL_BODY_ADMIN) {
+            return DEMO_COURT_NAME;
+        }
         return courtName;
     }
 
     /** Only the Oficial de Partes rules demand requests (RF 3.5). */
     public boolean isClerk() {
-        return role == UserRole.CLERK;
+        // DEMO (temporary): the judicial body administrator can do everything the Oficial de Partes does
+        return role == UserRole.CLERK || role == UserRole.JUDICIAL_BODY_ADMIN;
+    }
+
+    /** Only the Administrador de Juzgado registers the users of the court (RF 1.4). */
+    public boolean isCourtAdmin() {
+        return role == UserRole.COURT_ADMIN;
+    }
+
+    /** True until the user replaces the temporary password they received when they were registered. */
+    public boolean isMustChangePassword() {
+        return mustChangePassword;
+    }
+
+    /** The same user once the temporary password has been replaced. */
+    public User withPasswordChanged() {
+        return mustChangePassword ? new User(email, fullName, role, courtName, false) : this;
     }
 }

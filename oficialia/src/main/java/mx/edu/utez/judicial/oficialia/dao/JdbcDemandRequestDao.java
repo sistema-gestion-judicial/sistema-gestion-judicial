@@ -7,6 +7,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.sql.Types;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -22,6 +24,8 @@ import mx.edu.utez.judicial.oficialia.model.RequestStatus;
 
 /**
  * Demand requests stored in the sgj_oficialia database (tables demand_requests, parties and annexes).
+ * Each save also keeps the case file, the duplicity warning decision and the status log up to date
+ * (case_files, duplicity_warning_decisions and request_status_history), in the same transaction.
  */
 public class JdbcDemandRequestDao implements DemandRequestDao {
 
@@ -74,6 +78,10 @@ public class JdbcDemandRequestDao implements DemandRequestDao {
                 for (Annex annex : request.getAnnexes()) {
                     insertAnnex(connection, request.getFolio(), annex);
                 }
+                insertWarningDecision(connection, request);
+                insertStatusChange(connection, request.getFolio(), null, RequestStatus.PENDING, null,
+                    request.getCapturedBy(), registeredAt(request.getReceivedDate()));
+                saveRuling(connection, request, RequestStatus.PENDING);
                 connection.commit();
             } catch (SQLException e) {
                 connection.rollback();
@@ -88,19 +96,117 @@ public class JdbcDemandRequestDao implements DemandRequestDao {
     public void update(DemandRequest request) {
         String sql = "UPDATE demand_requests SET status = ?, case_file_number = ?, desk_name = ?, "
             + "rejection_reason = ?, ruled_by = ?, ruled_at = ? WHERE folio = ?";
-        try (Connection connection = database.getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setString(1, request.getStatus().name());
-            statement.setString(2, request.getCaseFileNumber());
-            statement.setString(3, request.getDeskName());
-            statement.setString(4, request.getRejectionReason());
-            statement.setString(5, request.getRuledBy());
-            statement.setTimestamp(6, request.getRuledAt() == null ? null : Timestamp.valueOf(request.getRuledAt()));
-            statement.setString(7, request.getFolio());
-            statement.executeUpdate();
+        try (Connection connection = database.getConnection()) {
+            connection.setAutoCommit(false);
+            try {
+                RequestStatus stored = storedStatus(connection, request.getFolio());
+                try (PreparedStatement statement = connection.prepareStatement(sql)) {
+                    statement.setString(1, request.getStatus().name());
+                    statement.setString(2, request.getCaseFileNumber());
+                    statement.setString(3, request.getDeskName());
+                    statement.setString(4, request.getRejectionReason());
+                    statement.setString(5, request.getRuledBy());
+                    statement.setTimestamp(6, timestamp(request.getRuledAt()));
+                    statement.setString(7, request.getFolio());
+                    statement.executeUpdate();
+                }
+                saveRuling(connection, request, stored);
+                connection.commit();
+            } catch (SQLException e) {
+                connection.rollback();
+                throw e;
+            }
         } catch (SQLException e) {
             throw new DataAccessException("Could not update demand request " + request.getFolio(), e);
         }
+    }
+
+    /** The status saved before this change, locked until the transaction ends. */
+    private static RequestStatus storedStatus(Connection connection, String folio) throws SQLException {
+        try (PreparedStatement statement = connection.prepareStatement(
+            "SELECT status FROM demand_requests WHERE folio = ? FOR UPDATE")) {
+            statement.setString(1, folio);
+            try (ResultSet rows = statement.executeQuery()) {
+                if (!rows.next()) {
+                    throw new SQLException("Demand request " + folio + " does not exist");
+                }
+                return RequestStatus.valueOf(rows.getString(1));
+            }
+        }
+    }
+
+    /** Opens or updates the case file and logs the ruling when the status changed from the stored one. */
+    private static void saveRuling(Connection connection, DemandRequest request, RequestStatus stored)
+            throws SQLException {
+        if (request.getCaseFileNumber() != null) {
+            saveCaseFile(connection, request);
+        }
+        if (request.getStatus() != stored) {
+            insertStatusChange(connection, request.getFolio(), stored, request.getStatus(),
+                request.getRejectionReason(), request.getRuledBy(), request.getRuledAt());
+        }
+    }
+
+    /** The case file number has the form AAAA/NNNNN/JJ; a later desk assignment only updates the desk. */
+    private static void saveCaseFile(Connection connection, DemandRequest request) throws SQLException {
+        String number = request.getCaseFileNumber();
+        String[] parts = number.split("/");
+        String sql = "INSERT INTO case_files (number, folio, court_code, year, sequence, desk_name, opened_at) "
+            + "VALUES (?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE desk_name = VALUES(desk_name)";
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, number);
+            statement.setString(2, request.getFolio());
+            statement.setString(3, request.getCourtCode());
+            statement.setInt(4, Integer.parseInt(parts[0]));
+            statement.setInt(5, Integer.parseInt(parts[1]));
+            statement.setString(6, request.getDeskName());
+            statement.setTimestamp(7, timestamp(request.getRuledAt() == null ? LocalDateTime.now() : request.getRuledAt()));
+            statement.executeUpdate();
+        }
+    }
+
+    private static void insertStatusChange(Connection connection, String folio, RequestStatus from, RequestStatus to,
+                                           String reason, String changedBy, LocalDateTime changedAt)
+            throws SQLException {
+        String sql = "INSERT INTO request_status_history (folio, from_status, to_status, reason, changed_by, "
+            + "changed_at) VALUES (?, ?, ?, ?, ?, ?)";
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, folio);
+            statement.setString(2, from == null ? null : from.name());
+            statement.setString(3, to.name());
+            statement.setString(4, reason);
+            statement.setString(5, changedBy);
+            statement.setTimestamp(6, timestamp(changedAt == null ? LocalDateTime.now() : changedAt));
+            statement.executeUpdate();
+        }
+    }
+
+    /** A request saved after a warning is one whose clerk chose to continue (DFR 3.1). */
+    private static void insertWarningDecision(Connection connection, DemandRequest request) throws SQLException {
+        DuplicityWarning warning = request.getDuplicityWarning();
+        if (warning == null) {
+            return;
+        }
+        String sql = "INSERT INTO duplicity_warning_decisions (folio, court_code, matched_court, matched_matter, "
+            + "decision, decided_by, decided_at) VALUES (?, ?, ?, ?, 'CONTINUE', ?, ?)";
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, request.getFolio());
+            statement.setString(2, request.getCourtCode());
+            statement.setString(3, warning.getCourtName());
+            statement.setString(4, warning.getMatter() == null ? request.getMatter() : warning.getMatter());
+            statement.setString(5, request.getCapturedBy());
+            statement.setTimestamp(6, timestamp(registeredAt(request.getReceivedDate())));
+            statement.executeUpdate();
+        }
+    }
+
+    /** Registered today means now; an older received date (sample or imported data) keeps its day. */
+    private static LocalDateTime registeredAt(LocalDate receivedDate) {
+        return receivedDate.equals(LocalDate.now()) ? LocalDateTime.now() : receivedDate.atStartOfDay();
+    }
+
+    private static Timestamp timestamp(LocalDateTime value) {
+        return value == null ? null : Timestamp.valueOf(value);
     }
 
     private List<DemandRequest> find(String where, String parameter) {
@@ -177,7 +283,7 @@ public class JdbcDemandRequestDao implements DemandRequestDao {
         }
     }
 
-    private static void insertRequest(Connection connection, DemandRequest request) throws SQLException {
+    static void insertRequest(Connection connection, DemandRequest request) throws SQLException {
         String sql = "INSERT INTO demand_requests (folio, received_date, court_code, matter, legal_representative, "
             + "captured_by, duplicity_court, duplicity_matter, duplicity_decision, status, case_file_number, "
             + "desk_name, rejection_reason, ruled_by, ruled_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
@@ -206,7 +312,7 @@ public class JdbcDemandRequestDao implements DemandRequestDao {
         }
     }
 
-    private static void insertParty(Connection connection, String folio, Party party) throws SQLException {
+    static void insertParty(Connection connection, String folio, Party party) throws SQLException {
         String sql = "INSERT INTO parties (folio, role, name, person_type, person_id, phone, email) "
             + "VALUES (?, ?, ?, ?, ?, ?, ?)";
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -221,7 +327,7 @@ public class JdbcDemandRequestDao implements DemandRequestDao {
         }
     }
 
-    private static void insertAnnex(Connection connection, String folio, Annex annex) throws SQLException {
+    static void insertAnnex(Connection connection, String folio, Annex annex) throws SQLException {
         try (PreparedStatement statement = connection.prepareStatement(
             "INSERT INTO annexes (folio, file_name, size_kb) VALUES (?, ?, ?)")) {
             statement.setString(1, folio);
@@ -235,7 +341,7 @@ public class JdbcDemandRequestDao implements DemandRequestDao {
     private static final class ResultRow {
 
         private String folio;
-        private java.time.LocalDate receivedDate;
+        private LocalDate receivedDate;
         private String courtName;
         private String courtCode;
         private String matter;

@@ -47,6 +47,12 @@ En local pon las dos cosas en tu `.env` (ya vienen en `.env.example`) o en las v
 IntelliJ. Si tu base ya tenía usuarios, no pasa nada: estas variables solo actúan con la tabla vacía.
 Sin ninguna de ellas, el log avisa que nadie puede iniciar sesión.
 
+Después, el Administrador de Juzgado registra a los oficiales de partes de su juzgado desde **Usuarios**
+(`/users`). El sistema genera una contraseña temporal de 12 caracteres y la muestra una sola vez al guardar;
+en la base solo queda su hash. La primera vez que el usuario entra, el sistema lo manda a cambiarla
+(`must_change_password`) y no le deja abrir otra pantalla hasta que lo haga. Sin base de datos, los usuarios
+registrados viven en memoria y se pierden al reiniciar.
+
 Cada página confirma que la cuenta siga activa, pero reutiliza esa respuesta durante un minuto
 (`ActiveAccountCache`). El código que desactive una cuenta debe llamar a
 `ActiveAccountCache.getInstance().forget(email)`, y el que desactive un juzgado a `clear()`, para que la sesión
@@ -64,6 +70,24 @@ Van en `<modulo>/src/main/resources/db/migration/` con número y descripción:
 `V001__create_catalogs.sql`, `V002__create_demand_requests.sql`. Cada script corre una sola vez y
 queda registrado en la tabla `schema_history`. **Nunca edites un script que ya se subió**: para
 cambiar una tabla, crea el siguiente (`V003__add_column_x.sql`).
+
+## Tablas de Oficialía
+
+| Tabla | Qué guarda |
+| --- | --- |
+| `roles` | Los tres perfiles (oficial de partes, administrador de juzgado, administrador del órgano) |
+| `users`, `password_reset_codes` | Cuentas, bloqueo por intentos y códigos de recuperación |
+| `judicial_districts`, `courts`, `subject_matters`, `court_subject_matters` | Catálogos; las materias tienen clave estable (`CIV`, `FAM`…) para la integración |
+| `rejection_reasons` | Motivos de no procedencia |
+| `demand_requests`, `parties`, `annexes` | Solicitudes con sus partes y anexos |
+| `duplicity_warning_decisions` | Cada advertencia de duplicidad y si el oficial continuó o canceló (un intento cancelado no tiene folio) |
+| `case_files` | Expedientes `AAAA/NNNNN/JJ`, su mesa, su instancia y su sala |
+| `request_status_history` | Bitácora de cambios de estado de cada solicitud |
+| `second_instance_transfers` | Bitácora de pases a segunda instancia |
+
+`JdbcDemandRequestDao` llena `case_files`, `duplicity_warning_decisions` y `request_status_history` en la
+misma transacción en que guarda la solicitud. Los datos semilla (catálogos y roles) vienen en los propios
+scripts.
 
 ## En la nube
 

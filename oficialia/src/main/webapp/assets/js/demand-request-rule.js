@@ -28,6 +28,8 @@ document.addEventListener("DOMContentLoaded", () => {
   // Opens the confirmation returned by the server
   const modalElement = document.querySelector("[data-show-on-load]");
   if (modalElement) {
+    // The app shell is its own stacking context, so a modal left inside it would sit under the backdrop
+    document.body.appendChild(modalElement);
     bootstrap.Modal.getOrCreateInstance(modalElement).show();
   }
 });
