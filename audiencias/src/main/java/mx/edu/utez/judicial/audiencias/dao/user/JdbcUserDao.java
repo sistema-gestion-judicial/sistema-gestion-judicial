@@ -94,29 +94,65 @@ public class JdbcUserDao implements UserDao {
     }
 
     @Override
-    public List<User> findLawyers() {
+    public List<User> findActiveLawyers(Role role) {
         String sql = "SELECT u.id,u.full_name, u.professional_license, u.status, d.matter " +
             "FROM users u " +
             "LEFT JOIN desks d ON u.id = d.user_id " +
-            "WHERE u.role = 'LAWYER'";
+            "WHERE u.role = ? AND u.status = 1";
         List<User> lawyers = new ArrayList<>();
         try (Connection con = database.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
+             PreparedStatement ps = con.prepareStatement(sql)){
 
-            while (rs.next()) {
-                lawyers.add(new User(
-                    rs.getInt("id"),
-                    rs.getString("full_name"),
-                    rs.getString("professional_license"),
-                    rs.getBoolean("status"),
-                    rs.getString("matter")
-                ));
+             ps.setString(1,role.name());
+
+            try (ResultSet rs = ps.executeQuery()){
+                while (rs.next()) {
+                    User user = new User();
+                    user.setId(rs.getInt("id"));
+                    user.setFullName(rs.getString("full_name"));
+                    user.setProfessionalLicense(rs.getString("professional_license"));
+                    user.setStatus(rs.getBoolean("status"));
+                    user.setMatter(rs.getString("matter"));
+                    lawyers.add(user);
+                }
             }
+
+
         } catch (SQLException e) {
             throw new DataAccessException("Failed to execute query", e);
         }
         return lawyers;
+    }
+    @Override
+    public Optional<User> findById(int id){
+        String sql = "SELECT u.id,u.full_name, u.professional_license, u.status, d.matter " +
+            "FROM users u " +
+            "LEFT JOIN desks d ON u.id = d.user_id " +
+            "WHERE u.id = ? ";
+        try {
+
+            try (Connection con = database.getConnection();
+                 PreparedStatement ps = con.prepareStatement(sql);
+
+            ) {
+                ps.setInt(1,id);
+                try(ResultSet rs = ps.executeQuery()){
+                    if(rs.next()){
+                        User user = new User();
+                        user.setId(rs.getInt("id"));
+                        user.setFullName(rs.getString("full_name"));
+                        user.setProfessionalLicense(rs.getString("professional_license"));
+                        user.setStatus(rs.getBoolean("status"));
+                        user.setMatter(rs.getString("matter"));
+                        return Optional.of(user);
+                    }
+                }
+            }
+            return Optional.empty();
+        }catch (SQLException e){
+            throw new DataAccessException("Failed to execute query", e);
+        }
+
     }
 
     @Override
