@@ -11,7 +11,6 @@
     <h1 class="page-title">Actualizar distrito judicial</h1>
     <p class="page-subtitle">Cambie el nombre o la sede cuando el distrito cambie.</p>
   </div>
-  <%@ include file="/WEB-INF/views/layout/user-chip.jspf" %>
 </header>
 
 <div class="row g-4">

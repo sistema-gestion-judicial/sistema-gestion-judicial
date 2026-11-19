@@ -24,9 +24,11 @@ final class RouteRules {
     // The catalogs are managed only by the judicial body administrator (DFR 2.1)
     private static final Set<String> CATALOG_PATHS =
         Set.of("/judicial-districts", "/judicial-districts/new", "/judicial-districts/edit");
+    // Every profile looks up the courts catalog (DFR 2.10)
+    private static final String COURTS_PATH = "/courts";
     // "/" and "/index.jsp" only redirect to the home page
     private static final Set<String> JUDICIAL_BODY_ADMIN_PATHS = Stream.concat(
-        Stream.of("/home", "/logout", "/", "/index.jsp", PASSWORD_CHANGE_PATH), CATALOG_PATHS.stream())
+        Stream.of("/home", "/logout", "/", "/index.jsp", PASSWORD_CHANGE_PATH, COURTS_PATH), CATALOG_PATHS.stream())
         .collect(Collectors.toSet());
 
     private RouteRules() {
@@ -42,21 +44,18 @@ final class RouteRules {
     }
 
     /**
-     * The judicial body administrator only reaches an explicit list of paths. For the other
-     * roles, paths without a rule here are open to every signed-in user.
+     * Paths without a rule here are open to every signed-in user.
      */
     static boolean canAccess(String path, UserRole role) {
-        if (role == UserRole.JUDICIAL_BODY_ADMIN) {
-            return JUDICIAL_BODY_ADMIN_PATHS.contains(path);
-        }
+        // DEMO (temporary): the judicial body administrator reaches every page the Oficial de Partes reaches
         if (path.equals(NEW_REQUEST_PATH)) {
-            return role == UserRole.CLERK;
+            return role == UserRole.CLERK || role == UserRole.JUDICIAL_BODY_ADMIN;
         }
         if (COURT_ADMIN_PATHS.contains(path)) {
             return role == UserRole.COURT_ADMIN;
         }
         if (CATALOG_PATHS.contains(path)) {
-            return false;
+            return role == UserRole.JUDICIAL_BODY_ADMIN;
         }
         return true;
     }

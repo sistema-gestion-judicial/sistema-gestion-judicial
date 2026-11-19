@@ -3,14 +3,19 @@ package mx.edu.utez.judicial.oficialia.service;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import mx.edu.utez.judicial.oficialia.dao.CatalogDao;
 import mx.edu.utez.judicial.oficialia.dao.DuplicateCodeException;
 import mx.edu.utez.judicial.oficialia.dao.DuplicateNameException;
 import mx.edu.utez.judicial.oficialia.dao.OficialiaDaos;
 import mx.edu.utez.judicial.oficialia.exception.AccessDeniedException;
 import mx.edu.utez.judicial.oficialia.exception.NotFoundException;
+import mx.edu.utez.judicial.oficialia.model.Court;
 import mx.edu.utez.judicial.oficialia.model.JudicialDistrict;
 import mx.edu.utez.judicial.oficialia.model.JudicialDistrictForm;
+import mx.edu.utez.judicial.oficialia.model.JudicialDistrictRow;
+import mx.edu.utez.judicial.oficialia.model.ResultPage;
 import mx.edu.utez.judicial.oficialia.model.User;
 import mx.edu.utez.judicial.oficialia.model.UserRole;
 import mx.edu.utez.judicial.oficialia.util.CatalogNames;
@@ -23,6 +28,7 @@ public class JudicialDistrictService {
 
     static final String CODE_TAKEN = "Esta clave ya existe.";
     static final String NAME_TAKEN = "Este nombre ya pertenece a otro distrito judicial.";
+    public static final int PAGE_SIZE = 10;
 
     private final CatalogDao catalogDao;
 
@@ -42,6 +48,29 @@ public class JudicialDistrictService {
     public List<JudicialDistrict> list(User user) {
         requireJudicialBodyAdmin(user);
         return catalogDao.findJudicialDistricts();
+    }
+
+    /**
+     * The page of the catalog that matches the filters (DFR 2.2), ordered by name, with the number of courts
+     * of each district. The text is looked for in the code, the name and the seat, ignoring case and accents;
+     * a null status shows active and inactive districts.
+     *
+     * @throws AccessDeniedException when the user is not the Administrador del órgano judicial
+     */
+    public ResultPage<JudicialDistrictRow> search(User user, String text, Boolean active, int page) {
+        requireJudicialBodyAdmin(user);
+        String key = CatalogNames.key(text);
+        Map<String, Long> courtsByDistrict = catalogDao.findCourts().stream()
+            .collect(Collectors.groupingBy(Court::getDistrictCode, Collectors.counting()));
+        List<JudicialDistrictRow> rows = catalogDao.findJudicialDistricts().stream()
+            .filter(district -> active == null || district.isActive() == active)
+            .filter(district -> key.isEmpty()
+                || Stream.of(district.getCode(), district.getName(), district.getSeatMunicipality())
+                    .anyMatch(value -> CatalogNames.key(value).contains(key)))
+            .map(district -> new JudicialDistrictRow(district,
+                courtsByDistrict.getOrDefault(district.getCode(), 0L).intValue()))
+            .toList();
+        return ResultPage.of(rows, page, PAGE_SIZE);
     }
 
     /** Field errors of the form, including a code or a name that already exist. Empty when it can be saved. */

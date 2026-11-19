@@ -10,8 +10,8 @@
 
   <section class="login-panel">
     <div class="card-mor login-card">
-      <h2 class="mb-4">Iniciar sesión</h2>
-      <p class="text-secondary mb-4">
+      <h2>Iniciar sesión</h2>
+      <p class="login-intro">
         Bienvenido al Sistema de Control de Demandas. Para ingresar, escriba su correo electrónico y contraseña.
       </p>
 
@@ -25,33 +25,35 @@
           <i class="bi bi-clock-history me-1"></i> <c:out value="${expiredMessage}" />
         </div>
       </c:if>
-      <c:if test="${not empty errorMessage}">
-        <div class="alert alert-mor-warning py-2" role="alert">
-          <i class="bi bi-exclamation-triangle me-1"></i> <c:out value="${errorMessage}" />
-        </div>
-      </c:if>
 
+      <%-- A rejected sign-in marks both fields and shows the reason under the password (Figma "Login | Error") --%>
+      <c:set var="signInFailed" value="${not empty errorMessage}" />
       <form method="post" action="${ctx}/login" novalidate>
-        <div class="mb-3">
+        <div class="mb-4">
           <label for="email" class="form-label">Correo electrónico</label>
-          <input type="email" class="form-control ${not empty emailError ? 'is-invalid' : ''}" id="email" name="email"
-                 autocomplete="username" value="<c:out value='${email}' />" placeholder="nombre@utez.edu.mx"
-                 required autofocus>
+          <input type="email" class="form-control ${not empty emailError or signInFailed ? 'is-invalid' : ''}"
+                 id="email" name="email" autocomplete="username" value="<c:out value='${email}' />"
+                 placeholder="nombre@utez.edu.mx" required autofocus
+                 ${signInFailed ? 'aria-describedby="signInError"' : ''}>
           <c:if test="${not empty emailError}">
             <div class="invalid-feedback"><c:out value="${emailError}" /></div>
           </c:if>
         </div>
 
-        <div class="mb-1">
+        <div>
           <label for="password" class="form-label">Contraseña</label>
           <div class="input-group">
-            <input type="password" class="form-control border-end-0" id="password" name="password"
-                   autocomplete="current-password" required>
+            <input type="password" class="form-control border-end-0 ${signInFailed ? 'is-invalid' : ''}"
+                   id="password" name="password" autocomplete="current-password" required
+                   ${signInFailed ? 'aria-describedby="signInError"' : ''}>
             <button type="button" class="btn btn-link password-toggle" id="togglePassword">Mostrar</button>
           </div>
         </div>
-        <div class="text-end mb-4">
-          <a class="small text-secondary" href="${ctx}/password-recovery">¿Olvidó su contraseña?</a>
+        <div class="login-row">
+          <c:if test="${signInFailed}">
+            <span class="login-error" id="signInError" role="alert"><c:out value="${errorMessage}" /></span>
+          </c:if>
+          <a href="${ctx}/password-recovery">¿Olvidó su contraseña?</a>
         </div>
 
         <button type="submit" class="btn btn-primary w-100">Entrar</button>

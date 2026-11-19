@@ -1,5 +1,6 @@
-<%-- Sidebar of the Oficialía de Partes. The including page sets activeNav to mark its menu entry.
-     Each role has its own entries; those marked "Pronto" have no page yet, so they carry no link. --%>
+<%-- Floating sidebar of the Oficialía de Partes and the greeting row above every page (Figma "Sidebar" frame).
+     The including page sets activeNav to mark its menu entry. Each role has its own entries; those marked
+     "Pronto" have no page yet, so they carry no link. --%>
 <c:set var="navRole" value="${sessionScope.currentUser.role}" />
 <c:set var="navRequests">
   <li>
@@ -17,25 +18,24 @@
 </c:set>
 <c:set var="navCourts">
   <li>
-    <span class="app-nav-link is-soon" title="Disponible en un siguiente avance">
-      <i class="bi bi-bank"></i> Juzgados <span class="soon-tag">Pronto</span>
-    </span>
+    <a class="app-nav-link ${activeNav == 'courts' ? 'active' : ''}" href="${ctx}/courts">
+      <i class="bi bi-bank"></i> Juzgados
+    </a>
   </li>
 </c:set>
 <body>
 <div class="app-shell">
   <aside class="app-sidebar">
     <div class="app-brand">
-      <div class="app-brand-logo">SCD</div>
-      <div>
-        <div class="app-brand-name">Sistema de Control de Demandas</div>
-        <div class="app-brand-area">Oficialía de Partes</div>
-      </div>
+      <div class="app-brand-logo" role="img" aria-label="Sistema de Control de Demandas"></div>
+      <div class="app-brand-name">SCD</div>
+      <div class="app-brand-area">Oficialía de Partes</div>
     </div>
 
     <ul class="app-nav">
       <c:choose>
-        <c:when test="${navRole == 'CLERK'}">
+        <%-- DEMO (temporary): the judicial body administrator gets the Oficial de Partes menu --%>
+        <c:when test="${navRole == 'CLERK' or navRole == 'JUDICIAL_BODY_ADMIN'}">
           <li>
             <a class="app-nav-link ${activeNav == 'new-request' ? 'active' : ''}" href="${ctx}/demand-requests/new">
               <i class="bi bi-file-earmark-plus"></i> Registrar solicitud
@@ -43,6 +43,13 @@
           </li>
           ${navRequests}
           ${navCaseFiles}
+          <c:if test="${navRole == 'JUDICIAL_BODY_ADMIN'}">
+            <li>
+              <a class="app-nav-link ${activeNav == 'districts' ? 'active' : ''}" href="${ctx}/judicial-districts">
+                <i class="bi bi-geo-alt"></i> Distritos judiciales
+              </a>
+            </li>
+          </c:if>
           ${navCourts}
         </c:when>
         <c:when test="${navRole == 'COURT_ADMIN'}">
@@ -65,6 +72,21 @@
         </c:otherwise>
       </c:choose>
     </ul>
+
+    <div class="app-sidebar-footer">
+      <form method="post" action="${ctx}/logout" data-sign-out>
+        <button type="submit" class="app-nav-link border-0">
+          <span class="icon-sign-out" aria-hidden="true"></span> Cerrar sesión
+        </button>
+      </form>
+    </div>
   </aside>
 
   <main class="app-main">
+    <div class="app-welcome">
+      <p class="app-welcome-text">
+        Bienvenido/a,
+        <strong><c:out value="${sessionScope.currentUser.fullName}" /></strong>
+      </p>
+      <%@ include file="/WEB-INF/views/layout/user-chip.jspf" %>
+    </div>
