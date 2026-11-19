@@ -57,6 +57,7 @@ class RouteRulesTest {
     void onlyTheClerkRegistersRequests() {
         assertTrue(RouteRules.canAccess("/demand-requests/new", UserRole.CLERK));
         assertFalse(RouteRules.canAccess("/demand-requests/new", UserRole.COURT_ADMIN));
+        assertFalse(RouteRules.canAccess("/demand-requests/new", UserRole.JUDICIAL_BODY_ADMIN));
     }
 
     @Test
@@ -66,20 +67,30 @@ class RouteRulesTest {
     }
 
     @Test
+    void theJudicialBodyAdministratorDoesNotSeeRequests() {
+        assertFalse(RouteRules.canAccess("/demand-requests", UserRole.JUDICIAL_BODY_ADMIN));
+        assertFalse(RouteRules.canAccess("/demand-requests/detail", UserRole.JUDICIAL_BODY_ADMIN));
+    }
+
+    @Test
     void everyRoleReachesTheHomePage() {
         for (UserRole role : UserRole.values()) {
             assertTrue(RouteRules.canAccess("/home", role));
         }
     }
 
-    // DEMO (temporary): the judicial body administrator works as the Oficial de Partes
     @Test
-    void theJudicialBodyAdministratorReachesEverythingTheClerkReaches() {
-        assertTrue(RouteRules.canAccess("/demand-requests", UserRole.JUDICIAL_BODY_ADMIN));
-        assertTrue(RouteRules.canAccess("/demand-requests/detail", UserRole.JUDICIAL_BODY_ADMIN));
-        assertTrue(RouteRules.canAccess("/demand-requests/new", UserRole.JUDICIAL_BODY_ADMIN));
-        assertTrue(RouteRules.canAccess("/demand-requests/rule", UserRole.JUDICIAL_BODY_ADMIN));
+    void theJudicialBodyAdministratorReachesHomeSignOutAndTheEntryRedirect() {
         assertTrue(RouteRules.canAccess("/logout", UserRole.JUDICIAL_BODY_ADMIN));
+        assertTrue(RouteRules.canAccess("/", UserRole.JUDICIAL_BODY_ADMIN));
+        assertTrue(RouteRules.canAccess("/index.jsp", UserRole.JUDICIAL_BODY_ADMIN));
+    }
+
+    @Test
+    void theJudicialBodyAdministratorReachesNothingElse() {
+        assertFalse(RouteRules.canAccess("/demand-requests/new", UserRole.JUDICIAL_BODY_ADMIN));
+        assertFalse(RouteRules.canAccess("/demand-requests-report", UserRole.JUDICIAL_BODY_ADMIN));
+        assertFalse(RouteRules.canAccess("/any-future-page", UserRole.JUDICIAL_BODY_ADMIN));
     }
 
     @Test
