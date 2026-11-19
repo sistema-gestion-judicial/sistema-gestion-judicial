@@ -1,15 +1,8 @@
-// model/CaseDocument.java
 package mx.edu.utez.judicial.audiencias.model;
 
 import java.time.LocalDateTime;
 
-/**
- * Document attached to a {@link Case} within Audiencias (an agreement, evidence, a scanned
- * notice). Deliberately not named CaseFile: Oficialía de Partes already publishes a CaseFile
- * resource in its contract (the whole admitted judicial case) — this is only a local attachment.
- * {@code sequenceNumber} is the document's position within the case file (page order), not its
- * upload time; {@link JdbcCaseDocumentDao} assigns the next one automatically on insert.
- */
+
 public class CaseDocument {
 
     private final Integer id;
