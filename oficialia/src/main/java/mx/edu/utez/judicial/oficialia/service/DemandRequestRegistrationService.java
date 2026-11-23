@@ -26,7 +26,6 @@ import mx.edu.utez.judicial.oficialia.model.PartyRole;
 import mx.edu.utez.judicial.oficialia.model.RequestFolio;
 import mx.edu.utez.judicial.oficialia.model.SubjectMatter;
 import mx.edu.utez.judicial.oficialia.model.User;
-import mx.edu.utez.judicial.oficialia.model.UserRole;
 import mx.edu.utez.judicial.oficialia.util.CatalogNames;
 
 /**
@@ -130,7 +129,8 @@ public class DemandRequestRegistrationService {
     }
 
     private Court courtOf(User user) {
-        if (user == null || user.getRole() != UserRole.CLERK) {
+        // isClerk also lets the judicial body administrator in while the demo of the clerk workflow lasts
+        if (user == null || !user.isClerk()) {
             throw new AccessDeniedException("Solo el Oficial de Partes puede registrar solicitudes de demanda.");
         }
         return catalogDao.findCourts().stream()

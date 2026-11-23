@@ -219,6 +219,16 @@ class DemandRequestRegistrationServiceTest {
     }
 
     @Test
+    void theDemoAdministratorRegistersInCuautlaLikeTheClerk() {
+        User demo = new User("o@utez.edu.mx", "Elena Ríos", UserRole.JUDICIAL_BODY_ADMIN, null);
+
+        DemandRequest saved = service.register(demo, parties("Civil", "DILR900101AB1"), data()).request();
+
+        assertEquals("12", saved.getCourtCode());
+        assertEquals("Elena Ríos", saved.getCapturedBy());
+    }
+
+    @Test
     void onlyAnOficialDePartesRegisters() {
         User courtAdmin = new User("a@utez.edu.mx", "Ana Paz", UserRole.COURT_ADMIN, "Juzgado de Cuautla");
 
