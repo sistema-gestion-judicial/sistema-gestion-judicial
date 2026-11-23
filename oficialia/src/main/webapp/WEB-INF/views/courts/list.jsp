@@ -19,6 +19,12 @@
   </c:if>
 </header>
 
+<c:if test="${not empty flashMessage}">
+  <div class="alert alert-mor-success d-flex gap-2 align-items-start" role="status">
+    <i class="bi bi-check-circle mt-1"></i> <span><c:out value="${flashMessage}" /></span>
+  </div>
+</c:if>
+
 <form class="filter-bar" method="get" action="${ctx}/courts">
   <div class="row g-3 align-items-center">
     <div class="col-lg">

@@ -27,6 +27,8 @@ public class CourtListServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         User user = (User) request.getSession().getAttribute(AuthFilter.SESSION_USER);
+        // Shows the confirmation left by the page that registered a court
+        DemandRequestListServlet.moveFlashMessage(request);
         boolean canSeeInactive = CourtService.canSeeInactive(user);
         String query = trimmed(request.getParameter("q"));
         String district = trimmed(request.getParameter("district"));
