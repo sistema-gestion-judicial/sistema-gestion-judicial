@@ -315,7 +315,6 @@ public class JdbcDemandRequestDao implements DemandRequestDao {
 
     private static void loadAnnexes(Connection connection, String where, String parameter,
                                     Map<String, ResultRow> rowsByFolio) throws SQLException {
-        // The content is left out: a list of requests does not need the bytes of every annex
         String sql = "SELECT a.folio, a.file_name, a.size_kb, a.content_type FROM annexes a "
             + "JOIN demand_requests r ON r.folio = a.folio "
             + "JOIN courts c ON c.code = r.court_code" + where + " ORDER BY a.id";
@@ -389,12 +388,11 @@ public class JdbcDemandRequestDao implements DemandRequestDao {
 
     static void insertAnnex(Connection connection, String folio, Annex annex) throws SQLException {
         try (PreparedStatement statement = connection.prepareStatement(
-            "INSERT INTO annexes (folio, file_name, size_kb, content_type, content) VALUES (?, ?, ?, ?, ?)")) {
+            "INSERT INTO annexes (folio, file_name, size_kb, content_type) VALUES (?, ?, ?, ?)")) {
             statement.setString(1, folio);
             statement.setString(2, annex.getFileName());
             statement.setInt(3, annex.getSizeKb());
             statement.setString(4, annex.getContentType());
-            statement.setBytes(5, annex.getContent());
             statement.executeUpdate();
         }
     }
