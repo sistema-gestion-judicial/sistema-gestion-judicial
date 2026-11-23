@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
 import mx.edu.utez.judicial.oficialia.dao.DemandRequestDao;
-import mx.edu.utez.judicial.oficialia.dao.InMemoryDemandRequestDao;
+import mx.edu.utez.judicial.oficialia.dao.OficialiaDaos;
 import mx.edu.utez.judicial.oficialia.model.ActiveDemand;
 import mx.edu.utez.judicial.oficialia.model.DemandRequest;
 import mx.edu.utez.judicial.oficialia.model.DuplicityCheckForm;
@@ -31,7 +31,8 @@ public class DuplicityService {
     private final Supplier<List<ActiveDemand>> activeDemands;
 
     public DuplicityService() {
-        this(InMemoryDemandRequestDao.getInstance());
+        // The same requests the rest of the application reads: MySQL when it is configured
+        this(OficialiaDaos.demandRequests());
     }
 
     /** Admissible requests count as active lawsuits as soon as they are ruled (RF 3.5). */
