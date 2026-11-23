@@ -25,7 +25,7 @@ public class CourtUpdateService {
 
     static final String NAME_TAKEN = "Este nombre ya pertenece a otro juzgado.";
     static final String UNKNOWN_DISTRICT = "Elija un distrito judicial activo.";
-    static final String UNKNOWN_MATTER = "Elija solo materias de la lista.";
+    static final String UNKNOWN_MATTER = "Elija solo materias activas.";
 
     private final CatalogDao catalogDao;
 
@@ -55,10 +55,10 @@ public class CourtUpdateService {
         return catalogDao.findJudicialDistricts().stream().filter(JudicialDistrict::isActive).toList();
     }
 
-    /** The subject matters a court can handle, for the checkboxes of the form. */
+    /** The active subject matters a court can handle, for the checkboxes of the form (DFR 2.5). */
     public List<SubjectMatter> subjectMatters(User user) {
         requireJudicialBodyAdmin(user);
-        return catalogDao.findSubjectMatters();
+        return catalogDao.findSubjectMatters().stream().filter(SubjectMatter::isActive).toList();
     }
 
     /**
@@ -81,7 +81,7 @@ public class CourtUpdateService {
                 .filter(JudicialDistrict::isActive).isEmpty()) {
             errors.put("districtCode", UNKNOWN_DISTRICT);
         }
-        if (!errors.containsKey("subjectMatterCodes") && !knownMatterCodes().containsAll(form.getSubjectMatterCodes())) {
+        if (!errors.containsKey("subjectMatterCodes") && !activeMatterCodes().containsAll(form.getSubjectMatterCodes())) {
             errors.put("subjectMatterCodes", UNKNOWN_MATTER);
         }
         if (!errors.isEmpty()) {
@@ -100,8 +100,11 @@ public class CourtUpdateService {
         return Saving.saved(current.getCode(), form.getName());
     }
 
-    private List<String> knownMatterCodes() {
-        return catalogDao.findSubjectMatters().stream().map(SubjectMatter::getCode).toList();
+    private List<String> activeMatterCodes() {
+        return catalogDao.findSubjectMatters().stream()
+            .filter(SubjectMatter::isActive)
+            .map(SubjectMatter::getCode)
+            .toList();
     }
 
     /** Outcome of saving a court: the saved court, or the field errors that stopped it. */

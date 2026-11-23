@@ -13,6 +13,7 @@ import mx.edu.utez.judicial.oficialia.exception.NotFoundException;
 import mx.edu.utez.judicial.oficialia.model.Court;
 import mx.edu.utez.judicial.oficialia.model.CourtForm;
 import mx.edu.utez.judicial.oficialia.model.JudicialDistrict;
+import mx.edu.utez.judicial.oficialia.model.SubjectMatter;
 import mx.edu.utez.judicial.oficialia.model.User;
 import mx.edu.utez.judicial.oficialia.model.UserRole;
 import org.junit.jupiter.api.Test;
@@ -119,12 +120,28 @@ class CourtUpdateServiceTest {
     }
 
     @Test
+    void offersAndAcceptsOnlyActiveSubjectMatters() {
+        InMemoryCatalogDao withInactive = new InMemoryCatalogDao() {
+            @Override
+            public List<SubjectMatter> findSubjectMatters() {
+                return List.of(new SubjectMatter(1, "CIV", "Civil", null, true),
+                    new SubjectMatter(5, "AGR", "Agraria", null, false));
+            }
+        };
+        CourtUpdateService filtered = new CourtUpdateService(withInactive);
+
+        assertEquals(List.of("CIV"), filtered.subjectMatters(admin).stream().map(SubjectMatter::getCode).toList());
+        assertEquals("Elija solo materias activas.", filtered.update(admin, "12",
+            form("Juzgado de Cuautla", "CUA", "CIV", "AGR")).errors().get("subjectMatterCodes"));
+    }
+
+    @Test
     void rejectsADistrictOrAMatterThatDoesNotExist() {
         var unknownDistrict = service.update(admin, "12", form("Juzgado de Cuautla", "ZZZ", "CIV"));
         var unknownMatter = service.update(admin, "12", form("Juzgado de Cuautla", "CUA", "CIV", "XXX"));
 
         assertEquals("Elija un distrito judicial activo.", unknownDistrict.errors().get("districtCode"));
-        assertEquals("Elija solo materias de la lista.", unknownMatter.errors().get("subjectMatterCodes"));
+        assertEquals("Elija solo materias activas.", unknownMatter.errors().get("subjectMatterCodes"));
         assertEquals(List.of("CIV", "FAM", "MER", "PEN"), catalog.findCourt("12").orElseThrow().getSubjectMatterCodes());
     }
 
