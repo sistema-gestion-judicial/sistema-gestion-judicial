@@ -234,8 +234,10 @@ class DemandRequestRegistrationServiceTest {
 
         assertThrows(AccessDeniedException.class,
             () -> service.register(courtAdmin, parties("Civil", "DILR900101AB1"), data()));
-        assertThrows(AccessDeniedException.class, () -> service.cancel(courtAdmin, parties("Familiar", "TOSA850312ML4")));
-        assertThrows(AccessDeniedException.class, () -> service.register(null, parties("Civil", "DILR900101AB1"), data()));
+        assertThrows(AccessDeniedException.class,
+            () -> service.cancel(courtAdmin, parties("Familiar", "TOSA850312ML4")));
+        assertThrows(AccessDeniedException.class,
+            () -> service.register(null, parties("Civil", "DILR900101AB1"), data()));
         assertEquals(10, requests.findAll().size());
     }
 }
