@@ -19,7 +19,7 @@ class ComplementaryDataFormTest {
         form.getPlaintiff().setEmail("Ana.Torres@Ejemplo.mx");
         form.setLegalRepresentative("Lic. Marcos Rivera Peña");
         form.setPresentationType("INDIVIDUAL");
-        form.addAnnex(new Annex("Demanda.pdf", "application/pdf", new byte[100]));
+        form.addAnnex(Annex.received("Demanda.pdf", "application/pdf", 100));
         return form;
     }
 
@@ -47,7 +47,7 @@ class ComplementaryDataFormTest {
         ComplementaryDataForm form = new ComplementaryDataForm();
         form.setLegalRepresentative("Colectivo Vecinos Unidos");
         form.setPresentationType("COLLECTIVE");
-        form.addAnnex(new Annex("Demanda.pdf", "application/pdf", new byte[100]));
+        form.addAnnex(Annex.received("Demanda.pdf", "application/pdf", 100));
 
         assertTrue(form.validate(false, false).isEmpty());
         assertNull(form.plaintiffAddress());
@@ -108,12 +108,12 @@ class ComplementaryDataFormTest {
     @Test
     void refusesAnAnnexOverTenMegabytesAndAllOfThemOverForty() {
         ComplementaryDataForm big = validForm();
-        big.addAnnex(new Annex("Video.mp4", "video/mp4", new byte[10 * 1024 * 1024 + 1]));
+        big.addAnnex(Annex.received("Video.mp4", "video/mp4", 10 * 1024 * 1024 + 1));
         assertEquals("El anexo «Video.mp4» pasa de 10 MB.", big.validate(true, true).get("annexes"));
 
         ComplementaryDataForm many = validForm();
         for (int i = 0; i < 5; i++) {
-            many.addAnnex(new Annex("Foto" + i + ".jpg", "image/jpeg", new byte[9 * 1024 * 1024]));
+            many.addAnnex(Annex.received("Foto" + i + ".jpg", "image/jpeg", 9 * 1024 * 1024));
         }
         assertEquals("Los anexos juntos pasan de 40 MB.", many.validate(true, true).get("annexes"));
     }

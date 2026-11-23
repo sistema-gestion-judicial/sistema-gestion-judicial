@@ -84,7 +84,7 @@ class JdbcDemandRequestDaoTest {
         dao.insert(new DemandRequest("S-000202/2026", LocalDate.parse("2026-11-17"), "Juzgado de Cuautla", "12",
             "Civil", Party.unidentified(PartyRole.PLAINTIFF), Party.unidentified(PartyRole.DEFENDANT),
             "Lic. Marcos Rivera Peña", "Laura Méndez",
-            List.of(new Annex("Demanda.pdf", "application/pdf", new byte[2048])), null));
+            List.of(Annex.received("Demanda.pdf", "application/pdf", 2048)), null));
 
         Annex saved = dao.findByFolio("S-000202/2026").orElseThrow().getAnnexes().get(0);
         assertEquals("Demanda.pdf", saved.getFileName());

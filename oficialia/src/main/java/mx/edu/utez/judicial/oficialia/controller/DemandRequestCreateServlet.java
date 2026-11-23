@@ -8,7 +8,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.http.Part;
 import java.io.IOException;
-import java.io.InputStream;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
@@ -130,10 +129,9 @@ public class DemandRequestCreateServlet extends HttpServlet {
         for (Part part : request.getParts()) {
             String fileName = fileName(part);
             if ("annexes".equals(part.getName()) && !fileName.isEmpty()) {
-                try (InputStream content = part.getInputStream()) {
-                    String type = part.getContentType() == null ? "application/octet-stream" : part.getContentType();
-                    data.addAnnex(new Annex(fileName, type, content.readAllBytes()));
-                }
+                // Only the name, size and type are kept: the file is not read
+                String type = part.getContentType() == null ? "application/octet-stream" : part.getContentType();
+                data.addAnnex(Annex.received(fileName, type, part.getSize()));
             }
         }
         return data;

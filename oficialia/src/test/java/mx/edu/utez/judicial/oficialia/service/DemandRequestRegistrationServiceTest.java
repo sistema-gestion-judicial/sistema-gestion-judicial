@@ -62,7 +62,7 @@ class DemandRequestRegistrationServiceTest {
         form.setLegalRepresentative("Lic. Marcos Rivera Peña");
         form.setPresentationType("INDIVIDUAL");
         form.setObservations("Entregó el acta en papel");
-        form.addAnnex(new Annex("Demanda.pdf", "application/pdf", new byte[2048]));
+        form.addAnnex(Annex.received("Demanda.pdf", "application/pdf", 2048));
         return form;
     }
 
@@ -172,7 +172,7 @@ class DemandRequestRegistrationServiceTest {
         ComplementaryDataForm data = new ComplementaryDataForm();
         data.setLegalRepresentative("Colectivo Vecinos Unidos");
         data.setPresentationType("COLLECTIVE");
-        data.addAnnex(new Annex("Demanda.pdf", "application/pdf", new byte[10]));
+        data.addAnnex(Annex.received("Demanda.pdf", "application/pdf", 10));
 
         DemandRequest saved = service.register(clerk, anonymous, data).request();
 
