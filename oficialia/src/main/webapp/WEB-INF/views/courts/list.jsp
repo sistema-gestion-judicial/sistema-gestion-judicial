@@ -10,6 +10,13 @@
     <h1 class="page-title">Juzgados</h1>
     <p class="page-subtitle">Catálogo de juzgados del estado: dirección, distrito y materias que atienden.</p>
   </div>
+  <c:if test="${canRegister}">
+    <div class="d-flex flex-column align-items-end gap-3">
+      <a class="btn btn-primary" href="${ctx}/courts/new">
+        <i class="bi bi-plus-lg me-1"></i> Registrar juzgado
+      </a>
+    </div>
+  </c:if>
 </header>
 
 <form class="filter-bar" method="get" action="${ctx}/courts">
