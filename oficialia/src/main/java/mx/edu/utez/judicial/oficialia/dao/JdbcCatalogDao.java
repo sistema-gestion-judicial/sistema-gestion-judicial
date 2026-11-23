@@ -154,7 +154,10 @@ public class JdbcCatalogDao implements CatalogDao {
                     for (String matterCode : changes.subjectMatterCodes()) {
                         statement.setString(1, code);
                         statement.setString(2, matterCode);
-                        statement.executeUpdate();
+                        // An unknown code inserts nothing: the court would lose a matter without notice
+                        if (statement.executeUpdate() != 1) {
+                            throw new SQLException("Unknown subject matter " + matterCode);
+                        }
                     }
                 }
                 connection.commit();

@@ -135,6 +135,16 @@ class JdbcCatalogDaoTest {
     }
 
     @Test
+    void keepsTheCourtWhenASubjectMatterDoesNotExist() {
+        assertThrows(DataAccessException.class, () -> dao.updateCourt("12",
+            new CourtChanges("Juzgado Primero de Cuautla", "CVA", CourtAddress.EMPTY, List.of("CIV", "XXX"))));
+
+        Court court = dao.findCourt("12").orElseThrow();
+        assertEquals("Juzgado de Cuautla", court.getName());
+        assertEquals("CUA", court.getDistrictCode());
+    }
+
+    @Test
     void demandRequestsKeepTheirMatterWhenTheCourtStopsHandlingIt() throws Exception {
         try (Connection connection = database.getConnection(); Statement statement = connection.createStatement()) {
             statement.executeUpdate("INSERT INTO demand_requests (folio, received_date, court_code, matter, "
