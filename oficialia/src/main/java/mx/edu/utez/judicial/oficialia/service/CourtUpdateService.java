@@ -24,7 +24,7 @@ import mx.edu.utez.judicial.oficialia.util.CatalogNames;
 public class CourtUpdateService {
 
     static final String NAME_TAKEN = "Este nombre ya pertenece a otro juzgado.";
-    static final String UNKNOWN_DISTRICT = "Elija un distrito judicial de la lista.";
+    static final String UNKNOWN_DISTRICT = "Elija un distrito judicial activo.";
     static final String UNKNOWN_MATTER = "Elija solo materias de la lista.";
 
     private final CatalogDao catalogDao;
@@ -49,10 +49,10 @@ public class CourtUpdateService {
             .orElseThrow(() -> new NotFoundException("No existe un juzgado con la clave indicada."));
     }
 
-    /** The districts a court can belong to, for the select of the form. */
+    /** The active districts a court can belong to, for the select of the form (DFR 2.4). */
     public List<JudicialDistrict> districts(User user) {
         requireJudicialBodyAdmin(user);
-        return catalogDao.findJudicialDistricts();
+        return catalogDao.findJudicialDistricts().stream().filter(JudicialDistrict::isActive).toList();
     }
 
     /** The subject matters a court can handle, for the checkboxes of the form. */
@@ -77,7 +77,8 @@ public class CourtUpdateService {
                     && CatalogNames.sameName(other.getName(), form.getName()))) {
             errors.put("name", NAME_TAKEN);
         }
-        if (!errors.containsKey("districtCode") && catalogDao.findJudicialDistrict(form.getDistrictCode()).isEmpty()) {
+        if (!errors.containsKey("districtCode") && catalogDao.findJudicialDistrict(form.getDistrictCode())
+                .filter(JudicialDistrict::isActive).isEmpty()) {
             errors.put("districtCode", UNKNOWN_DISTRICT);
         }
         if (!errors.containsKey("subjectMatterCodes") && !knownMatterCodes().containsAll(form.getSubjectMatterCodes())) {
