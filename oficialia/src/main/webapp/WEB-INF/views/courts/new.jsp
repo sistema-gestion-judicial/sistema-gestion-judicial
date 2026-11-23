@@ -1,7 +1,7 @@
 <%@ page contentType="text/html;charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <c:set var="pageTitle" value="Registrar juzgado" />
-<c:set var="activeNav" value="new-court" />
+<c:set var="activeNav" value="courts" />
 <%@ include file="/WEB-INF/views/layout/head.jspf" %>
 <%@ include file="/WEB-INF/views/layout/app-start.jspf" %>
 
@@ -13,12 +13,6 @@
     </p>
   </div>
 </header>
-
-<c:if test="${not empty flashMessage}">
-  <div class="alert alert-mor-success d-flex gap-2 align-items-start" role="status">
-    <i class="bi bi-check-circle mt-1"></i> <span><c:out value="${flashMessage}" /></span>
-  </div>
-</c:if>
 
 <div class="row g-4">
   <div class="col-xl-8">
@@ -190,7 +184,7 @@
       </div>
 
       <div class="d-flex justify-content-end gap-3 mt-4">
-        <a class="btn btn-outline-primary" href="${ctx}/home">Cancelar</a>
+        <a class="btn btn-outline-primary" href="${ctx}/courts">Cancelar</a>
         <button type="submit" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i> Registrar juzgado</button>
       </div>
     </form>

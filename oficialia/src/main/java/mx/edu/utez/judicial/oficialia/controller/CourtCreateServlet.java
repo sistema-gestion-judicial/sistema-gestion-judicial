@@ -28,7 +28,6 @@ public class CourtCreateServlet extends HttpServlet {
         // The filter already refuses other profiles; this keeps the rule in the service as well
         try {
             courtService.requireAccess(currentUser(request));
-            DemandRequestListServlet.moveFlashMessage(request);
             show(request, response, new CourtRegistrationForm());
         } catch (AccessDeniedException e) {
             ErrorView.forbidden(request, response, e.getMessage());
@@ -62,7 +61,7 @@ public class CourtCreateServlet extends HttpServlet {
                     "El juzgado «" + registration.court().getName() + "» (clave " + registration.court().getCode()
                         + ") quedó registrado como activo. " + registration.administratorName()
                         + " es su administrador y debe cambiar la contraseña temporal al iniciar sesión.");
-                response.sendRedirect(request.getContextPath() + "/courts/new");
+                response.sendRedirect(request.getContextPath() + "/courts");
                 return;
             }
             request.setAttribute("errors", registration.errors());
