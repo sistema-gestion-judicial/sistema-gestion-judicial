@@ -1,5 +1,6 @@
 document.addEventListener("DOMContentLoaded", () => {
   const AUDIENCIAS_URL = `${window.APP_CONTEXT || ""}/inicioAudienciasAbogados.jsp`;
+  const AGENDAMIENTO_URL = `${window.APP_CONTEXT || ""}/agendamientoAbogados.jsp`;
 
   const profileButton = document.getElementById("profileButton");
   const profileMenu = document.getElementById("profileMenu");
@@ -23,8 +24,10 @@ document.addEventListener("DOMContentLoaded", () => {
       if (exp) {
         const titleEl = document.getElementById("case-title");
         const expEl = document.getElementById("detailExpediente");
+        const breadcrumbEl = document.querySelector(".breadcrumb-current");
         if (titleEl) titleEl.textContent = exp;
         if (expEl) expEl.textContent = exp;
+        if (breadcrumbEl) breadcrumbEl.textContent = exp;
       }
 
       if (data) {
@@ -46,10 +49,16 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  function showDialog(title, message, actions) {
+  function showDialog(title, message, actions, isHtml = false) {
     if (!dialog) return;
     if (dialogTitle) dialogTitle.textContent = title;
-    if (dialogMessage) dialogMessage.textContent = message;
+    if (dialogMessage) {
+      if (isHtml) {
+        dialogMessage.innerHTML = message;
+      } else {
+        dialogMessage.textContent = message;
+      }
+    }
     if (dialogActions) {
       dialogActions.replaceChildren();
       for (const action of actions) {
@@ -117,6 +126,72 @@ document.addEventListener("DOMContentLoaded", () => {
         [{ label: "Cerrar" }]
       );
     });
+  });
+
+  // Botón "Ver" dentro de la pestaña Peritaje
+  const panelPeritaje = document.getElementById("panel-peritaje");
+  if (panelPeritaje) {
+    panelPeritaje.querySelectorAll("button, a").forEach((el) => {
+      if (el.textContent.trim().includes("Ver")) {
+        el.addEventListener("click", (event) => {
+          event.preventDefault();
+          const currentExp = document.getElementById("case-title")?.textContent.trim() || "PEN-2025-0891";
+          const row = el.closest("tr");
+          const rowText = row ? row.textContent.toLowerCase() : "";
+          const estaEnEspera = rowText.includes("espera");
+
+          // Si ya está listo/concluido, lleva directo a la pestaña Expediente completo
+          if (!estaEnEspera) {
+            const tabExpediente = document.getElementById("tab-expediente");
+            if (tabExpediente) {
+              activateTab(tabExpediente);
+              tabExpediente.focus();
+            }
+            return;
+          }
+
+          // Si sigue "En espera", muestra aviso ordenado en naranja
+          const detalleHtml = `
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px 20px; margin-bottom: 16px;">
+              <div>
+                <span style="display: block; font-size: 12px; color: #5a635c; margin-bottom: 2px;">Solicitante</span>
+                <strong style="font-size: 14px; color: #1f2b1f;">Ricardo Salgado</strong>
+              </div>
+              <div>
+                <span style="display: block; font-size: 12px; color: #5a635c; margin-bottom: 2px;">Materia</span>
+                <strong style="font-size: 14px; color: #1f2b1f;">Familiar</strong>
+              </div>
+              <div>
+                <span style="display: block; font-size: 12px; color: #5a635c; margin-bottom: 2px;">Fecha de solicitud</span>
+                <strong style="font-size: 14px; color: #1f2b1f;">05/10/2026 · 08:00 a.m.</strong>
+              </div>
+              <div>
+                <span style="display: block; font-size: 12px; color: #5a635c; margin-bottom: 2px;">Estado</span>
+                <span style="display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 999px; background: #fff3e0; color: #c25900; font-size: 12px; font-weight: 700;">
+                  ● En espera
+                </span>
+              </div>
+            </div>
+            <div style="padding: 12px 14px; border-radius: 10px; background: #fff8f0; border: 1px solid #f5cba7; color: #9a4700; font-size: 13px; line-height: 1.45;">
+              <strong>Dictamen aún no disponible:</strong> El peritaje sigue en proceso. Una vez concluido, podrás consultarlo directamente dentro de la pestaña <strong>Expediente completo</strong>.
+            </div>
+          `;
+
+          showDialog(`Detalle de peritaje · ${currentExp}`, detalleHtml, [{ label: "Cerrar" }], true);
+        });
+      }
+    });
+  }
+
+  // Botón "Ver agenda" en la tarjeta lateral Detalle de audiencia
+  document.querySelectorAll("button, a").forEach((el) => {
+    if (el.textContent.trim() === "Ver agenda") {
+      el.addEventListener("click", (event) => {
+        event.preventDefault();
+        const currentExp = document.getElementById("case-title")?.textContent.trim() || "PEN-2025-0891";
+        window.location.href = `${AGENDAMIENTO_URL}?expediente=${encodeURIComponent(currentExp)}`;
+      });
+    }
   });
 
   // Enlace a Expediente completo

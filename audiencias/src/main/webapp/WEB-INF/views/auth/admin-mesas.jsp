@@ -5,120 +5,169 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#e9e9e2">
   <title>SGA Audiencias | Mesas</title>
 
-  <!-- Reusamos el CSS global y el CSS que creó tu compañera -->
   <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/styles.css">
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/abogados.css">
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/abogados.css?v=<%= System.currentTimeMillis() %>">
 </head>
 <body>
-<div class="page">
+<div class="page layout-figma">
 
-  <!-- Topbar con clases de abogados.css -->
-  <header class="topbar">
-    <a class="brand" href="#" aria-label="SGA Audiencias, inicio">
-      <span class="logo">Logo</span>
-      <span>
-        <span class="brand-name">SGA</span>
-        <span class="brand-subtitle" style="display:block">Audiencias</span>
-      </span>
-    </a>
-
-    <nav class="main-nav" aria-label="Navegación principal">
-      <button class="nav-link" aria-current="page">Mesas</button>
-      <a href="abogados.jsp" class="nav-link" style="text-decoration:none;">Abogados de audiencia</a>
-    </nav>
-
-    <div class="profile-wrap">
-      <button class="profile" id="profileButton" aria-expanded="false" aria-haspopup="true" aria-controls="profileMenu" type="button">
-        <span class="avatar" aria-hidden="true">
-          <svg width="35" height="35" viewBox="0 0 36 36" fill="none">
-            <circle cx="18" cy="11" r="7" stroke="currentColor" stroke-width="2"/>
-            <path d="M5.5 32c.9-7.3 5.2-11 12.5-11s11.6 3.7 12.5 11" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-          </svg>
-        </span>
-        <span>
-          <span class="profile-name">Ricardo Salgado</span>
-          <span class="profile-role" style="display:block">Administrador</span>
-        </span>
-        <svg class="profile-chevron" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-          <path d="m4 7 6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Barra Lateral Institucional -->
+  <aside class="sidebar" aria-label="Menú lateral">
+    <div>
+      <a class="sidebar-brand" href="#" aria-label="SGA Audiencias, inicio">
+        <svg width="46" height="46" viewBox="0 0 48 48" fill="none" aria-hidden="true">
+          <path d="M24 7v33M15 40h18M11 15h26" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          <path d="M11 15 6 26h10l-5-11ZM37 15l-5 11h10l-5-11Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+          <path d="M6 26c0 2.8 2.2 4.5 5 4.5s5-1.7 5-4.5M32 26c0 2.8 2.2 4.5 5 4.5s5-1.7 5-4.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
         </svg>
-      </button>
+        <span class="sidebar-brand-title">Audiencias</span>
+      </a>
 
-      <span class="profile-menu" id="profileMenu" role="menu">
-        <button type="button" role="menuitem">Mi perfil</button>
-        <a href="${pageContext.request.contextPath}/views/auth/login.jsp" style="text-decoration: none;">
-          <button type="button" role="menuitem" style="width:100%; border:0; background:transparent; text-align:left; cursor:pointer;">Cerrar sesión</button>
-        </a>
-      </span>
-    </div>
-  </header>
-
-  <main>
-
-    <section aria-labelledby="page-title">
-      <div class="heading-rule"></div>
-      <h1 id="page-title" class="font-serif">Mesas</h1>
-      <p class="intro">Gestiona las mesas pertenecientes al sistema</p>
-
-      <form class="filters" id="mesasFilters">
-        <input class="search-field" id="expedienteSearch" type="search" placeholder="Buscar por expediente" aria-label="Buscar por expediente">
-
-        <select class="subject-filter" id="materiaFilter" aria-label="Materia">
-          <option value="">Materia</option>
-          <option value="Familiar">Familiar</option>
-          <option value="Civil">Civil</option>
-          <option value="Mercantil">Mercantil</option>
-          <option value="Penal">Penal</option>
-        </select>
-
-        <button type="button" id="btnResetFilters" class="btn-link-reset">Limpiar filtros</button>
-
-        <button class="apply-filters" type="submit">
-          <svg viewBox="0 0 20 20" fill="none" aria-hidden="true" width="16" height="16">
-            <path d="M2.5 5.8h15M4.8 10h10.4M7.5 14.2h5" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+      <nav class="sidebar-nav" aria-label="Navegación principal">
+        <button type="button" class="sidebar-link active-link" aria-current="page">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <rect x="3" y="4" width="18" height="16" rx="2.5" stroke="currentColor" stroke-width="1.7"/>
+            <path d="M3 10h18M9 4v16" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
           </svg>
-          Aplicar filtros
+          <span>Mesas</span>
         </button>
-      </form>
-    </section>
 
-    <!-- Contenedor Tabla de Mesas -->
-    <section class="agenda" aria-labelledby="table-title">
-      <div class="agenda-heading">
-        <div>
-          <h2 id="table-title" class="font-serif fst-italic">Mesas</h2>
-          <div class="agenda-subtitle">Consulta las mesas</div>
+        <a href="abogados.jsp" class="sidebar-link">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <circle cx="9" cy="8" r="3.5" stroke="currentColor" stroke-width="1.7"/>
+            <path d="M3 19c.6-3.8 3-5.5 6-5.5s5.4 1.7 6 5.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+            <circle cx="17" cy="9" r="2.5" stroke="currentColor" stroke-width="1.7"/>
+            <path d="M16.5 14c2.3.3 4 1.7 4.5 4.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+          </svg>
+          <span>Abogados de audiencia</span>
+        </a>
+      </nav>
+    </div>
+
+    <div class="sidebar-footer">
+      <a href="${pageContext.request.contextPath}/views/auth/login.jsp" class="sidebar-logout">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span>Cerrar sesión</span>
+      </a>
+    </div>
+  </aside>
+
+  <!-- Columna Derecha: Topbar + Contenido -->
+  <div class="content-shell">
+
+    <!-- Topbar Flotante (sin flecha en perfil) -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-brand-compact">
+          <span class="brand-name">SGA</span>
+          <span class="brand-subtitle">Audiencias</span>
         </div>
-        <button type="button" id="btnRegisterMesa" class="apply-filters rounded-pill border-0" style="background-color: #2b3929;">
-          + Registrar mesa
-        </button>
+
+        <span class="topbar-divider" aria-hidden="true"></span>
+
+        <nav class="breadcrumb-nav" aria-label="Ruta de navegación">
+          <span>Inicio</span>
+          <span aria-hidden="true">&rsaquo;</span>
+          <span class="breadcrumb-current">Mesas</span>
+        </nav>
       </div>
 
-      <div class="table-scroll">
-        <table>
-          <thead>
-          <tr>
-            <th scope="col">N-Mesa</th>
-            <th scope="col">Juzgado Asignado</th>
-            <th scope="col">Materia</th>
-            <th scope="col">Estado</th>
-            <th scope="col" style="text-align:right;">Acciones</th>
-          </tr>
-          </thead>
-          <tbody id="mesasRows"></tbody>
-        </table>
+      <div class="topbar-right">
+        <div class="profile-wrap">
+          <button class="profile" id="profileButton" aria-expanded="false" aria-haspopup="true" aria-controls="profileMenu" type="button">
+            <span class="avatar" aria-hidden="true">RS</span>
+            <span class="profile-text">
+              <span class="profile-name">Ricardo Salgado</span>
+              <span class="profile-role">Administrador</span>
+            </span>
+          </button>
+
+          <span class="profile-menu" id="profileMenu" role="menu">
+            <button type="button" role="menuitem">Mi perfil</button>
+            <a href="${pageContext.request.contextPath}/views/auth/login.jsp" style="text-decoration: none;">
+              <button type="button" role="menuitem" style="width:100%; border:0; background:transparent; text-align:left; cursor:pointer;">Cerrar sesión</button>
+            </a>
+          </span>
+        </div>
       </div>
+    </header>
 
+    <main>
 
-      <footer class="table-footer">
-        <span id="paginationSummary" aria-live="polite">Mostrando 1–4 de 36</span>
-        <nav class="pagination" aria-label="Paginación de mesas" id="pagination"></nav>
-      </footer>
-    </section>
-  </main>
+      <section aria-labelledby="page-title" class="hero-banner-justice">
+        <div class="heading-rule"></div>
+        <h1 id="page-title" class="font-serif">Mesas</h1>
+        <p class="intro">Gestiona las mesas pertenecientes al sistema</p>
+
+        <form class="filters" id="mesasFilters">
+          <div class="search-wrap">
+            <svg class="search-icon" viewBox="0 0 20 20" fill="none" width="16" height="16">
+              <circle cx="9" cy="9" r="6" stroke="currentColor" stroke-width="1.8"/>
+              <path d="m13.5 13.5 4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+            </svg>
+            <input class="search-field" id="expedienteSearch" type="search" placeholder="Buscar por expediente" aria-label="Buscar por expediente">
+          </div>
+
+          <select class="subject-filter" id="materiaFilter" aria-label="Materia">
+            <option value="">Materia</option>
+            <option value="Familiar">Familiar</option>
+            <option value="Civil">Civil</option>
+            <option value="Mercantil">Mercantil</option>
+            <option value="Penal">Penal</option>
+          </select>
+
+          <button type="button" id="btnResetFilters" class="btn-link-reset">Limpiar filtros</button>
+
+          <button class="apply-filters" type="submit">
+            <svg viewBox="0 0 20 20" fill="none" aria-hidden="true" width="16" height="16">
+              <path d="M2.5 5.8h15M4.8 10h10.4M7.5 14.2h5" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+            </svg>
+            Aplicar filtros
+          </button>
+        </form>
+      </section>
+
+      <!-- Contenedor Tabla de Mesas -->
+      <section class="agenda" aria-labelledby="table-title">
+        <div class="agenda-heading">
+          <div>
+            <h2 id="table-title" class="font-serif fst-italic">Mesas</h2>
+            <div class="agenda-subtitle">Consulta las mesas</div>
+          </div>
+          <button type="button" id="btnRegisterMesa" class="apply-filters rounded-pill border-0" style="background-color: #2b3929;">
+            + Registrar mesa
+          </button>
+        </div>
+
+        <div class="table-scroll">
+          <table>
+            <thead>
+            <tr>
+              <th scope="col">N-Mesa</th>
+              <th scope="col">Juzgado Asignado</th>
+              <th scope="col">Materia</th>
+              <th scope="col">Estado</th>
+              <th scope="col" style="text-align:right;">Acciones</th>
+            </tr>
+            </thead>
+            <tbody id="mesasRows"></tbody>
+          </table>
+        </div>
+
+        <footer class="table-footer">
+          <span id="paginationSummary" aria-live="polite">Mostrando 1–4 de 36</span>
+          <nav class="pagination" aria-label="Paginación de mesas" id="pagination"></nav>
+        </footer>
+      </section>
+    </main>
+  </div>
 </div>
+
 <!-- Modal 1: Registrar Mesa -->
 <dialog id="modalRegistrarMesa" class="custom-modal">
   <div class="modal-body-custom">
