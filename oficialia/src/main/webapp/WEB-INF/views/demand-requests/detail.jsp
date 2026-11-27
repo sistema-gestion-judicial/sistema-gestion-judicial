@@ -8,6 +8,9 @@
 <c:url var="ruleUrl" value="/demand-requests/rule">
   <c:param name="folio" value="${demandRequest.folio}" />
 </c:url>
+<c:url var="editUrl" value="/demand-requests/edit">
+  <c:param name="folio" value="${demandRequest.folio}" />
+</c:url>
 <c:set var="canRule" value="${demandRequest.pending and sessionScope.currentUser.clerk}" />
 
 <header class="page-head">
@@ -26,6 +29,7 @@
   </div>
   <div class="page-head-side">
     <c:if test="${canRule}">
+      <a class="btn btn-secondary" href="${editUrl}">Corregir</a>
       <a class="btn btn-primary" href="${ruleUrl}">Calificar solicitud</a>
     </c:if>
     <a class="back-link" href="${ctx}/demand-requests">Volver a Solicitudes</a>

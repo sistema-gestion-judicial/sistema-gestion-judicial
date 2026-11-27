@@ -128,4 +128,11 @@ class RouteRulesTest {
             assertTrue(RouteRules.canAccess("/courts", role), role.name());
         }
     }
+
+    @Test
+    void onlyTheClerkCorrectsARequest() {
+        assertTrue(RouteRules.canAccess("/demand-requests/edit", UserRole.CLERK));
+        assertFalse(RouteRules.canAccess("/demand-requests/edit", UserRole.COURT_ADMIN));
+        assertFalse(RouteRules.canAccess("/demand-requests/edit", UserRole.JUDICIAL_BODY_ADMIN));
+    }
 }

@@ -19,6 +19,9 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import mx.edu.utez.judicial.common.db.Database;
 import mx.edu.utez.judicial.oficialia.model.DemandRequest;
+import mx.edu.utez.judicial.oficialia.model.DuplicityWarning;
+import mx.edu.utez.judicial.oficialia.model.Party;
+import mx.edu.utez.judicial.oficialia.model.PartyRole;
 import mx.edu.utez.judicial.oficialia.model.NewUserAccount;
 import mx.edu.utez.judicial.oficialia.model.RequestStatus;
 import mx.edu.utez.judicial.oficialia.model.User;
@@ -205,5 +208,33 @@ class JdbcDemandRequestDaoTest {
             rows.next();
             return rows.getInt(1);
         }
+    }
+
+    @Test
+    void correctsAPendingRequestAndWritesTheAuditLog() throws Exception {
+        DemandRequest current = dao.findByFolio("S-000127/2026").orElseThrow();
+        DemandRequest corrected = new DemandRequest(current.getFolio(), current.getReceivedDate(),
+            current.getCourtName(), current.getCourtCode(), "Civil", current.getPlaintiff(),
+            Party.unidentified(PartyRole.DEFENDANT), "Lic. Rosa Campos", current.getCapturedBy(),
+            current.getAnnexes(), null);
+
+        dao.correct(corrected, new DuplicityWarning("Juzgado de Jojutla", "Civil", "Continuó con la corrección"),
+            clerk, RULED_AT);
+
+        DemandRequest saved = dao.findByFolio("S-000127/2026").orElseThrow();
+        assertEquals("Civil", saved.getMatter());
+        assertEquals("Lic. Rosa Campos", saved.getLegalRepresentative());
+        assertFalse(saved.getDefendant().isIdentified());
+        assertEquals("Juzgado de Jojutla", saved.getDuplicityWarning().getCourtName());
+        assertEquals(current.getAnnexes().size(), saved.getAnnexes().size());
+        assertTrue(auditEntries().contains("USER|lmendez@utez.edu.mx|REQUEST_CORRECTED|S-000127/2026"));
+    }
+
+    @Test
+    void refusesToCorrectARuledRequest() {
+        DemandRequest request = pending("S-000127/2026");
+        dao.admit(request, clerk, RULED_AT);
+
+        assertThrows(IllegalStateException.class, () -> dao.correct(request, null, clerk, RULED_AT));
     }
 }

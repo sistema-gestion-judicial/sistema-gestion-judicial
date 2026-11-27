@@ -79,6 +79,19 @@ public class InMemoryDemandRequestDao implements DemandRequestDao {
         stored(request).recordInadmissible(reason, clerk.getFullName(), ruledAt);
     }
 
+    @Override
+    public synchronized void correct(DemandRequest corrected, DuplicityWarning warning, User clerk,
+                                     LocalDateTime at) {
+        DemandRequest current = stored(corrected);
+        if (!current.isPending()) {
+            throw new IllegalStateException("Request " + corrected.getFolio() + " was already ruled");
+        }
+        requestsByFolio.put(corrected.getFolio(), new DemandRequest(current.getFolio(), current.getReceivedDate(),
+            current.getCourtName(), current.getCourtCode(), corrected.getMatter(), corrected.getPlaintiff(),
+            corrected.getDefendant(), corrected.getLegalRepresentative(), current.getCapturedBy(),
+            current.getAnnexes(), warning == null ? current.getDuplicityWarning() : warning));
+    }
+
     private DemandRequest stored(DemandRequest request) {
         DemandRequest stored = requestsByFolio.get(request.getFolio());
         if (stored == null) {
