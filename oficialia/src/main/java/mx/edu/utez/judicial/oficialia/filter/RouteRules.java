@@ -20,7 +20,8 @@ final class RouteRules {
     private static final String NEW_REQUEST_PATH = "/demand-requests/new";
     private static final String PASSWORD_CHANGE_PATH = "/password/change";
     // The users of a court are managed only by its administrator (RF 1.4)
-    private static final Set<String> COURT_ADMIN_PATHS = Set.of("/users", "/users/new");
+    private static final Set<String> COURT_ADMIN_PATHS =
+        Set.of("/users", "/users/new", "/users/edit", "/users/status");
     // The catalogs are managed only by the judicial body administrator (DFR 2.1)
     private static final Set<String> CATALOG_PATHS =
         Set.of("/judicial-districts", "/judicial-districts/new", "/judicial-districts/edit",
