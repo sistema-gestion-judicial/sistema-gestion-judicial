@@ -12,6 +12,12 @@
   </div>
 </header>
 
+<c:if test="${not empty flashMessage}">
+  <div class="alert alert-mor-success d-flex gap-2 align-items-start" role="status">
+    <i class="bi bi-check-circle mt-1"></i> <span><c:out value="${flashMessage}" /></span>
+  </div>
+</c:if>
+
 <form class="filter-bar" method="get" action="${ctx}/courts">
   <div class="row g-3 align-items-center">
     <div class="col-lg">
@@ -98,6 +104,9 @@
               <c:if test="${canSeeInactive}">
                 <th>Estado</th>
               </c:if>
+              <c:if test="${canEdit}">
+                <th><span class="visually-hidden">Acciones</span></th>
+              </c:if>
             </tr>
           </thead>
           <tbody>
@@ -123,6 +132,16 @@
                     <span class="badge-mor ${court.active ? 'status-admissible' : 'status-inadmissible'}">
                       <span class="dot"></span> <c:out value="${court.active ? 'Activo' : 'Inactivo'}" />
                     </span>
+                  </td>
+                </c:if>
+                <c:if test="${canEdit}">
+                  <td class="text-end text-nowrap">
+                    <c:url var="editUrl" value="/courts/edit">
+                      <c:param name="code" value="${court.code}" />
+                    </c:url>
+                    <a class="row-action" href="${editUrl}" aria-label="Editar juzgado ${court.name}">
+                      <i class="bi bi-pencil" aria-hidden="true"></i> Editar
+                    </a>
                   </td>
                 </c:if>
               </tr>

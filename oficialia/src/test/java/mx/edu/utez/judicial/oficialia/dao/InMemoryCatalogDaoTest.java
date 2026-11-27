@@ -5,6 +5,9 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
+import mx.edu.utez.judicial.oficialia.model.Court;
+import mx.edu.utez.judicial.oficialia.model.CourtAddress;
+import mx.edu.utez.judicial.oficialia.model.CourtChanges;
 import mx.edu.utez.judicial.oficialia.model.JudicialDistrict;
 import org.junit.jupiter.api.Test;
 
@@ -54,6 +57,30 @@ class InMemoryCatalogDaoTest {
 
         dao.updateJudicialDistrict("CUA", "DISTRITO JUDICIAL DE CUAUTLA", "Cuautla");
         assertEquals("DISTRITO JUDICIAL DE CUAUTLA", dao.findJudicialDistrict("CUA").orElseThrow().getName());
+    }
+
+    @Test
+    void updatesACourtAndKeepsItsCodeNumberAndStatus() {
+        dao.updateCourt("12", new CourtChanges("Juzgado Primero de Cuautla", "CVA",
+            new CourtAddress("Av. Reforma 12", "Centro", "62740", "Cuautla", "7353521234"), List.of("CIV")));
+
+        Court updated = dao.findCourt("12").orElseThrow();
+        assertEquals("Juzgado Primero de Cuautla", updated.getName());
+        assertEquals("CVA", updated.getDistrictCode());
+        assertEquals("Distrito judicial de Cuernavaca", updated.getJudicialDistrict());
+        assertEquals("62740", updated.getAddress().postalCode());
+        assertEquals(List.of("CIV"), updated.getSubjectMatterCodes());
+        assertEquals(12, updated.getNumber());
+        assertTrue(updated.isActive());
+    }
+
+    @Test
+    void refusesACourtNameOfAnotherCourtButAllowsItsOwn() {
+        CourtChanges clash = new CourtChanges("juzgado de cuernavaca", "CUA", CourtAddress.EMPTY, List.of("CIV"));
+        assertThrows(DuplicateNameException.class, () -> dao.updateCourt("12", clash));
+
+        dao.updateCourt("12", new CourtChanges("JUZGADO DE CUAUTLA", "CUA", CourtAddress.EMPTY, List.of("CIV")));
+        assertEquals("JUZGADO DE CUAUTLA", dao.findCourt("12").orElseThrow().getName());
     }
 
     @Test
