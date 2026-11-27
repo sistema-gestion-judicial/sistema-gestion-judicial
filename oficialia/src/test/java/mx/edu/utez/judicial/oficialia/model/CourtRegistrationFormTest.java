@@ -115,6 +115,11 @@ class CourtRegistrationFormTest {
         form.setPhone("777abc4567");
         assertTrue(form.validate().containsKey("phone"));
 
+        for (String onlySymbols : new String[] {"---", "()", "+"}) {
+            form.setPhone(onlySymbols);
+            assertEquals("Escriba un teléfono de 10 dígitos.", form.validate().get("phone"), onlySymbols);
+        }
+
         form.setPhone("(777) 123-4567");
         assertTrue(form.validate().isEmpty());
         assertEquals("7771234567", form.getPhoneDigits());
