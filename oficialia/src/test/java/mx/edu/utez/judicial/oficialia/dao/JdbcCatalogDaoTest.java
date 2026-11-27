@@ -141,4 +141,14 @@ class JdbcCatalogDaoTest {
         dao.updateSubjectMatterStatus("PEN", true);
         assertTrue(dao.findSubjectMatter("PEN").orElseThrow().isActive());
     }
+
+    @Test
+    void changesTheStatusOfADistrictAndACourt() {
+        dao.updateJudicialDistrictStatus("JOJ", false);
+        dao.updateCourtStatus("07", false);
+
+        assertFalse(dao.findJudicialDistrict("JOJ").orElseThrow().isActive());
+        assertFalse(dao.findCourt("07").orElseThrow().isActive());
+        assertTrue(dao.findCourt("12").orElseThrow().isActive());
+    }
 }

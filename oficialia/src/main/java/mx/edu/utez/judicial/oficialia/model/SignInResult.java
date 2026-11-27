@@ -10,6 +10,7 @@ public record SignInResult(Status status, User user, long lockedMinutes) {
         SIGNED_IN,
         INVALID_CREDENTIALS,
         INACTIVE_ACCOUNT,
+        INACTIVE_COURT,
         LOCKED
     }
 
@@ -23,6 +24,10 @@ public record SignInResult(Status status, User user, long lockedMinutes) {
 
     public static SignInResult inactiveAccount() {
         return new SignInResult(Status.INACTIVE_ACCOUNT, null, 0);
+    }
+
+    public static SignInResult inactiveCourt() {
+        return new SignInResult(Status.INACTIVE_COURT, null, 0);
     }
 
     public static SignInResult locked(long minutes) {

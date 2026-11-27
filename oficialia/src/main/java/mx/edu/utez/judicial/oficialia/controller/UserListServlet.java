@@ -14,7 +14,8 @@ import mx.edu.utez.judicial.oficialia.model.User;
 import mx.edu.utez.judicial.oficialia.service.UserService;
 
 /**
- * Lists the users of the administrator's court (RF 1.4: a registered user is added to this list).
+ * Lists the users of the administrator's court (DFR 1.5), filtered by text and status and split in pages. A
+ * registered or corrected user shows up here.
  */
 @WebServlet("/users")
 public class UserListServlet extends HttpServlet {
@@ -30,14 +31,30 @@ public class UserListServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         User user = (User) request.getSession().getAttribute(AuthFilter.SESSION_USER);
+        String query = request.getParameter("q") == null ? "" : request.getParameter("q").trim();
+        String status = request.getParameter("status");
+        Boolean active = "active".equals(status) ? Boolean.TRUE : "inactive".equals(status) ? Boolean.FALSE : null;
         try {
-            request.setAttribute("users", userService.listForCourt(user));
+            request.setAttribute("page", userService.search(user, query, active, parsePage(request)));
         } catch (AccessDeniedException e) {
             ErrorView.forbidden(request, response, e.getMessage());
             return;
         }
+        request.setAttribute("query", query);
+        request.setAttribute("selectedStatus", active == null ? "" : status);
+        request.setAttribute("filtered", !query.isEmpty() || active != null);
         moveRegisteredUser(request);
+        DemandRequestListServlet.moveFlashMessage(request);
         request.getRequestDispatcher(VIEW).forward(request, response);
+    }
+
+    /** A missing or invalid page number shows the first page. */
+    private static int parsePage(HttpServletRequest request) {
+        try {
+            return Integer.parseInt(request.getParameter("page"));
+        } catch (NumberFormatException e) {
+            return 1;
+        }
     }
 
     /** The temporary password is shown only once: it is removed from the session as soon as it is read. */

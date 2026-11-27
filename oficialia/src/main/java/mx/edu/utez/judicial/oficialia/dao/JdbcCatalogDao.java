@@ -109,6 +109,27 @@ public class JdbcCatalogDao implements CatalogDao {
     }
 
     @Override
+    public void updateJudicialDistrictStatus(String code, boolean active) {
+        updateStatus("UPDATE judicial_districts SET active = ? WHERE code = ?", code, active, "judicial district");
+    }
+
+    @Override
+    public void updateCourtStatus(String code, boolean active) {
+        updateStatus("UPDATE courts SET active = ? WHERE code = ?", code, active, "court");
+    }
+
+    private void updateStatus(String sql, String code, boolean active, String what) {
+        try (Connection connection = database.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setBoolean(1, active);
+            statement.setString(2, code);
+            statement.executeUpdate();
+        } catch (SQLException e) {
+            throw new DataAccessException("Could not change the status of the " + what + " " + code, e);
+        }
+    }
+
+    @Override
     public List<Court> findCourts() {
         return queryCourts(SELECT_COURTS + " ORDER BY c.name", null);
     }
@@ -173,15 +194,7 @@ public class JdbcCatalogDao implements CatalogDao {
 
     @Override
     public void updateSubjectMatterStatus(String code, boolean active) {
-        try (Connection connection = database.getConnection();
-             PreparedStatement statement = connection.prepareStatement(
-                 "UPDATE subject_matters SET active = ? WHERE code = ?")) {
-            statement.setBoolean(1, active);
-            statement.setString(2, code);
-            statement.executeUpdate();
-        } catch (SQLException e) {
-            throw new DataAccessException("Could not change the status of the subject matter " + code, e);
-        }
+        updateStatus("UPDATE subject_matters SET active = ? WHERE code = ?", code, active, "subject matter");
     }
 
     private List<SubjectMatter> querySubjectMatters(String sql, String code) {

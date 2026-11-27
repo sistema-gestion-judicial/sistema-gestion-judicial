@@ -2,6 +2,10 @@
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <c:set var="pageTitle" value="Juzgados" />
 <c:set var="activeNav" value="courts" />
+<c:if test="${canChangeStatus}">
+  <c:set var="pageScript" value="status-confirm.js" />
+  <c:set var="statusAction" value="/courts/status" />
+</c:if>
 <%@ include file="/WEB-INF/views/layout/head.jspf" %>
 <%@ include file="/WEB-INF/views/layout/app-start.jspf" %>
 
@@ -11,6 +15,12 @@
     <p class="page-subtitle">Catálogo de juzgados del estado: dirección, distrito y materias que atienden.</p>
   </div>
 </header>
+
+<c:if test="${not empty flashMessage}">
+  <div class="alert alert-mor-success d-flex gap-2 align-items-start" role="status">
+    <i class="bi bi-check-circle mt-1"></i> <span><c:out value="${flashMessage}" /></span>
+  </div>
+</c:if>
 
 <form class="filter-bar" method="get" action="${ctx}/courts">
   <div class="row g-3 align-items-center">
@@ -98,6 +108,9 @@
               <c:if test="${canSeeInactive}">
                 <th>Estado</th>
               </c:if>
+              <c:if test="${canChangeStatus}">
+                <th class="text-end">Acciones</th>
+              </c:if>
             </tr>
           </thead>
           <tbody>
@@ -123,6 +136,20 @@
                     <span class="badge-mor ${court.active ? 'status-admissible' : 'status-inadmissible'}">
                       <span class="dot"></span> <c:out value="${court.active ? 'Activo' : 'Inactivo'}" />
                     </span>
+                  </td>
+                </c:if>
+                <c:if test="${canChangeStatus}">
+                  <c:set var="courtUsers" value="${userCounts[court.name]}" />
+                  <td class="text-end text-nowrap">
+                    <button type="button" class="row-action border-0 bg-transparent" data-status-toggle
+                            data-code="<c:out value='${court.code}' />" data-name="<c:out value='${court.name}' />"
+                            data-active="${not court.active}" data-label="el juzgado"
+                            data-title-on="Activar juzgado" data-title-off="Desactivar juzgado"
+                            data-note-on="${courtUsers == 1 ? 'Su usuario podrá' : 'Sus ' += courtUsers += ' usuarios podrán'} volver a entrar y el juzgado aparecerá en los catálogos."
+                            data-note-off="Tiene ${courtUsers}${courtUsers == 1 ? ' usuario asignado' : ' usuarios asignados'}, que ya no podrán entrar. Dejará de aparecer en los catálogos; las solicitudes y expedientes lo seguirán mostrando.">
+                      <i class="bi ${court.active ? 'bi-toggle-on' : 'bi-toggle-off'}" aria-hidden="true"></i>
+                      <c:out value="${court.active ? 'Desactivar' : 'Activar'}" />
+                    </button>
                   </td>
                 </c:if>
               </tr>
@@ -179,4 +206,7 @@
   </c:choose>
 </div>
 
+<c:if test="${canChangeStatus}">
+  <%@ include file="/WEB-INF/views/includes/status-modal.jspf" %>
+</c:if>
 <%@ include file="/WEB-INF/views/layout/app-end.jspf" %>

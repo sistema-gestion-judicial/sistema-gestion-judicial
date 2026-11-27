@@ -11,9 +11,14 @@ import java.util.Map;
 import mx.edu.utez.judicial.oficialia.dao.InMemoryCatalogDao;
 import mx.edu.utez.judicial.oficialia.dao.InMemoryUserDao;
 import mx.edu.utez.judicial.oficialia.exception.AccessDeniedException;
+import mx.edu.utez.judicial.oficialia.exception.BusinessRuleException;
+import mx.edu.utez.judicial.oficialia.exception.NotFoundException;
 import mx.edu.utez.judicial.oficialia.model.NewUserForm;
+import mx.edu.utez.judicial.oficialia.model.ResultPage;
 import mx.edu.utez.judicial.oficialia.model.User;
 import mx.edu.utez.judicial.oficialia.model.UserAccount;
+import mx.edu.utez.judicial.oficialia.model.UserEditForm;
+import mx.edu.utez.judicial.oficialia.model.UserProfile;
 import mx.edu.utez.judicial.oficialia.model.UserRole;
 import mx.edu.utez.judicial.oficialia.model.UserSummary;
 import org.junit.jupiter.api.BeforeEach;
@@ -132,5 +137,85 @@ class UserServiceTest {
         assertThrows(AccessDeniedException.class, () -> service.register(judicialBodyAdmin, form("x@utez.edu.mx")));
         assertThrows(AccessDeniedException.class, () -> service.listForCourt(clerk));
         assertTrue(users.findByEmail("x@utez.edu.mx").isEmpty());
+    }
+
+    private static UserEditForm editForm(String firstName, String email, String role) {
+        UserEditForm form = new UserEditForm();
+        form.setFirstName(firstName);
+        form.setLastName("Ruiz");
+        form.setEmail(email);
+        form.setPhone("");
+        form.setRole(role);
+        return form;
+    }
+
+    @Test
+    void searchesOnlyTheUsersOfTheCourtByNameOrEmailAndStatus() {
+        service.register(courtAdmin, form("ana@utez.edu.mx"));
+        service.changeStatus(courtAdmin, "ana@utez.edu.mx", false);
+
+        assertEquals(List.of("ana@utez.edu.mx"), emails(service.search(courtAdmin, "RUIZ", null, 1)));
+        assertEquals(List.of("ana@utez.edu.mx"), emails(service.search(courtAdmin, "", false, 1)));
+        assertEquals(List.of("admin@utez.edu.mx"), emails(service.search(courtAdmin, null, true, 1)));
+        // Rosa belongs to another court, so typing her e-mail finds nothing
+        assertTrue(service.search(courtAdmin, "otra@utez.edu.mx", null, 1).getItems().isEmpty());
+    }
+
+    @Test
+    void correctsAUserOfTheCourtKeepingTheCourt() {
+        service.register(courtAdmin, form("ana@utez.edu.mx"));
+
+        UserService.Update update = service.update(courtAdmin, "ana@utez.edu.mx",
+            editForm("Ana Lucía", "alucia@utez.edu.mx", "COURT_ADMIN"));
+
+        assertTrue(update.isSaved());
+        UserProfile saved = users.findProfile("alucia@utez.edu.mx").orElseThrow();
+        assertEquals("Ana Lucía Ruiz", saved.getFullName());
+        assertEquals(UserRole.COURT_ADMIN, saved.getRole());
+        assertEquals(COURT, saved.getCourtName());
+        assertEquals(null, saved.getPhone());
+    }
+
+    @Test
+    void refusesAnEmailOfAnotherUserOrAnInvalidOne() {
+        service.register(courtAdmin, form("ana@utez.edu.mx"));
+
+        assertEquals(UserService.EMAIL_TAKEN, service.update(courtAdmin, "ana@utez.edu.mx",
+            editForm("Ana", "OTRA@utez.edu.mx", "CLERK")).errors().get("email"));
+        assertTrue(service.update(courtAdmin, "ana@utez.edu.mx", editForm("Ana", "no-es-correo", "CLERK"))
+            .errors().containsKey("email"));
+        assertEquals("ana@utez.edu.mx", users.findProfile("ana@utez.edu.mx").orElseThrow().getEmail());
+    }
+
+    @Test
+    void anAdministratorCannotChangeTheirOwnProfileOrDeactivateThemselves() {
+        UserService.Update update = service.update(courtAdmin, "admin@utez.edu.mx",
+            editForm("Jorge", "admin@utez.edu.mx", "CLERK"));
+
+        assertEquals(UserService.OWN_ROLE, update.errors().get("role"));
+        assertThrows(BusinessRuleException.class, () -> service.changeStatus(courtAdmin, "admin@utez.edu.mx", false));
+        assertTrue(users.findByEmail("admin@utez.edu.mx").orElseThrow().active());
+    }
+
+    @Test
+    void usersOfOtherCourtsAreNotFound() {
+        assertThrows(NotFoundException.class, () -> service.get(courtAdmin, "otra@utez.edu.mx"));
+        assertThrows(NotFoundException.class, () -> service.changeStatus(courtAdmin, "otra@utez.edu.mx", false));
+        assertTrue(users.findByEmail("otra@utez.edu.mx").orElseThrow().active());
+    }
+
+    @Test
+    void deactivatesAndActivatesAUserOfTheCourt() {
+        service.register(courtAdmin, form("ana@utez.edu.mx"));
+
+        service.changeStatus(courtAdmin, "ana@utez.edu.mx", false);
+        assertFalse(users.findByEmail("ana@utez.edu.mx").orElseThrow().active());
+
+        service.changeStatus(courtAdmin, "ana@utez.edu.mx", true);
+        assertTrue(users.findByEmail("ana@utez.edu.mx").orElseThrow().active());
+    }
+
+    private static List<String> emails(ResultPage<UserSummary> page) {
+        return page.getItems().stream().map(UserSummary::getEmail).toList();
     }
 }

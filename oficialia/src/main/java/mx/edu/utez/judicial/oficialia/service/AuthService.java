@@ -55,7 +55,7 @@ public class AuthService {
         attemptTracker.reset(email);
         // Checked only after the password, so nobody can learn an account's status without knowing it
         if (!account.get().active()) {
-            return SignInResult.inactiveAccount();
+            return account.get().courtActive() ? SignInResult.inactiveAccount() : SignInResult.inactiveCourt();
         }
         return SignInResult.signedIn(account.get().user());
     }
