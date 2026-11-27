@@ -10,11 +10,14 @@
   </li>
 </c:set>
 <c:set var="navCaseFiles">
-  <li>
-    <span class="app-nav-link is-soon" title="Disponible en un siguiente avance">
-      <i class="bi bi-folder2"></i> Expedientes <span class="soon-tag">Pronto</span>
-    </span>
-  </li>
+  <%-- The judicial body administrator has no court, so it has no case files of its own --%>
+  <c:if test="${navRole != 'JUDICIAL_BODY_ADMIN'}">
+    <li>
+      <a class="app-nav-link ${activeNav == 'case-files' ? 'active' : ''}" href="${ctx}/case-files">
+        <i class="bi bi-folder2"></i> Expedientes
+      </a>
+    </li>
+  </c:if>
 </c:set>
 <c:set var="navCourts">
   <li>

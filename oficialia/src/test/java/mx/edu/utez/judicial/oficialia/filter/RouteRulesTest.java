@@ -128,4 +128,15 @@ class RouteRulesTest {
             assertTrue(RouteRules.canAccess("/courts", role), role.name());
         }
     }
+
+    @Test
+    void courtStaffSeeTheirCaseFilesAndOnlyTheClerkMovesThemToSecondInstance() {
+        for (String path : new String[] {"/case-files", "/case-files/detail", "/case-files/receipt"}) {
+            assertTrue(RouteRules.canAccess(path, UserRole.CLERK), path);
+            assertTrue(RouteRules.canAccess(path, UserRole.COURT_ADMIN), path);
+            assertFalse(RouteRules.canAccess(path, UserRole.JUDICIAL_BODY_ADMIN), path);
+        }
+        assertTrue(RouteRules.canAccess("/case-files/second-instance", UserRole.CLERK));
+        assertFalse(RouteRules.canAccess("/case-files/second-instance", UserRole.COURT_ADMIN));
+    }
 }

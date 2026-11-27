@@ -2,11 +2,15 @@ package mx.edu.utez.judicial.oficialia.service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
+import mx.edu.utez.judicial.oficialia.dao.CaseFileDao;
 import mx.edu.utez.judicial.oficialia.dao.DemandRequestDao;
-import mx.edu.utez.judicial.oficialia.dao.InMemoryDemandRequestDao;
+import mx.edu.utez.judicial.oficialia.dao.InMemoryCaseFileDao;
+import mx.edu.utez.judicial.oficialia.dao.OficialiaDaos;
 import mx.edu.utez.judicial.oficialia.model.ActiveDemand;
+import mx.edu.utez.judicial.oficialia.model.CaseFileState;
 import mx.edu.utez.judicial.oficialia.model.DemandRequest;
 import mx.edu.utez.judicial.oficialia.model.DuplicityCheckForm;
 import mx.edu.utez.judicial.oficialia.model.DuplicityMatch;
@@ -31,15 +35,24 @@ public class DuplicityService {
     private final Supplier<List<ActiveDemand>> activeDemands;
 
     public DuplicityService() {
-        this(InMemoryDemandRequestDao.getInstance());
+        this(OficialiaDaos.demandRequests(), OficialiaDaos.caseFiles());
     }
 
-    /** Admissible requests count as active lawsuits as soon as they are ruled (RF 3.5). */
     public DuplicityService(DemandRequestDao demandRequestDao) {
+        this(demandRequestDao, new InMemoryCaseFileDao(demandRequestDao));
+    }
+
+    /**
+     * Admissible requests count as active lawsuits as soon as they are ruled (RF 3.5), until another system
+     * reports that their case file concluded (DFR 3.6).
+     */
+    public DuplicityService(DemandRequestDao demandRequestDao, CaseFileDao caseFileDao) {
         this.activeDemands = () -> {
             List<ActiveDemand> demands = new ArrayList<>(OTHER_COURTS);
+            Map<String, CaseFileState> states = caseFileDao.findStates();
             demandRequestDao.findAll().stream()
                     .filter(request -> request.getStatus() == RequestStatus.ADMISSIBLE)
+                    .filter(request -> !isConcluded(states.get(request.getCaseFileNumber())))
                     .map(DuplicityService::toActiveDemand)
                     .forEach(demands::add);
             return demands;
@@ -49,6 +62,10 @@ public class DuplicityService {
     public DuplicityService(List<ActiveDemand> activeDemands) {
         List<ActiveDemand> copy = List.copyOf(activeDemands);
         this.activeDemands = () -> copy;
+    }
+
+    private static boolean isConcluded(CaseFileState state) {
+        return state != null && state.concludedAt() != null;
     }
 
     public Optional<DuplicityMatch> findMatch(DuplicityCheckForm form) {
