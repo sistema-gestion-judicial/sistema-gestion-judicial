@@ -2,6 +2,7 @@ package mx.edu.utez.judicial.oficialia.dao;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -11,9 +12,12 @@ import java.sql.Statement;
 import java.util.List;
 import mx.edu.utez.judicial.common.db.Database;
 import mx.edu.utez.judicial.oficialia.model.NewUserAccount;
+import mx.edu.utez.judicial.oficialia.model.User;
 import mx.edu.utez.judicial.oficialia.model.UserAccount;
+import mx.edu.utez.judicial.oficialia.model.UserDetails;
 import mx.edu.utez.judicial.oficialia.model.UserRole;
 import mx.edu.utez.judicial.oficialia.model.UserSummary;
+import mx.edu.utez.judicial.oficialia.model.UserUpdate;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -131,5 +135,103 @@ class JdbcUserDaoTest {
 
         assertEquals(List.of("Ana Ruiz", "Zoe Mar"),
             dao.findByCourt("Juzgado de Cuautla").stream().map(UserSummary::getFullName).toList());
+    }
+
+    private static final User ADMIN = new User("jorge@utez.edu.mx", "Jorge Salas", UserRole.COURT_ADMIN,
+        "Juzgado de Cuautla");
+
+    private long insertAdminAndClerk() {
+        dao.insert(new NewUserAccount("Jorge", "Salas", ADMIN.getEmail(), UserRole.COURT_ADMIN, "12", HASH, false,
+            true));
+        dao.insert(new NewUserAccount("Ana", "Ruiz", "ana@utez.edu.mx", "7771234567", UserRole.CLERK, "12", HASH,
+            true, true));
+        return dao.findByCourt("Juzgado de Cuautla").stream().filter(user -> user.getEmail().equals("ana@utez.edu.mx"))
+            .findFirst().orElseThrow().getId();
+    }
+
+    @Test
+    void findsAUserByIdWithTheNameOfTheirCourt() {
+        long id = insertAdminAndClerk();
+
+        UserDetails ana = dao.findById(id).orElseThrow();
+
+        assertEquals("Ana", ana.getFirstName());
+        assertEquals("Ruiz", ana.getLastName());
+        assertEquals("7771234567", ana.getPhone());
+        assertEquals(UserRole.CLERK, ana.getRole());
+        assertEquals("Juzgado de Cuautla", ana.getCourtName());
+        assertTrue(dao.findById(id + 100).isEmpty());
+    }
+
+    @Test
+    void correctsAUserKeepingThePasswordAndRecordsTheChangeInTheAuditLog() throws Exception {
+        long id = insertAdminAndClerk();
+
+        dao.update(new UserUpdate(id, "Ana María", "Ruiz", "Ana.Maria@utez.edu.mx", null, UserRole.COURT_ADMIN), ADMIN);
+
+        UserAccount account = dao.findByEmail("ana.maria@utez.edu.mx").orElseThrow();
+        assertEquals("Ana María Ruiz", account.user().getFullName());
+        assertEquals(UserRole.COURT_ADMIN, account.user().getRole());
+        assertEquals(HASH, account.passwordHash());
+        assertTrue(account.user().isMustChangePassword());
+        assertTrue(dao.findByEmail("ana@utez.edu.mx").isEmpty());
+        try (Connection connection = database.getConnection();
+             Statement statement = connection.createStatement();
+             ResultSet rows = statement.executeQuery("SELECT a.action, a.entity_type, a.entity_id, a.court_code, "
+                 + "a.occurred_at, u.email, a.details FROM audit_log a JOIN users u ON u.id = a.actor_user_id")) {
+            assertTrue(rows.next());
+            assertEquals("USER_UPDATED", rows.getString("action"));
+            assertEquals("USER", rows.getString("entity_type"));
+            assertEquals(String.valueOf(id), rows.getString("entity_id"));
+            assertEquals("12", rows.getString("court_code"));
+            assertNotNull(rows.getTimestamp("occurred_at"));
+            assertEquals(ADMIN.getEmail(), rows.getString("email"));
+            String details = rows.getString("details");
+            assertTrue(details.contains("ana.maria@utez.edu.mx"), details);
+            assertTrue(details.contains("7771234567"), details);
+            assertFalse(details.contains("lastName"), details);
+            assertFalse(rows.next());
+        }
+    }
+
+    @Test
+    void anAdministratorCanChangeTheirOwnEmailAndStillSignTheAuditRecord() throws Exception {
+        insertAdminAndClerk();
+        long adminId = dao.findByCourt("Juzgado de Cuautla").stream()
+            .filter(user -> user.getEmail().equals(ADMIN.getEmail())).findFirst().orElseThrow().getId();
+
+        dao.update(new UserUpdate(adminId, "Jorge", "Salas", "jorge.salas@utez.edu.mx", null, UserRole.COURT_ADMIN),
+            ADMIN);
+
+        assertTrue(dao.findByEmail("jorge.salas@utez.edu.mx").isPresent());
+        assertEquals(1, auditRows());
+    }
+
+    @Test
+    void writesNothingWhenNoValueChanged() throws Exception {
+        long id = insertAdminAndClerk();
+
+        dao.update(new UserUpdate(id, "Ana", "Ruiz", "ana@utez.edu.mx", "7771234567", UserRole.CLERK), ADMIN);
+
+        assertEquals(0, auditRows());
+    }
+
+    @Test
+    void reportsTheEmailOfAnotherUserAsADuplicateAndLogsNothing() throws Exception {
+        long id = insertAdminAndClerk();
+
+        assertThrows(DuplicateEmailException.class, () -> dao.update(
+            new UserUpdate(id, "Ana", "Ruiz", "JORGE@utez.edu.mx", null, UserRole.CLERK), ADMIN));
+        assertEquals("ana@utez.edu.mx", dao.findById(id).orElseThrow().getEmail());
+        assertEquals(0, auditRows());
+    }
+
+    private int auditRows() throws Exception {
+        try (Connection connection = database.getConnection();
+             Statement statement = connection.createStatement();
+             ResultSet rows = statement.executeQuery("SELECT COUNT(*) FROM audit_log")) {
+            rows.next();
+            return rows.getInt(1);
+        }
     }
 }

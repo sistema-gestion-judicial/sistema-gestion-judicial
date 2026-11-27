@@ -7,18 +7,23 @@ import java.sql.SQLException;
 import java.sql.SQLIntegrityConstraintViolationException;
 import java.sql.Types;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import mx.edu.utez.judicial.common.db.Database;
 import mx.edu.utez.judicial.oficialia.model.NewUserAccount;
 import mx.edu.utez.judicial.oficialia.model.User;
 import mx.edu.utez.judicial.oficialia.model.UserAccount;
+import mx.edu.utez.judicial.oficialia.model.UserDetails;
 import mx.edu.utez.judicial.oficialia.model.UserRole;
 import mx.edu.utez.judicial.oficialia.model.UserSummary;
+import mx.edu.utez.judicial.oficialia.model.UserUpdate;
 import mx.edu.utez.judicial.oficialia.util.EmailValidator;
 
 /**
- * Reads and creates the accounts of the users table (V005).
+ * Reads, creates and corrects the accounts of the users table (V005).
  */
 public class JdbcUserDao implements UserDao {
 
@@ -65,7 +70,7 @@ public class JdbcUserDao implements UserDao {
 
     @Override
     public List<UserSummary> findByCourt(String courtName) {
-        String sql = "SELECT u.first_name, u.last_name, u.email, u.phone, u.role, u.active FROM users u "
+        String sql = "SELECT u.id, u.first_name, u.last_name, u.email, u.phone, u.role, u.active FROM users u "
             + "JOIN courts c ON c.code = u.court_code WHERE c.name = ? ORDER BY u.first_name, u.last_name";
         List<UserSummary> users = new ArrayList<>();
         try (Connection connection = database.getConnection();
@@ -73,7 +78,7 @@ public class JdbcUserDao implements UserDao {
             statement.setString(1, courtName);
             try (ResultSet rows = statement.executeQuery()) {
                 while (rows.next()) {
-                    users.add(new UserSummary(rows.getString("first_name") + " " + rows.getString("last_name"),
+                    users.add(new UserSummary(rows.getLong("id"), rows.getString("first_name") + " " + rows.getString("last_name"),
                         rows.getString("email"), rows.getString("phone"), UserRole.valueOf(rows.getString("role")),
                         rows.getBoolean("active")));
                 }
@@ -99,6 +104,117 @@ public class JdbcUserDao implements UserDao {
         } catch (SQLException e) {
             throw new DataAccessException("Could not update the password", e);
         }
+    }
+
+    @Override
+    public Optional<UserDetails> findById(long id) {
+        String sql = "SELECT u.id, u.first_name, u.last_name, u.email, u.phone, u.role, u.active, c.name AS court_name "
+            + "FROM users u LEFT JOIN courts c ON c.code = u.court_code WHERE u.id = ?";
+        try (Connection connection = database.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setLong(1, id);
+            try (ResultSet rows = statement.executeQuery()) {
+                if (!rows.next()) {
+                    return Optional.empty();
+                }
+                return Optional.of(new UserDetails(rows.getLong("id"), rows.getString("first_name"),
+                    rows.getString("last_name"), rows.getString("email"), rows.getString("phone"),
+                    UserRole.valueOf(rows.getString("role")), rows.getString("court_name"), rows.getBoolean("active")));
+            }
+        } catch (SQLException e) {
+            throw new DataAccessException("Could not read user " + id, e);
+        }
+    }
+
+    /**
+     * Locks the row, writes the audit record with the values before and after, and then the new values, all in
+     * one transaction (DFR 3.3.9, business rule 5). The record goes first because its author is looked up by
+     * e-mail, which may be the one this same update changes. Nothing is written when no value changed.
+     */
+    @Override
+    public void update(UserUpdate update, User actor) {
+        String email = EmailValidator.normalize(update.email());
+        try (Connection connection = database.getConnection()) {
+            connection.setAutoCommit(false);
+            try {
+                Map<String, Object> before;
+                String courtCode;
+                try (PreparedStatement statement = connection.prepareStatement("SELECT first_name, last_name, email, "
+                    + "phone, role, court_code FROM users WHERE id = ? FOR UPDATE")) {
+                    statement.setLong(1, update.id());
+                    try (ResultSet rows = statement.executeQuery()) {
+                        if (!rows.next()) {
+                            connection.rollback();
+                            return;
+                        }
+                        before = values(rows.getString("first_name"), rows.getString("last_name"),
+                            rows.getString("email"), rows.getString("phone"), rows.getString("role"));
+                        courtCode = rows.getString("court_code");
+                    }
+                }
+                Map<String, Object> changes = changes(before, values(update.firstName(), update.lastName(), email,
+                    update.phone(), update.role().name()));
+                if (changes.isEmpty()) {
+                    connection.rollback();
+                    return;
+                }
+                AuditLog.record(connection, actor, courtCode, "USER_UPDATED", "USER", String.valueOf(update.id()),
+                    null, changes);
+                try (PreparedStatement statement = connection.prepareStatement("UPDATE users SET first_name = ?, "
+                    + "last_name = ?, email = ?, phone = ?, role = ? WHERE id = ?")) {
+                    statement.setString(1, update.firstName());
+                    statement.setString(2, update.lastName());
+                    statement.setString(3, email);
+                    if (update.phone() == null) {
+                        statement.setNull(4, Types.VARCHAR);
+                    } else {
+                        statement.setString(4, update.phone());
+                    }
+                    statement.setString(5, update.role().name());
+                    statement.setLong(6, update.id());
+                    statement.executeUpdate();
+                }
+                connection.commit();
+            } catch (SQLException | RuntimeException e) {
+                connection.rollback();
+                throw e;
+            }
+        } catch (SQLIntegrityConstraintViolationException e) {
+            // Another account took the e-mail after the service checked it; the UNIQUE key decides
+            if (e.getErrorCode() == MYSQL_DUPLICATE_ENTRY) {
+                throw new DuplicateEmailException(email, e);
+            }
+            throw new DataAccessException("Could not update user " + update.id(), e);
+        } catch (SQLException e) {
+            throw new DataAccessException("Could not update user " + update.id(), e);
+        }
+    }
+
+    private static Map<String, Object> values(String firstName, String lastName, String email, String phone,
+                                              String role) {
+        // LinkedHashMap because the phone may be null, which Map.of refuses
+        Map<String, Object> values = new LinkedHashMap<>();
+        values.put("firstName", firstName);
+        values.put("lastName", lastName);
+        values.put("email", email);
+        values.put("phone", phone);
+        values.put("role", role);
+        return values;
+    }
+
+    /** Each changed field with its value before and after, for the audit record. */
+    private static Map<String, Object> changes(Map<String, Object> before, Map<String, Object> after) {
+        Map<String, Object> changes = new LinkedHashMap<>();
+        before.forEach((field, oldValue) -> {
+            Object newValue = after.get(field);
+            if (!Objects.equals(oldValue, newValue)) {
+                Map<String, Object> change = new LinkedHashMap<>();
+                change.put("from", oldValue);
+                change.put("to", newValue);
+                changes.put(field, change);
+            }
+        });
+        return changes;
     }
 
     public int count() {

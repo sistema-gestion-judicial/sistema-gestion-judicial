@@ -36,6 +36,12 @@
   </div>
 </c:if>
 
+<c:if test="${not empty flashMessage}">
+  <div class="alert alert-mor-success d-flex gap-2 align-items-start" role="status">
+    <i class="bi bi-check-circle mt-1"></i> <span><c:out value="${flashMessage}" /></span>
+  </div>
+</c:if>
+
 <div class="card-mor overflow-hidden">
   <div class="card-mor-header">
     <div>
@@ -62,6 +68,7 @@
               <th>Teléfono</th>
               <th>Perfil</th>
               <th>Estado</th>
+              <th class="text-end">Acciones</th>
             </tr>
           </thead>
           <tbody>
@@ -75,6 +82,14 @@
                   <span class="badge-mor ${listedUser.active ? 'status-admissible' : 'status-inadmissible'}">
                     <span class="dot"></span> <c:out value="${listedUser.active ? 'Activo' : 'Inactivo'}" />
                   </span>
+                </td>
+                <td class="text-end text-nowrap">
+                  <c:url var="editUrl" value="/users/edit">
+                    <c:param name="id" value="${listedUser.id}" />
+                  </c:url>
+                  <a class="row-action" href="${editUrl}" aria-label="Editar a <c:out value='${listedUser.fullName}' />">
+                    <i class="bi bi-pencil" aria-hidden="true"></i> Editar
+                  </a>
                 </td>
               </tr>
             </c:forEach>
