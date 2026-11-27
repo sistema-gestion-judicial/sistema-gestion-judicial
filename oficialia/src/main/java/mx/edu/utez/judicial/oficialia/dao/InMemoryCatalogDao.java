@@ -18,7 +18,7 @@ public class InMemoryCatalogDao implements CatalogDao {
 
     private static final List<String> ALL_MATTERS = List.of("CIV", "FAM", "MER", "PEN");
 
-    private static final List<SubjectMatter> SUBJECT_MATTERS = List.of(
+    private List<SubjectMatter> subjectMatters = List.of(
         new SubjectMatter(1, "CIV", "Civil", null, true), new SubjectMatter(2, "FAM", "Familiar", null, true),
         new SubjectMatter(3, "MER", "Mercantil", null, true), new SubjectMatter(4, "PEN", "Penal", null, true));
 
@@ -86,8 +86,50 @@ public class InMemoryCatalogDao implements CatalogDao {
     }
 
     @Override
-    public List<SubjectMatter> findSubjectMatters() {
-        return SUBJECT_MATTERS;
+    public synchronized List<SubjectMatter> findSubjectMatters() {
+        return subjectMatters.stream()
+            .sorted(Comparator.comparing(matter -> CatalogNames.key(matter.getName())))
+            .toList();
+    }
+
+    @Override
+    public synchronized Optional<SubjectMatter> findSubjectMatter(String code) {
+        return subjectMatters.stream().filter(matter -> matter.getCode().equals(code)).findFirst();
+    }
+
+    @Override
+    public synchronized void insertSubjectMatter(SubjectMatter matter) {
+        if (subjectMatters.stream().anyMatch(other -> other.getCode().equalsIgnoreCase(matter.getCode()))) {
+            throw new DuplicateCodeException(matter.getCode(), null);
+        }
+        if (subjectMatters.stream().anyMatch(other -> CatalogNames.sameName(other.getName(), matter.getName()))) {
+            throw new DuplicateNameException(matter.getName(), null);
+        }
+        int id = subjectMatters.stream().mapToInt(SubjectMatter::getId).max().orElse(0) + 1;
+        List<SubjectMatter> updated = new ArrayList<>(subjectMatters);
+        updated.add(new SubjectMatter(id, matter.getCode(), matter.getName(), matter.getDescription(),
+            matter.isActive()));
+        subjectMatters = List.copyOf(updated);
+    }
+
+    @Override
+    public synchronized void updateSubjectMatter(String code, String name, String description) {
+        if (subjectMatters.stream().anyMatch(other -> !other.getCode().equals(code)
+                && CatalogNames.sameName(other.getName(), name))) {
+            throw new DuplicateNameException(name, null);
+        }
+        subjectMatters = subjectMatters.stream()
+            .map(matter -> matter.getCode().equals(code)
+                ? new SubjectMatter(matter.getId(), code, name, description, matter.isActive()) : matter)
+            .toList();
+    }
+
+    @Override
+    public synchronized void updateSubjectMatterStatus(String code, boolean active) {
+        subjectMatters = subjectMatters.stream()
+            .map(matter -> matter.getCode().equals(code) ? new SubjectMatter(matter.getId(), code,
+                matter.getName(), matter.getDescription(), active) : matter)
+            .toList();
     }
 
     private static Court withDistrictName(Court court, String districtName) {

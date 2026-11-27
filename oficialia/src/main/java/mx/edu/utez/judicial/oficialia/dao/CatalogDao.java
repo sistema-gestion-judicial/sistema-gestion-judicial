@@ -37,5 +37,27 @@ public interface CatalogDao {
 
     Optional<Court> findCourt(String code);
 
+    /** Every subject matter, active or not, ordered by name. */
     List<SubjectMatter> findSubjectMatters();
+
+    Optional<SubjectMatter> findSubjectMatter(String code);
+
+    /**
+     * Adds a subject matter to the catalog. The code is stored as given.
+     *
+     * @throws DuplicateCodeException when another subject matter already has the code
+     * @throws DuplicateNameException when another subject matter already has the name
+     */
+    void insertSubjectMatter(SubjectMatter matter);
+
+    /**
+     * Changes the name and the description of a subject matter; its code and status stay as they are. The
+     * demand requests registered with it keep pointing to it. Does nothing when the code is unknown.
+     *
+     * @throws DuplicateNameException when another subject matter already has the name
+     */
+    void updateSubjectMatter(String code, String name, String description);
+
+    /** Activates or deactivates a subject matter. Does nothing when the code is unknown. */
+    void updateSubjectMatterStatus(String code, boolean active);
 }

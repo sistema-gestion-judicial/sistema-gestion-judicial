@@ -1,11 +1,13 @@
 package mx.edu.utez.judicial.oficialia.dao;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
 import mx.edu.utez.judicial.oficialia.model.JudicialDistrict;
+import mx.edu.utez.judicial.oficialia.model.SubjectMatter;
 import org.junit.jupiter.api.Test;
 
 class InMemoryCatalogDaoTest {
@@ -62,5 +64,34 @@ class InMemoryCatalogDaoTest {
 
         assertTrue(dao.findJudicialDistrict("ZZZ").isEmpty());
         assertEquals(4, dao.findJudicialDistricts().size());
+    }
+
+    @Test
+    void registersUpdatesAndTogglesASubjectMatter() {
+        InMemoryCatalogDao catalog = new InMemoryCatalogDao();
+        catalog.insertSubjectMatter(new SubjectMatter(0, "AMP", "Amparo", null, true));
+        catalog.updateSubjectMatter("AMP", "Amparo indirecto", "Ante juzgados de distrito");
+        catalog.updateSubjectMatterStatus("AMP", false);
+
+        SubjectMatter saved = catalog.findSubjectMatter("AMP").orElseThrow();
+        assertEquals(5, saved.getId());
+        assertEquals("Amparo indirecto", saved.getName());
+        assertEquals("Ante juzgados de distrito", saved.getDescription());
+        assertFalse(saved.isActive());
+        assertEquals(List.of("Amparo indirecto", "Civil", "Familiar", "Mercantil", "Penal"),
+            catalog.findSubjectMatters().stream().map(SubjectMatter::getName).toList());
+    }
+
+    @Test
+    void refusesARepeatedSubjectMatterCodeOrName() {
+        InMemoryCatalogDao catalog = new InMemoryCatalogDao();
+
+        assertThrows(DuplicateCodeException.class,
+            () -> catalog.insertSubjectMatter(new SubjectMatter(0, "civ", "Otra", null, true)));
+        assertThrows(DuplicateNameException.class,
+            () -> catalog.insertSubjectMatter(new SubjectMatter(0, "OTR", "PENAL", null, true)));
+        assertThrows(DuplicateNameException.class, () -> catalog.updateSubjectMatter("CIV", "Familiar", null));
+        catalog.updateSubjectMatter("CIV", "civil", null);
+        assertEquals("civil", catalog.findSubjectMatter("CIV").orElseThrow().getName());
     }
 }

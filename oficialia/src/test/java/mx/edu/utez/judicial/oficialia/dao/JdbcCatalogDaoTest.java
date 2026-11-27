@@ -1,11 +1,14 @@
 package mx.edu.utez.judicial.oficialia.dao;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
+import mx.edu.utez.judicial.common.db.Database;
 import mx.edu.utez.judicial.oficialia.model.Court;
+import mx.edu.utez.judicial.oficialia.model.DemandRequest;
 import mx.edu.utez.judicial.oficialia.model.JudicialDistrict;
 import mx.edu.utez.judicial.oficialia.model.SubjectMatter;
 import org.junit.jupiter.api.BeforeEach;
@@ -16,11 +19,13 @@ import org.junit.jupiter.api.Test;
  */
 class JdbcCatalogDaoTest {
 
+    private Database database;
     private JdbcCatalogDao dao;
 
     @BeforeEach
     void freshSchema() throws Exception {
-        dao = new JdbcCatalogDao(TestDatabase.migrated());
+        database = TestDatabase.migrated();
+        dao = new JdbcCatalogDao(database);
     }
 
     @Test
@@ -95,5 +100,45 @@ class JdbcCatalogDaoTest {
         JudicialDistrict unchanged = dao.findJudicialDistrict("CUA").orElseThrow();
         assertEquals("Distrito judicial de Cuautla", unchanged.getName());
         assertEquals("Cuautla", unchanged.getSeatMunicipality());
+    }
+
+    @Test
+    void savesASubjectMatterAndTellsWhichKeyWasRepeated() {
+        dao.insertSubjectMatter(new SubjectMatter(0, "AMP", "Amparo", "Juicios de amparo", true));
+
+        SubjectMatter saved = dao.findSubjectMatter("AMP").orElseThrow();
+        assertEquals("Amparo", saved.getName());
+        assertEquals("Juicios de amparo", saved.getDescription());
+        assertTrue(saved.isActive());
+        assertThrows(DuplicateCodeException.class,
+            () -> dao.insertSubjectMatter(new SubjectMatter(0, "CIV", "Otra", null, true)));
+        assertThrows(DuplicateNameException.class,
+            () -> dao.insertSubjectMatter(new SubjectMatter(0, "OTR", "Civil", null, true)));
+        assertEquals(5, dao.findSubjectMatters().size());
+    }
+
+    @Test
+    void renamingASubjectMatterKeepsTheRequestsRegisteredWithIt() {
+        JdbcDemandRequestDao requests = new JdbcDemandRequestDao(database);
+        DemandRequest civil = InMemoryDemandRequestDao.sampleRequests().stream()
+            .filter(request -> request.getMatter().equals("Civil")).findFirst().orElseThrow();
+        requests.insert(civil);
+
+        dao.updateSubjectMatter("CIV", "Civil y arrendamiento", "Incluye arrendamiento");
+
+        SubjectMatter renamed = dao.findSubjectMatter("CIV").orElseThrow();
+        assertEquals("Civil y arrendamiento", renamed.getName());
+        assertEquals("Incluye arrendamiento", renamed.getDescription());
+        assertEquals("Civil y arrendamiento", requests.findByFolio(civil.getFolio()).orElseThrow().getMatter());
+        assertThrows(DuplicateNameException.class, () -> dao.updateSubjectMatter("CIV", "familiar", null));
+    }
+
+    @Test
+    void deactivatesAndActivatesASubjectMatter() {
+        dao.updateSubjectMatterStatus("PEN", false);
+        assertFalse(dao.findSubjectMatter("PEN").orElseThrow().isActive());
+
+        dao.updateSubjectMatterStatus("PEN", true);
+        assertTrue(dao.findSubjectMatter("PEN").orElseThrow().isActive());
     }
 }
