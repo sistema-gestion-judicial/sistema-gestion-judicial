@@ -127,6 +127,25 @@ public class JdbcDeskDao implements DeskDao {
         }
     }
 
+    @Override
+    public void update(Desk desk) {
+        String sql = "UPDATE desks SET desk_name = ?, matter = ?, active = ?, user_id = ?, court_id = ? WHERE id = ?";
+        try (Connection connection = database.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, desk.getDeskName());
+            statement.setString(2, desk.getMatter());
+            statement.setBoolean(3, desk.isActive());
+            setNullableInt(statement, 4, desk.getUserId());
+            setNullableString(statement, 5, desk.getCourtId());
+            statement.setInt(6, desk.getId());
+            statement.executeUpdate();
+        } catch (SQLIntegrityConstraintViolationException e) {
+            throw new DataAccessException("Ese abogado ya encabeza otra mesa", e);
+        } catch (SQLException e) {
+            throw new DataAccessException("No se pudo actualizar la mesa " + desk.getId(), e);
+        }
+    }
+
     private static List<Desk> readAll(ResultSet rows) throws SQLException {
         List<Desk> desks = new ArrayList<>();
         while (rows.next()) {
