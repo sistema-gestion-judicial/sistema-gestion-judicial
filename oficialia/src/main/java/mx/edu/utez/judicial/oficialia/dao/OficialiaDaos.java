@@ -25,6 +25,10 @@ public final class OficialiaDaos {
         .<UserDao>map(JdbcUserDao::new)
         .orElseGet(InMemoryUserDao::getInstance);
 
+    private static final CaseFileDao CASE_FILES = DATABASE
+        .<CaseFileDao>map(JdbcCaseFileDao::new)
+        .orElseGet(InMemoryCaseFileDao::getInstance);
+
     private OficialiaDaos() {
     }
 
@@ -43,5 +47,9 @@ public final class OficialiaDaos {
 
     public static UserDao users() {
         return USERS;
+    }
+
+    public static CaseFileDao caseFiles() {
+        return CASE_FILES;
     }
 }
