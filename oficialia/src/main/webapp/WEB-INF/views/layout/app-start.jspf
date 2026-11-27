@@ -23,6 +23,13 @@
     </a>
   </li>
 </c:set>
+<c:set var="navMatters">
+  <li>
+    <a class="app-nav-link ${activeNav == 'matters' ? 'active' : ''}" href="${ctx}/subject-matters">
+      <i class="bi bi-tags"></i> Materias
+    </a>
+  </li>
+</c:set>
 <body>
 <div class="app-shell">
   <aside class="app-sidebar">
@@ -49,6 +56,7 @@
                 <i class="bi bi-geo-alt"></i> Distritos judiciales
               </a>
             </li>
+            ${navMatters}
           </c:if>
           ${navCourts}
         </c:when>
@@ -68,6 +76,7 @@
               <i class="bi bi-geo-alt"></i> Distritos judiciales
             </a>
           </li>
+          ${navMatters}
           ${navCourts}
         </c:otherwise>
       </c:choose>

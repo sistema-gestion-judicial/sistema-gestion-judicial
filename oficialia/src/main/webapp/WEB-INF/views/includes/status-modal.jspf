@@ -1,0 +1,22 @@
+<%-- Confirmation before activating or deactivating a record of a catalog list (used with status-confirm.js).
+     The including page sets statusAction to the path that receives the change. --%>
+<div class="modal modal-mor fade" id="statusModal" tabindex="-1" aria-labelledby="statusModalTitle">
+  <div class="modal-dialog modal-dialog-centered">
+    <form class="modal-content" method="post" action="${ctx}${statusAction}">
+      <input type="hidden" name="code">
+      <input type="hidden" name="active">
+      <div class="modal-header">
+        <h2 class="modal-title" id="statusModalTitle" data-status-title>Cambiar estado</h2>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-lead" data-status-lead></p>
+        <p class="alert-mor-note mt-4 mb-0" data-status-note></p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="submit" class="btn btn-primary" data-status-submit>Confirmar</button>
+      </div>
+    </form>
+  </div>
+</div>
