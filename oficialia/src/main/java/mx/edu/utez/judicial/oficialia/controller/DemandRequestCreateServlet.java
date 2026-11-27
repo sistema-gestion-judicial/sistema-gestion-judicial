@@ -32,9 +32,9 @@ import mx.edu.utez.judicial.oficialia.service.SubjectMatterService;
  * details and annexes with a new folio.
  */
 @WebServlet("/demand-requests/new")
-// Each annex can weigh up to 10 MB; the request carries at most 10 of them plus the form fields
-@MultipartConfig(maxFileSize = RequestDetailsForm.MAX_ANNEX_BYTES, maxRequestSize = 110L * 1024 * 1024,
-    fileSizeThreshold = 1024 * 1024)
+// No per-file limit here: if the container refused a file it would drop the whole form, so the 10 MB rule
+// is checked by RequestDetailsForm, which keeps what was typed. The request still has an overall cap.
+@MultipartConfig(maxRequestSize = 110L * 1024 * 1024, fileSizeThreshold = 1024 * 1024)
 public class DemandRequestCreateServlet extends HttpServlet {
 
     private static final String VIEW = "/WEB-INF/views/demand-requests/new.jsp";
@@ -53,6 +53,14 @@ public class DemandRequestCreateServlet extends HttpServlet {
             throws ServletException, IOException {
         String action = request.getParameter("action");
         DuplicityCheckForm form = readForm(request);
+        String contentType = request.getContentType();
+        if (action == null && contentType != null && contentType.startsWith("multipart/")) {
+            // The container dropped the whole upload because it went over the overall cap, fields included
+            request.setAttribute("errors", Map.of("parties", "Los anexos pesan más de lo permitido en total. "
+                + "Capture de nuevo la solicitud con archivos más ligeros."));
+            show(request, response, form);
+            return;
+        }
         if ("cancel".equals(action)) {
             try {
                 registrationService.cancel(currentUser(request), form);
@@ -63,6 +71,10 @@ public class DemandRequestCreateServlet extends HttpServlet {
             request.getSession().setAttribute(DemandRequestListServlet.FLASH_MESSAGE,
                     "Se canceló el registro. El intento quedó guardado con su usuario y la fecha.");
             response.sendRedirect(request.getContextPath() + "/demand-requests");
+            return;
+        }
+        if ("back".equals(action)) {
+            show(request, response, form);
             return;
         }
         if ("register".equals(action)) {

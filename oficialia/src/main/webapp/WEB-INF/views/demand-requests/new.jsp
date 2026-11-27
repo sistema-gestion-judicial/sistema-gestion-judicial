@@ -51,6 +51,7 @@
       </div>
     </c:if>
 
+    <c:if test="${not verified}">
     <form id="duplicityForm" class="section-card" method="post" action="${ctx}/demand-requests/new" novalidate data-unsaved-guard>
       <div class="section-card-header">
         <h2 class="section-card-title">Datos para verificar duplicidad</h2>
@@ -152,10 +153,11 @@
         </div>
       </fieldset>
     </form>
+    </c:if>
 
     <c:choose>
       <c:when test="${verified}">
-        <form id="registerForm" class="section-card mt-4" method="post" action="${ctx}/demand-requests/new"
+        <form id="registerForm" class="section-card" method="post" action="${ctx}/demand-requests/new"
               enctype="multipart/form-data" novalidate data-unsaved-guard>
           <%-- Step 1 is locked once verified, so its values travel again here; the server checks duplicity again --%>
           <input type="hidden" name="matter" value="${fn:escapeXml(form.matter)}">
@@ -170,10 +172,23 @@
           <c:if test="${not empty continuedWithWarning}"><input type="hidden" name="warningAccepted" value="true"></c:if>
 
           <div class="section-card-header">
-            <h2 class="section-card-title">Datos complementarios</h2>
-            <span class="badge-mor status-admissible"><span class="dot"></span> Habilitado</span>
+            <div>
+              <%-- Goes back to step 1 with what was typed there; the details of step 2 are not kept --%>
+              <button type="submit" name="action" value="back" formnovalidate
+                      class="back-link border-0 bg-transparent p-0 mb-2">
+                <i class="bi bi-arrow-left" aria-hidden="true"></i> Volver a la verificación
+              </button>
+              <h2 class="section-card-title">Datos complementarios</h2>
+            </div>
           </div>
           <div class="section-card-body">
+            <dl class="field-list mb-4">
+              <div><dt>Materia</dt><dd><c:out value="${form.matter}" /></dd></div>
+              <div><dt>Demandante</dt>
+                <dd><c:out value="${form.plaintiffAnonymous ? 'Anónimo' : form.plaintiffName.concat(' · ').concat(form.plaintiffId)}" /></dd></div>
+              <div><dt>Demandado</dt>
+                <dd><c:out value="${form.defendantUnknown ? 'Desconocido' : form.defendantName.concat(' · ').concat(form.defendantId)}" /></dd></div>
+            </dl>
             <c:if test="${not empty detailErrors}">
               <div class="alert alert-mor-warning py-2" role="alert">
                 <i class="bi bi-exclamation-triangle me-1"></i> Revise los campos marcados. La solicitud no se registró.
@@ -271,20 +286,6 @@
           </div>
         </form>
       </c:when>
-      <c:otherwise>
-        <section class="section-card mt-4 is-locked">
-          <div class="section-card-header">
-            <h2 class="section-card-title">Datos complementarios</h2>
-            <span class="badge-mor is-neutral">Bloqueado</span>
-          </div>
-          <div class="section-card-body">
-            <p class="section-card-text">
-              Domicilio, teléfono y correo de las partes, representante legal, tipo de presentación y anexos.
-              Se habilitan cuando termine la verificación de duplicidad.
-            </p>
-          </div>
-        </section>
-      </c:otherwise>
     </c:choose>
   </div>
 
