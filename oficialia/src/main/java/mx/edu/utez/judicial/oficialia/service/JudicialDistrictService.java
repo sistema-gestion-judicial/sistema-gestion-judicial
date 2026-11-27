@@ -10,6 +10,7 @@ import mx.edu.utez.judicial.oficialia.dao.DuplicateCodeException;
 import mx.edu.utez.judicial.oficialia.dao.DuplicateNameException;
 import mx.edu.utez.judicial.oficialia.dao.OficialiaDaos;
 import mx.edu.utez.judicial.oficialia.exception.AccessDeniedException;
+import mx.edu.utez.judicial.oficialia.exception.BusinessRuleException;
 import mx.edu.utez.judicial.oficialia.exception.NotFoundException;
 import mx.edu.utez.judicial.oficialia.model.Court;
 import mx.edu.utez.judicial.oficialia.model.JudicialDistrict;
@@ -167,6 +168,32 @@ public class JudicialDistrictService {
         }
         return Saving.saved(new JudicialDistrict(code, form.getName(), form.getSeatMunicipality(),
             current.isActive()));
+    }
+
+    /**
+     * Activates or deactivates a district (DFR 2.4). A district with active courts is not deactivated: the
+     * message says how many there are. Once inactive, it is no longer offered in the court form.
+     *
+     * @throws AccessDeniedException when the user is not the Administrador del órgano judicial
+     * @throws NotFoundException when no district has the code
+     * @throws BusinessRuleException when the district still has active courts
+     */
+    public JudicialDistrict changeStatus(User user, String code, boolean active) {
+        JudicialDistrict current = get(user, code);
+        if (!active) {
+            long activeCourts = catalogDao.findCourts().stream()
+                .filter(court -> court.getDistrictCode().equals(code) && court.isActive())
+                .count();
+            if (activeCourts > 0) {
+                throw new BusinessRuleException("El distrito «" + current.getName() + "» tiene " + activeCourts
+                    + (activeCourts == 1 ? " juzgado activo" : " juzgados activos")
+                    + ". Desactívelos o cámbielos de distrito antes de desactivarlo.");
+            }
+        }
+        if (current.isActive() != active) {
+            catalogDao.updateJudicialDistrictStatus(code, active);
+        }
+        return new JudicialDistrict(code, current.getName(), current.getSeatMunicipality(), active);
     }
 
     /**

@@ -17,6 +17,7 @@ import mx.edu.utez.judicial.oficialia.model.ResultPage;
 import mx.edu.utez.judicial.oficialia.model.User;
 import mx.edu.utez.judicial.oficialia.model.UserRole;
 import org.junit.jupiter.api.Test;
+import mx.edu.utez.judicial.oficialia.exception.BusinessRuleException;
 
 class JudicialDistrictServiceTest {
 
@@ -228,5 +229,33 @@ class JudicialDistrictServiceTest {
     void reportsAnUnknownDistrict() {
         assertThrows(NotFoundException.class, () -> service.get(admin, "ZZZ"));
         assertThrows(NotFoundException.class, () -> service.update(admin, "ZZZ", form("ZZZ", "Nombre", "Sede")));
+    }
+
+    @Test
+    void doesNotDeactivateADistrictWithActiveCourtsAndSaysHowMany() {
+        BusinessRuleException refused =
+            assertThrows(BusinessRuleException.class, () -> service.changeStatus(admin, "CUA", false));
+
+        assertTrue(refused.getMessage().contains("1 juzgado activo"));
+        assertTrue(catalog.findJudicialDistrict("CUA").orElseThrow().isActive());
+    }
+
+    @Test
+    void deactivatesADistrictOnceItsCourtsAreInactiveAndActivatesItAgain() {
+        catalog.updateCourtStatus("12", false);
+
+        service.changeStatus(admin, "CUA", false);
+        assertFalse(catalog.findJudicialDistrict("CUA").orElseThrow().isActive());
+
+        service.changeStatus(admin, "CUA", true);
+        assertTrue(catalog.findJudicialDistrict("CUA").orElseThrow().isActive());
+    }
+
+    @Test
+    void onlyTheJudicialBodyAdminChangesTheStatusOfADistrict() {
+        User courtAdmin = new User("a@utez.edu.mx", "Jorge Salas", UserRole.COURT_ADMIN, "Juzgado de Cuautla");
+
+        assertThrows(AccessDeniedException.class, () -> service.changeStatus(courtAdmin, "JOJ", false));
+        assertThrows(NotFoundException.class, () -> service.changeStatus(admin, "ZZZ", true));
     }
 }

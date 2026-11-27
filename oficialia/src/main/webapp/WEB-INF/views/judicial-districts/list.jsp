@@ -2,6 +2,8 @@
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <c:set var="pageTitle" value="Distritos judiciales" />
 <c:set var="activeNav" value="districts" />
+<c:set var="pageScript" value="status-confirm.js" />
+<c:set var="statusAction" value="/judicial-districts/status" />
 <%@ include file="/WEB-INF/views/layout/head.jspf" %>
 <%@ include file="/WEB-INF/views/layout/app-start.jspf" %>
 
@@ -20,6 +22,12 @@
 <c:if test="${not empty flashMessage}">
   <div class="alert alert-mor-success d-flex gap-2 align-items-start" role="status">
     <i class="bi bi-check-circle mt-1"></i> <span><c:out value="${flashMessage}" /></span>
+  </div>
+</c:if>
+
+<c:if test="${not empty flashWarning}">
+  <div class="alert alert-mor-warning d-flex gap-2 align-items-start" role="alert">
+    <i class="bi bi-exclamation-triangle mt-1"></i> <span><c:out value="${flashWarning}" /></span>
   </div>
 </c:if>
 
@@ -109,6 +117,15 @@
                   <a class="row-action" href="${editUrl}" aria-label="Editar distrito ${district.name}">
                     <i class="bi bi-pencil" aria-hidden="true"></i> Editar
                   </a>
+                  <button type="button" class="row-action border-0 bg-transparent" data-status-toggle
+                          data-code="<c:out value='${district.code}' />" data-name="<c:out value='${district.name}' />"
+                          data-active="${not district.active}" data-label="el distrito"
+                          data-title-on="Activar distrito" data-title-off="Desactivar distrito"
+                          data-note-on="Volverá a ofrecerse al registrar o editar juzgados."
+                          data-note-off="Dejará de ofrecerse al registrar o editar juzgados. Solo se puede desactivar si no tiene juzgados activos.">
+                    <i class="bi ${district.active ? 'bi-toggle-on' : 'bi-toggle-off'}" aria-hidden="true"></i>
+                    <c:out value="${district.active ? 'Desactivar' : 'Activar'}" />
+                  </button>
                 </td>
               </tr>
             </c:forEach>
@@ -158,4 +175,5 @@
   </c:choose>
 </div>
 
+<%@ include file="/WEB-INF/views/includes/status-modal.jspf" %>
 <%@ include file="/WEB-INF/views/layout/app-end.jspf" %>

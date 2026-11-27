@@ -33,9 +33,18 @@ public interface CatalogDao {
      */
     void updateJudicialDistrict(String code, String name, String seatMunicipality);
 
+    /** Activates or deactivates a district. Does nothing when the code is unknown. */
+    void updateJudicialDistrictStatus(String code, boolean active);
+
     List<Court> findCourts();
 
     Optional<Court> findCourt(String code);
+
+    /**
+     * Activates or deactivates a court. Its users cannot sign in while it is inactive. Does nothing when the
+     * code is unknown.
+     */
+    void updateCourtStatus(String code, boolean active);
 
     /** Every subject matter, active or not, ordered by name. */
     List<SubjectMatter> findSubjectMatters();

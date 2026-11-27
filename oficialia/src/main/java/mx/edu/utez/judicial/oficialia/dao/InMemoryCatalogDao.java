@@ -76,6 +76,23 @@ public class InMemoryCatalogDao implements CatalogDao {
     }
 
     @Override
+    public synchronized void updateJudicialDistrictStatus(String code, boolean active) {
+        districts = districts.stream()
+            .map(district -> district.getCode().equals(code) ? new JudicialDistrict(code, district.getName(),
+                district.getSeatMunicipality(), active) : district)
+            .toList();
+    }
+
+    @Override
+    public synchronized void updateCourtStatus(String code, boolean active) {
+        courts = courts.stream()
+            .map(court -> court.getCode().equals(code) ? new Court(code, court.getNumber(), court.getName(),
+                court.getDistrictCode(), court.getJudicialDistrict(), court.getAddress(),
+                court.getSubjectMatterCodes(), active) : court)
+            .toList();
+    }
+
+    @Override
     public synchronized List<Court> findCourts() {
         return courts;
     }
