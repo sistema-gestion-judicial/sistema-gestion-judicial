@@ -42,6 +42,12 @@ public class CourtListServlet extends HttpServlet {
         request.setAttribute("districts", courtService.districts());
         request.setAttribute("subjectMatters", courtService.subjectMatters());
         request.setAttribute("canSeeInactive", canSeeInactive);
+        boolean canChangeStatus = CourtService.canChangeStatus(user);
+        request.setAttribute("canChangeStatus", canChangeStatus);
+        if (canChangeStatus) {
+            request.setAttribute("userCounts", courtService.userCounts(user));
+        }
+        DemandRequestListServlet.moveFlashMessage(request);
         request.setAttribute("query", query);
         request.setAttribute("selectedDistrict", district);
         request.setAttribute("selectedMatter", matter);

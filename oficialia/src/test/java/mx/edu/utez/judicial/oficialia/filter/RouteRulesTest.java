@@ -116,6 +116,7 @@ class RouteRulesTest {
     @Test
     void onlyTheJudicialBodyAdministratorManagesTheCatalogs() {
         for (String path : new String[] {"/judicial-districts", "/judicial-districts/new", "/judicial-districts/edit",
+            "/judicial-districts/status", "/courts/status",
             "/subject-matters", "/subject-matters/new", "/subject-matters/edit", "/subject-matters/status"}) {
             assertTrue(RouteRules.canAccess(path, UserRole.JUDICIAL_BODY_ADMIN), path);
             assertFalse(RouteRules.canAccess(path, UserRole.COURT_ADMIN), path);

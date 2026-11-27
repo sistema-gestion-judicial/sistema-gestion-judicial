@@ -16,6 +16,9 @@ import mx.edu.utez.judicial.oficialia.model.ResultPage;
 import mx.edu.utez.judicial.oficialia.model.User;
 import mx.edu.utez.judicial.oficialia.model.UserRole;
 import org.junit.jupiter.api.Test;
+import mx.edu.utez.judicial.oficialia.dao.InMemoryUserDao;
+import mx.edu.utez.judicial.oficialia.exception.NotFoundException;
+import mx.edu.utez.judicial.oficialia.model.UserAccount;
 
 class CourtServiceTest {
 
@@ -111,5 +114,33 @@ class CourtServiceTest {
     @Test
     void refusesWhenNobodyIsSignedIn() {
         assertThrows(AccessDeniedException.class, () -> service.search(null, "", null, null, null, 1));
+    }
+
+    @Test
+    void theJudicialBodyAdminDeactivatesACourtKnowingHowManyUsersItHas() {
+        InMemoryCatalogDao catalog = new InMemoryCatalogDao();
+        InMemoryUserDao users = new InMemoryUserDao(List.of(
+            new UserAccount(clerk, "irrelevant", true), new UserAccount(courtAdmin, "irrelevant", true)));
+        CourtService withUsers = new CourtService(catalog, users);
+
+        assertEquals(2, withUsers.userCounts(bodyAdmin).get("Juzgado de Cuautla"));
+        assertEquals(0, withUsers.userCounts(bodyAdmin).get("Juzgado de Jojutla"));
+
+        withUsers.changeStatus(bodyAdmin, "12", false);
+        assertFalse(catalog.findCourt("12").orElseThrow().isActive());
+        // The Oficial de Partes no longer finds it in the catalog
+        assertFalse(codes(withUsers.search(clerk, "", null, null, null, 1)).contains("12"));
+
+        withUsers.changeStatus(bodyAdmin, "12", true);
+        assertTrue(catalog.findCourt("12").orElseThrow().isActive());
+    }
+
+    @Test
+    void onlyTheJudicialBodyAdminChangesTheStatusOfACourt() {
+        CourtService plain = new CourtService(new InMemoryCatalogDao(), new InMemoryUserDao(List.of()));
+
+        assertThrows(AccessDeniedException.class, () -> plain.changeStatus(courtAdmin, "12", false));
+        assertThrows(AccessDeniedException.class, () -> plain.userCounts(clerk));
+        assertThrows(NotFoundException.class, () -> plain.changeStatus(bodyAdmin, "99", false));
     }
 }

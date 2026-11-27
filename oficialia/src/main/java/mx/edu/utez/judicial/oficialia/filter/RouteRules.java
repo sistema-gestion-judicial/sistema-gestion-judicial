@@ -25,6 +25,7 @@ final class RouteRules {
     // The catalogs are managed only by the judicial body administrator (DFR 2.1)
     private static final Set<String> CATALOG_PATHS =
         Set.of("/judicial-districts", "/judicial-districts/new", "/judicial-districts/edit",
+            "/judicial-districts/status", "/courts/status",
             "/subject-matters", "/subject-matters/new", "/subject-matters/edit", "/subject-matters/status");
     // Every profile looks up the courts catalog (DFR 2.10)
     private static final String COURTS_PATH = "/courts";
