@@ -1789,8 +1789,19 @@ textarea.form-control {
   .app-bar-brand + .app-bar-divider,
   .app-bar-breadcrumb,
   .app-bar-end .app-bar-divider,
-  .user-chip-role {
-    display: none;
+  .app-bar .user-chip-role {
+    display: none !important;
+  }
+
+  .app-bar-end,
+  .app-bar .dropdown,
+  .app-bar .user-chip {
+    min-width: 0;
+  }
+
+  .app-bar .user-chip-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 }
 
