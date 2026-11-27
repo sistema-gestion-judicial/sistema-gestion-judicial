@@ -1799,6 +1799,11 @@ textarea.form-control {
     min-width: 0;
   }
 
+  /* A button keeps the width of its content unless it is capped */
+  .app-bar .user-chip {
+    max-width: 100%;
+  }
+
   /* The text column of the profile shrinks and cuts the name with "…" so the chevron stays visible */
   .app-bar .user-chip > span:nth-child(2) {
     min-width: 0;
