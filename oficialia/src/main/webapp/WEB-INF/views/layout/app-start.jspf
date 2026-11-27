@@ -83,10 +83,28 @@
   </aside>
 
   <main class="app-main">
-    <div class="app-welcome">
-      <p class="app-welcome-text">
-        Bienvenido/a,
-        <strong><c:out value="${sessionScope.currentUser.fullName}" /></strong>
-      </p>
-      <%@ include file="/WEB-INF/views/layout/user-chip.jspf" %>
-    </div>
+    <%-- "Barra superior" of the Tocas design: system and area, breadcrumb, and the profile that opens the user menu.
+         Oficialía has no notifications, so the notifications pill of the design is left out. --%>
+    <header class="app-bar">
+      <div class="app-bar-brand">
+        <span class="app-bar-system">SCD</span>
+        <span class="app-bar-area">Oficialía de Partes</span>
+      </div>
+      <span class="app-bar-divider" aria-hidden="true"></span>
+      <nav class="app-bar-breadcrumb" aria-label="Ruta de navegación">
+        <c:choose>
+          <c:when test="${pageTitle == 'Inicio'}">
+            <span aria-current="page">Inicio</span>
+          </c:when>
+          <c:otherwise>
+            <a href="${ctx}/home">Inicio</a>
+            <span class="app-bar-separator" aria-hidden="true">›</span>
+            <span aria-current="page"><c:out value="${pageTitle}" /></span>
+          </c:otherwise>
+        </c:choose>
+      </nav>
+      <div class="app-bar-end">
+        <span class="app-bar-divider" aria-hidden="true"></span>
+        <%@ include file="/WEB-INF/views/layout/user-chip.jspf" %>
+      </div>
+    </header>

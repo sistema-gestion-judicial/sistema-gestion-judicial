@@ -48,6 +48,16 @@
   --mor-shadow-card: 0 1px 3px rgba(46, 59, 43, 0.1), 0 1px 0 rgba(46, 59, 43, 0.05);
   --mor-shadow: 2px 4px 15px rgba(0, 0, 0, 0.12), var(--mor-shadow-card);
   --mor-shadow-field: 0 1px 0 rgba(46, 59, 43, 0.05), 0 1px 3px rgba(46, 59, 43, 0.1);
+  /* Glass effects of the Tocas design ("Vidrio/Barra", "Vidrio/Tarjeta", "Vidrio/Campo") */
+  --mor-text-secondary: #404540;
+  --mor-glass-field-bg: linear-gradient(rgba(228, 233, 224, 0.12), rgba(228, 233, 224, 0.12)),
+    linear-gradient(rgba(255, 255, 255, 0.89), rgba(255, 255, 255, 0.89));
+  --mor-glass-field-shadow: 0 4px 12px rgba(46, 59, 43, 0.1), inset 0 1px 1px rgba(255, 255, 255, 0.8);
+  --mor-glass-card-bg: linear-gradient(rgba(228, 233, 224, 0.06), rgba(228, 233, 224, 0.06)),
+    linear-gradient(rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.14));
+  --mor-glass-card-shadow: 0 2px 6px rgba(46, 59, 43, 0.07), inset 0 1px 2px rgba(255, 255, 255, 0.6);
+  --mor-glass-band-bg: linear-gradient(rgba(255, 255, 255, 0.11), rgba(255, 255, 255, 0.11)),
+    linear-gradient(rgba(128, 158, 117, 0.21), rgba(128, 158, 117, 0.21));
 
   /* Layout of the sidebar frame (1440 px wide): a floating 176 px bar and content from x = 240 */
   --mor-sidebar-width: 176px;
@@ -294,18 +304,99 @@ textarea.form-control {
   transform: scaleY(-1);
 }
 
-/* Filters sit on the page background, as in the "Barra de opciones" frame */
+/* "Barra de opciones": the filters are the top of the list card, with glass fields */
 .filter-bar {
   margin-bottom: 24px;
+  padding: 20px 24px;
+  background: var(--mor-glass-card-bg);
+  border: 1.5px solid var(--mor-white);
+  border-radius: var(--mor-radius-card);
+  box-shadow: var(--mor-glass-card-shadow);
+}
+
+/* The list card that follows continues the same glass card */
+.filter-bar + .card-mor {
+  margin-top: -24px;
+  border-top: 0;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+
+.filter-bar:has(+ .card-mor) {
+  border-bottom: 0;
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.6);
+}
+
+.filter-bar .form-control,
+.filter-bar .form-select,
+.filter-bar .input-group {
+  border-radius: var(--mor-radius-card);
+}
+
+.filter-bar .form-control,
+.filter-bar .form-select {
+  background-color: transparent;
+  background-image: var(--mor-glass-field-bg);
+  border: 1.25px solid var(--mor-white);
+  box-shadow: var(--mor-glass-field-shadow);
+  color: var(--mor-text-secondary);
+}
+
+.filter-bar .form-select {
+  background-image: url("../img/icon-select-arrow.svg"), var(--mor-glass-field-bg);
+  background-repeat: no-repeat, no-repeat;
+  background-position: right 16px center, 0 0;
+  background-size: 14.5px 8.25px, 100% 100%;
+}
+
+.filter-bar .form-control::placeholder {
+  color: var(--mor-text-secondary);
+}
+
+/* The search field and its icon are one glass field */
+.filter-bar .input-group {
+  background-image: var(--mor-glass-field-bg);
+  border: 1.25px solid var(--mor-white);
+  box-shadow: var(--mor-glass-field-shadow);
+}
+
+.filter-bar .input-group > .form-control,
+.filter-bar .input-group > .input-group-text {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  min-height: 47.5px;
+}
+
+.filter-bar .form-control:focus,
+.filter-bar .form-select:focus {
+  box-shadow: 0 0 0 2px var(--mor-primary), var(--mor-glass-field-shadow);
+}
+
+.filter-bar .input-group:focus-within {
+  box-shadow: 0 0 0 2px var(--mor-primary), var(--mor-glass-field-shadow);
+}
+
+.filter-bar .input-group:focus-within > .form-control:focus {
+  box-shadow: none;
+}
+
+/* "Limpiar filtros": plain underlined link in dark green */
+.filter-bar .link-dark {
+  color: var(--mor-primary) !important;
+  text-decoration: underline;
 }
 
 /* ---- Cards, alerts and badges ------------------------------------------- */
 
+/* "Pagina contenedora": glass card */
 .card-mor {
-  background: var(--mor-white);
-  border: 1px solid var(--mor-card-border);
+  background: var(--mor-glass-card-bg);
+  border: 1.5px solid var(--mor-white);
   border-radius: var(--mor-radius-card);
-  box-shadow: var(--mor-shadow);
+  box-shadow: var(--mor-glass-card-shadow);
 }
 
 .card-mor .card-title {
@@ -327,9 +418,8 @@ textarea.form-control {
   align-items: flex-start;
   gap: 16px;
   padding: 20px 24px 13px;
-  background: var(--mor-primary-surface);
-  border-bottom: 0.5px solid var(--mor-primary-light);
-  border-radius: var(--mor-radius-card) var(--mor-radius-card) 0 0;
+  background: var(--mor-glass-band-bg);
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.7);
 }
 
 .card-mor-title {
@@ -346,7 +436,7 @@ textarea.form-control {
   margin: 2px 0 0;
   font-size: 16px;
   line-height: 24px;
-  color: var(--mor-text-muted);
+  color: var(--mor-text-secondary);
 }
 
 .card-mor-count {
@@ -360,10 +450,9 @@ textarea.form-control {
   justify-content: space-between;
   align-items: center;
   gap: 12px;
-  padding: 20px 24px;
-  border-top: 0.5px solid #b0b0b0;
+  padding: 16px 24px 16px;
   font-size: 16px;
-  color: var(--mor-text-muted);
+  color: var(--mor-text-secondary);
 }
 
 .alert-mor-info,
@@ -406,11 +495,12 @@ textarea.form-control {
   align-items: center;
   gap: 6px;
   padding: 3px 14px;
-  border-radius: 9999px;
+  border-radius: 15px;
   font-size: 16px;
   line-height: 24px;
   font-weight: 400;
-  border: 1px solid transparent;
+  border: 1px solid var(--mor-white) !important;
+  box-shadow: 0 2px 3px rgba(46, 59, 43, 0.1), inset 0 1px 1px rgba(255, 255, 255, 0.7);
   white-space: nowrap;
 }
 
@@ -421,32 +511,35 @@ textarea.form-control {
   background: currentColor;
 }
 
+/* "Informativa" */
 .badge-mor.status-pending {
   color: var(--mor-info-text);
-  background: var(--mor-info-bg);
-  border-color: var(--mor-info-border);
+  background: linear-gradient(rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.1)),
+    linear-gradient(rgba(228, 238, 248, 0.6), rgba(228, 238, 248, 0.6));
 }
 
+/* "Éxito" */
 .badge-mor.status-admissible {
   color: var(--mor-success-text);
-  background: var(--mor-success-bg);
-  border-color: var(--mor-success-border);
+  background: linear-gradient(rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.1)),
+    linear-gradient(rgba(225, 242, 231, 0.6), rgba(225, 242, 231, 0.6));
 }
 
 .badge-mor.status-admissible .dot {
   background: var(--mor-success-dot);
 }
 
+/* "Próxima" */
 .badge-mor.status-inadmissible {
   color: var(--mor-text);
-  background: var(--mor-secondary-surface);
-  border-color: var(--mor-secondary-border);
+  background: linear-gradient(rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.1)),
+    linear-gradient(rgba(245, 237, 225, 0.9), rgba(245, 237, 225, 0.9));
 }
 
+/* "Neutra" */
 .badge-mor.is-neutral {
   color: var(--mor-primary);
-  background: var(--mor-primary-surface);
-  border-color: var(--mor-background);
+  background: rgba(228, 233, 224, 0.8);
 }
 
 /* The beige and neutral labels of the design have no dot */
@@ -652,27 +745,92 @@ textarea.form-control {
 .app-main {
   width: 100%;
   max-width: calc(var(--mor-content-max) + 48px + 56px);
-  padding: 46px 56px 48px 48px;
+  padding: 24px 56px 48px 48px;
   min-width: 0;
 }
 
-/* Greeting and profile on the first row, as in the sidebar frame */
-.app-welcome {
+/* "Barra superior": floating glass bar with the system, the breadcrumb and the profile (1144 x 72) */
+.app-bar {
+  position: relative;
   display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 24px;
-  margin-bottom: 42px;
+  align-items: center;
+  gap: 17px;
+  min-height: 72px;
+  margin-bottom: 70px;
+  padding: 0 16px 0 23px;
+  border: 1px solid var(--mor-white);
+  border-radius: 24px;
+  background: linear-gradient(rgba(228, 233, 224, 0.12), rgba(228, 233, 224, 0.12)),
+    linear-gradient(rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.6));
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 2px 6px rgba(46, 59, 43, 0.08), 0 5px 30px rgba(46, 59, 43, 0.16),
+    inset 0 1px 2px rgba(255, 255, 255, 0.6);
+  z-index: 2;
 }
 
-.app-welcome-text {
-  margin: 40px 0 0 15px;
+.app-bar-brand {
+  display: flex;
+  flex-direction: column;
+  white-space: nowrap;
+}
+
+.app-bar-system {
   font-size: 18px;
-  line-height: 26px;
+  line-height: 28px;
+  font-weight: 700;
+  color: var(--mor-primary);
 }
 
-.app-welcome-text strong {
-  display: block;
+.app-bar-area {
+  margin-top: -6px;
+  font-size: 16px;
+  line-height: 24px;
+  color: var(--mor-text-secondary);
+}
+
+.app-bar-divider {
+  flex: 0 0 1px;
+  width: 1px;
+  height: 32px;
+  background: rgba(111, 127, 106, 0.4);
+}
+
+.app-bar-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  font-size: 16px;
+  line-height: 24px;
+  white-space: nowrap;
+}
+
+.app-bar-breadcrumb a {
+  color: var(--mor-text-secondary);
+  text-decoration: none;
+}
+
+.app-bar-breadcrumb a:hover {
+  text-decoration: underline;
+}
+
+.app-bar-separator {
+  color: #566a52;
+}
+
+.app-bar-breadcrumb [aria-current="page"] {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 700;
+  color: var(--mor-text);
+}
+
+.app-bar-end {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-left: auto;
 }
 
 .app-topbar {
@@ -722,42 +880,42 @@ textarea.form-control {
   display: none;
 }
 
-/* "Perfil": pill with the initials, the name and the role */
+/* "Perfil": initials in a dark circle, the name and the role, and the chevron of the user menu */
 .user-chip {
   display: flex;
   align-items: center;
-  gap: 14px;
-  min-width: 283px;
-  height: 72px;
-  padding: 0 22px 0 9px;
-  border: 0.5px solid var(--mor-text-muted);
-  border-radius: 40px;
-  background: rgba(228, 233, 224, 0.55);
+  gap: 12px;
+  min-height: 72px;
+  padding: 0;
+  border: 0;
+  background: none;
   white-space: nowrap;
 }
 
 .user-chip-avatar {
-  flex: 0 0 60px;
-  width: 60px;
-  height: 60px;
+  flex: 0 0 44px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   background: var(--mor-primary);
-  border: 2px solid var(--mor-primary-light);
-  color: var(--mor-secondary-border);
+  color: var(--mor-white);
   display: grid;
   place-items: center;
   font-family: var(--mor-font-title);
-  font-size: 22px;
+  font-size: 18px;
+  font-weight: 700;
 }
 
 .user-chip-name {
-  font-size: 18px;
-  line-height: 28px;
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 700;
+  color: var(--mor-text);
 }
 
 .user-chip-role {
-  font-size: 16px;
-  line-height: 24px;
+  font-size: 14px;
+  line-height: 18px;
   color: var(--mor-text);
 }
 
@@ -765,7 +923,7 @@ textarea.form-control {
   flex: 0 0 24px;
   width: 24px;
   height: 24px;
-  margin-left: auto;
+  margin-left: 12px;
   background: url("../img/icon-chevron-down.svg") center / contain no-repeat;
 }
 
@@ -777,7 +935,9 @@ textarea.form-control {
 }
 
 .table-mor thead th {
-  background: var(--mor-primary-band);
+  background: var(--mor-glass-band-bg);
+  border-top: 1px solid rgba(111, 127, 106, 0.55);
+  box-shadow: inset 0 -1px 0 rgba(111, 127, 106, 0.55);
   font-size: 16px;
   line-height: 24px;
   font-weight: 700;
@@ -793,11 +953,20 @@ textarea.form-control {
   font-size: 18px;
   line-height: 28px;
   vertical-align: middle;
-  border-color: var(--mor-line);
+  border-bottom: 0;
 }
 
-.table-mor tbody tr:last-child td {
-  border-bottom: 0;
+/* Row dividers stop 20 px before each edge of the card, as in "Filas | Listado" */
+.table-mor tbody tr {
+  background: linear-gradient(rgba(111, 127, 106, 0.4), rgba(111, 127, 106, 0.4)) no-repeat;
+  background-size: calc(100% - 40px) 1px;
+  background-position: 20px 100%;
+}
+
+.table-mor .cell-sub,
+.table-mor .cell-muted,
+.table-mor .cell-secondary {
+  color: var(--mor-text-secondary);
 }
 
 .table-mor .cell-strong {
@@ -862,15 +1031,15 @@ textarea.form-control {
   --bs-pagination-font-size: 16px;
   --bs-pagination-color: #1b1a19;
   --bs-pagination-bg: var(--mor-white);
-  --bs-pagination-border-color: var(--mor-field-border);
+  --bs-pagination-border-color: var(--mor-white);
   --bs-pagination-border-radius: var(--mor-radius-sm);
   --bs-pagination-hover-color: var(--mor-primary);
   --bs-pagination-hover-bg: var(--mor-primary-surface);
-  --bs-pagination-hover-border-color: var(--mor-field-border);
+  --bs-pagination-hover-border-color: var(--mor-white);
   --bs-pagination-focus-box-shadow: 0 0 0 2px var(--mor-primary);
   --bs-pagination-active-color: var(--mor-white);
   --bs-pagination-active-bg: var(--mor-primary);
-  --bs-pagination-active-border-color: var(--mor-primary);
+  --bs-pagination-active-border-color: #4ce983;
   --bs-pagination-disabled-color: #9a9c91;
   --bs-pagination-disabled-bg: var(--mor-white);
   --bs-pagination-disabled-border-color: #d2d0c0;
@@ -888,12 +1057,24 @@ textarea.form-control {
   line-height: 24px;
 }
 
+.pagination .page-item.active .page-link {
+  font-weight: 500;
+}
+
+/* "…" between page numbers: no box (added by pagination.js) */
+.pagination .page-item.is-gap .page-link {
+  background: transparent;
+  border-color: transparent;
+  color: #1b1a19;
+  pointer-events: none;
+}
+
 /* Previous and next: green squares with the design arrow */
 .pagination .page-link[aria-label="Anterior"],
 .pagination .page-link[aria-label="Siguiente"] {
   font-size: 0;
   background: var(--mor-primary-surface) url("../img/icon-arrow-left.svg") center / 13px 18.5px no-repeat;
-  border-color: var(--mor-primary-light);
+  border-color: var(--mor-primary-light) !important;
 }
 
 .pagination .page-item:first-child {
@@ -1583,14 +1764,22 @@ textarea.form-control {
   }
 }
 
-@media (max-width: 575.98px) {
-  .app-welcome,
-  .app-topbar {
-    flex-wrap: wrap;
+@media (max-width: 767.98px) {
+  .app-bar {
+    margin-bottom: 32px;
   }
 
-  .user-chip {
-    min-width: 0;
+  .app-bar-brand + .app-bar-divider,
+  .app-bar-breadcrumb,
+  .app-bar-end .app-bar-divider,
+  .user-chip-role {
+    display: none;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .app-topbar {
+    flex-wrap: wrap;
   }
 
   .page-title {

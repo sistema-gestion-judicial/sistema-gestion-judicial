@@ -2,4 +2,5 @@
   </main>
 </div>
 <script src="${ctx}/assets/js/unsaved-guard.js"></script>
+<script src="${ctx}/assets/js/pagination.js"></script>
 <%@ include file="/WEB-INF/views/layout/scripts.jspf" %>
