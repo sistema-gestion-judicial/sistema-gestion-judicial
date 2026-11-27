@@ -6,18 +6,25 @@ package mx.edu.utez.judicial.oficialia.model;
  */
 public class UserSummary {
 
+    private final long id;
     private final String fullName;
     private final String email;
     private final String phone;
     private final UserRole role;
     private final boolean active;
 
-    public UserSummary(String fullName, String email, String phone, UserRole role, boolean active) {
+    public UserSummary(long id, String fullName, String email, String phone, UserRole role, boolean active) {
+        this.id = id;
         this.fullName = fullName;
         this.email = email;
         this.phone = phone;
         this.role = role;
         this.active = active;
+    }
+
+    /** Identifies the user in the links of the listing, such as the one that opens the edit form. */
+    public long getId() {
+        return id;
     }
 
     public String getFullName() {

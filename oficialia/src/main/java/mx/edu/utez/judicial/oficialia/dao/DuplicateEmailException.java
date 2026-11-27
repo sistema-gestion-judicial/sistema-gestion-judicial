@@ -1,8 +1,8 @@
 package mx.edu.utez.judicial.oficialia.dao;
 
 /**
- * Another account already uses the e-mail. Thrown by {@link UserDao#insert} so a registration that raced
- * with another one is reported like any other duplicate.
+ * Another account already uses the e-mail. Thrown by {@link UserDao#insert} and {@link UserDao#update} so a
+ * registration or correction that raced with another one is reported like any other duplicate.
  */
 public class DuplicateEmailException extends DataAccessException {
 

@@ -2,6 +2,7 @@ package mx.edu.utez.judicial.oficialia.dao;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -9,8 +10,10 @@ import java.util.List;
 import mx.edu.utez.judicial.oficialia.model.NewUserAccount;
 import mx.edu.utez.judicial.oficialia.model.User;
 import mx.edu.utez.judicial.oficialia.model.UserAccount;
+import mx.edu.utez.judicial.oficialia.model.UserDetails;
 import mx.edu.utez.judicial.oficialia.model.UserRole;
 import mx.edu.utez.judicial.oficialia.model.UserSummary;
+import mx.edu.utez.judicial.oficialia.model.UserUpdate;
 import org.junit.jupiter.api.Test;
 
 class InMemoryUserDaoTest {
@@ -83,5 +86,59 @@ class InMemoryUserDaoTest {
         UserAccount account = dao.findByEmail("beto@utez.edu.mx").orElseThrow();
         assertEquals("new-hash", account.passwordHash());
         assertFalse(account.user().isMustChangePassword());
+    }
+
+    private long idOf(String email) {
+        return dao.findByCourt("Juzgado 12").stream().filter(user -> user.getEmail().equals(email))
+            .findFirst().orElseThrow().getId();
+    }
+
+    @Test
+    void findsAUserByIdWithTheNameSplitInTwo() {
+        dao.insert(clerk("beto@utez.edu.mx", "7771234567"));
+
+        UserDetails beto = dao.findById(idOf("beto@utez.edu.mx")).orElseThrow();
+
+        assertEquals("Ana", beto.getFirstName());
+        assertEquals("Ruiz", beto.getLastName());
+        assertEquals("7771234567", beto.getPhone());
+        assertEquals("Juzgado 12", beto.getCourtName());
+        assertTrue(dao.findById(999).isEmpty());
+    }
+
+    @Test
+    void correctsAUserAndMovesItToTheNewEmailKeepingThePassword() {
+        dao.insert(clerk("beto@utez.edu.mx", "7771234567"));
+        long id = idOf("beto@utez.edu.mx");
+
+        dao.update(new UserUpdate(id, "Beto", "Paz", " Beto.Paz@utez.edu.mx", null, UserRole.COURT_ADMIN), ANA);
+
+        assertTrue(dao.findByEmail("beto@utez.edu.mx").isEmpty());
+        UserAccount account = dao.findByEmail("beto.paz@utez.edu.mx").orElseThrow();
+        assertEquals("Beto Paz", account.user().getFullName());
+        assertEquals(UserRole.COURT_ADMIN, account.user().getRole());
+        assertEquals("Juzgado 12", account.user().getCourtName());
+        assertEquals(HASH, account.passwordHash());
+        assertTrue(account.user().isMustChangePassword());
+        UserDetails details = dao.findById(id).orElseThrow();
+        assertEquals(id, details.getId());
+        assertNull(details.getPhone());
+    }
+
+    @Test
+    void refusesToMoveAUserToTheEmailOfAnotherOne() {
+        dao.insert(clerk("beto@utez.edu.mx", null));
+        long id = idOf("beto@utez.edu.mx");
+
+        assertThrows(DuplicateEmailException.class, () -> dao.update(
+            new UserUpdate(id, "Beto", "Paz", "ANA@utez.edu.mx", null, UserRole.CLERK), ANA));
+        assertEquals("Ana Ruiz", dao.findByEmail("beto@utez.edu.mx").orElseThrow().user().getFullName());
+    }
+
+    @Test
+    void updatingAnUnknownIdDoesNothing() {
+        dao.update(new UserUpdate(999, "Beto", "Paz", "beto@utez.edu.mx", null, UserRole.CLERK), ANA);
+
+        assertTrue(dao.findByEmail("beto@utez.edu.mx").isEmpty());
     }
 }
