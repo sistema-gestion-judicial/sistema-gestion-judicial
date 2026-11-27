@@ -120,6 +120,18 @@ public class InMemoryUserDao implements UserDao {
             new UserAccount(user, current.account().passwordHash(), current.account().active())));
     }
 
+    @Override
+    public synchronized boolean updateStatus(long id, boolean active, String reason, User actor) {
+        Entry current = findEntry(id).orElse(null);
+        if (current == null || current.account().active() == active) {
+            return false;
+        }
+        UserAccount account = current.account();
+        entriesByEmail.put(EmailValidator.normalize(account.user().getEmail()),
+            current.withAccount(new UserAccount(account.user(), account.passwordHash(), active)));
+        return true;
+    }
+
     private Optional<Entry> findEntry(long id) {
         return entriesByEmail.values().stream().filter(entry -> entry.id() == id).findFirst();
     }

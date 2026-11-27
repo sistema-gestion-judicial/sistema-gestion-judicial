@@ -42,4 +42,15 @@ public interface UserDao {
      * @throws DuplicateEmailException when another account already has the new e-mail
      */
     void update(UserUpdate update, User actor);
+
+    /**
+     * Activates or deactivates an account and records who did it, when and why in the audit trail (RF 1.7).
+     * The account is never deleted, so what the user registered keeps their name. Does nothing when the id is
+     * unknown or the account already has that status.
+     *
+     * @param reason why the status changed, or null
+     * @param actor the administrator who made the change
+     * @return true when the status changed
+     */
+    boolean updateStatus(long id, boolean active, String reason, User actor);
 }

@@ -190,6 +190,47 @@ public class JdbcUserDao implements UserDao {
         }
     }
 
+    /**
+     * Locks the row, writes the audit record and then the new status, in one transaction (DFR 3.3.9, business
+     * rule 5). Signed-in sessions of a deactivated user end on their next request, because AuthFilter checks the
+     * status every time.
+     */
+    @Override
+    public boolean updateStatus(long id, boolean active, String reason, User actor) {
+        try (Connection connection = database.getConnection()) {
+            connection.setAutoCommit(false);
+            try {
+                String courtCode;
+                try (PreparedStatement statement = connection.prepareStatement(
+                    "SELECT active, court_code FROM users WHERE id = ? FOR UPDATE")) {
+                    statement.setLong(1, id);
+                    try (ResultSet rows = statement.executeQuery()) {
+                        if (!rows.next() || rows.getBoolean("active") == active) {
+                            connection.rollback();
+                            return false;
+                        }
+                        courtCode = rows.getString("court_code");
+                    }
+                }
+                AuditLog.record(connection, actor, courtCode, active ? "USER_ACTIVATED" : "USER_DEACTIVATED", "USER",
+                    String.valueOf(id), reason, Map.of("active", active));
+                try (PreparedStatement statement = connection.prepareStatement(
+                    "UPDATE users SET active = ? WHERE id = ?")) {
+                    statement.setBoolean(1, active);
+                    statement.setLong(2, id);
+                    statement.executeUpdate();
+                }
+                connection.commit();
+                return true;
+            } catch (SQLException | RuntimeException e) {
+                connection.rollback();
+                throw e;
+            }
+        } catch (SQLException e) {
+            throw new DataAccessException("Could not change the status of user " + id, e);
+        }
+    }
+
     private static Map<String, Object> values(String firstName, String lastName, String email, String phone,
                                               String role) {
         // LinkedHashMap because the phone may be null, which Map.of refuses

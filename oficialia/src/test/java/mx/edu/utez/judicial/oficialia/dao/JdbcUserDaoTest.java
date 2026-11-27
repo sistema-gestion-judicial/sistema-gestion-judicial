@@ -226,6 +226,42 @@ class JdbcUserDaoTest {
         assertEquals(0, auditRows());
     }
 
+    @Test
+    void deactivatesAUserAndRecordsWhoWhenAndWhyInTheAuditLog() throws Exception {
+        long id = insertAdminAndClerk();
+
+        assertTrue(dao.updateStatus(id, false, "Cambió de área", ADMIN));
+
+        assertFalse(dao.findByEmail("ana@utez.edu.mx").orElseThrow().active());
+        assertFalse(dao.findById(id).orElseThrow().isActive());
+        try (Connection connection = database.getConnection();
+             Statement statement = connection.createStatement();
+             ResultSet rows = statement.executeQuery("SELECT a.action, a.entity_id, a.reason, a.occurred_at, u.email "
+                 + "FROM audit_log a JOIN users u ON u.id = a.actor_user_id")) {
+            assertTrue(rows.next());
+            assertEquals("USER_DEACTIVATED", rows.getString("action"));
+            assertEquals(String.valueOf(id), rows.getString("entity_id"));
+            assertEquals("Cambió de área", rows.getString("reason"));
+            assertNotNull(rows.getTimestamp("occurred_at"));
+            assertEquals(ADMIN.getEmail(), rows.getString("email"));
+            assertFalse(rows.next());
+        }
+    }
+
+    @Test
+    void activatesAUserAgainAndSkipsAChangeToTheSameStatus() throws Exception {
+        long id = insertAdminAndClerk();
+
+        assertFalse(dao.updateStatus(id, true, null, ADMIN));
+        assertEquals(0, auditRows());
+        assertTrue(dao.updateStatus(id, false, null, ADMIN));
+        assertTrue(dao.updateStatus(id, true, null, ADMIN));
+
+        assertTrue(dao.findByEmail("ana@utez.edu.mx").orElseThrow().active());
+        assertEquals(2, auditRows());
+        assertFalse(dao.updateStatus(id + 100, false, null, ADMIN));
+    }
+
     private int auditRows() throws Exception {
         try (Connection connection = database.getConnection();
              Statement statement = connection.createStatement();

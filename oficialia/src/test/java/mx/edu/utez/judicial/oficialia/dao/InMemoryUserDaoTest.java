@@ -136,6 +136,23 @@ class InMemoryUserDaoTest {
     }
 
     @Test
+    void deactivatesAndActivatesAnAccountKeepingEverythingElse() {
+        dao.insert(clerk("beto@utez.edu.mx", "7771234567"));
+        long id = idOf("beto@utez.edu.mx");
+
+        assertTrue(dao.updateStatus(id, false, "Cambió de área", ANA));
+
+        UserAccount account = dao.findByEmail("beto@utez.edu.mx").orElseThrow();
+        assertFalse(account.active());
+        assertEquals(HASH, account.passwordHash());
+        assertEquals("7771234567", dao.findById(id).orElseThrow().getPhone());
+        assertFalse(dao.updateStatus(id, false, null, ANA));
+        assertTrue(dao.updateStatus(id, true, null, ANA));
+        assertTrue(dao.findByEmail("beto@utez.edu.mx").orElseThrow().active());
+        assertFalse(dao.updateStatus(999, false, null, ANA));
+    }
+
+    @Test
     void updatingAnUnknownIdDoesNothing() {
         dao.update(new UserUpdate(999, "Beto", "Paz", "beto@utez.edu.mx", null, UserRole.CLERK), ANA);
 
