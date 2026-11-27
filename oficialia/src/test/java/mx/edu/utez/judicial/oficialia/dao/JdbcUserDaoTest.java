@@ -69,6 +69,7 @@ class JdbcUserDaoTest {
         }
 
         assertFalse(dao.findByEmail("ana@utez.edu.mx").orElseThrow().active());
+        assertFalse(dao.findByEmail("ana@utez.edu.mx").orElseThrow().courtActive());
     }
 
     @Test

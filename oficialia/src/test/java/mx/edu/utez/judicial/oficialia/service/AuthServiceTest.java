@@ -104,4 +104,15 @@ class AuthServiceTest {
     private static UserAccount account(String email, boolean active) {
         return new UserAccount(new User(email, "Test User", UserRole.CLERK, "Juzgado de Cuautla"), HASH, active);
     }
+
+    @Test
+    void tellsWhenTheAccountCannotBeUsedBecauseItsCourtIsInactive() {
+        User clerk = new User("carla@utez.edu.mx", "Carla Díaz", UserRole.CLERK, "Juzgado de Cuautla");
+        AuthService withInactiveCourt = new AuthService(
+            new InMemoryUserDao(List.of(new UserAccount(clerk, HASH, false, false))),
+            new LoginAttemptTracker(() -> Instant.parse("2026-11-09T10:00:00Z")));
+
+        assertEquals(Status.INACTIVE_COURT, withInactiveCourt.signIn("carla@utez.edu.mx", PASSWORD).status());
+        assertFalse(withInactiveCourt.isActive("carla@utez.edu.mx"));
+    }
 }

@@ -60,7 +60,7 @@ public class JdbcUserDao implements UserDao {
                     rows.getString("first_name") + " " + rows.getString("last_name"),
                     UserRole.valueOf(rows.getString("role")), courtName, rows.getBoolean("must_change_password"));
                 return Optional.of(new UserAccount(user, rows.getString("password_hash"),
-                    rows.getBoolean("active") && courtActive));
+                    rows.getBoolean("active") && courtActive, courtActive));
             }
         } catch (SQLException e) {
             throw new DataAccessException("Could not read the user account", e);

@@ -24,6 +24,9 @@ public class LoginServlet extends HttpServlet {
     private static final String VIEW = "/WEB-INF/views/auth/login.jsp";
     private static final String INACTIVE_ACCOUNT_MESSAGE =
             "Su cuenta está inactiva. Contacte al administrador del sistema.";
+    private static final String INACTIVE_COURT_MESSAGE =
+            "Su juzgado está inactivo, por lo que no puede entrar al sistema. "
+                    + "Contacte al administrador del órgano judicial.";
 
     private final AuthService authService = new AuthService();
 
@@ -75,6 +78,7 @@ public class LoginServlet extends HttpServlet {
             case INVALID_CREDENTIALS ->
                     showError(request, response, email, "El correo o la contraseña no son correctos.");
             case INACTIVE_ACCOUNT -> showError(request, response, email, INACTIVE_ACCOUNT_MESSAGE);
+            case INACTIVE_COURT -> showError(request, response, email, INACTIVE_COURT_MESSAGE);
             case LOCKED -> showError(request, response, email, lockedMessage(result.lockedMinutes()));
         }
     }
