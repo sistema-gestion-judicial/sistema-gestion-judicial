@@ -57,6 +57,9 @@ public interface DemandRequestDao {
      */
     void reject(DemandRequest request, String reason, User clerk, LocalDateTime ruledAt);
 
-    /** Keeps a registration cancelled after a duplicity warning; it has no folio because nothing was saved. */
-    void recordCancelledAttempt(CancelledAttempt attempt);
+    /**
+     * Keeps a registration cancelled after a duplicity warning, which has no folio because nothing was saved,
+     * and logs the decision with the clerk and the moment (DFR 3.3.9).
+     */
+    void recordCancelledAttempt(CancelledAttempt attempt, User clerk);
 }

@@ -121,7 +121,7 @@ public class InMemoryDemandRequestDao implements DemandRequestDao {
     }
 
     @Override
-    public void recordCancelledAttempt(CancelledAttempt attempt) {
+    public void recordCancelledAttempt(CancelledAttempt attempt, User clerk) {
         cancelledAttempts.add(attempt);
     }
 

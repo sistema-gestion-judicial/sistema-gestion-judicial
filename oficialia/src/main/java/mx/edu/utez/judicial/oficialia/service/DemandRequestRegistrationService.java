@@ -124,7 +124,7 @@ public class DemandRequestRegistrationService {
         }
         Optional<DuplicityMatch> match = duplicityService.findMatch(parties);
         match.ifPresent(found -> demandRequestDao.recordCancelledAttempt(
-            CancelledAttempt.of(court.getCode(), found, user.getFullName(), LocalDateTime.now(clock))));
+            CancelledAttempt.of(court.getCode(), found, user.getFullName(), LocalDateTime.now(clock)), user));
         return match.isPresent();
     }
 

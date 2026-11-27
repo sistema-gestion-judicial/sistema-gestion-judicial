@@ -35,7 +35,7 @@ class InMemoryDemandRequestDaoTest {
         CancelledAttempt attempt = new CancelledAttempt("12", "Juzgado de Jojutla", "Familiar", false,
             "Laura Méndez", LocalDateTime.parse("2026-11-17T12:30"));
 
-        dao.recordCancelledAttempt(attempt);
+        dao.recordCancelledAttempt(attempt, null);
 
         assertEquals(List.of(attempt), dao.findCancelledAttempts());
         assertEquals(0, dao.findAll().size());

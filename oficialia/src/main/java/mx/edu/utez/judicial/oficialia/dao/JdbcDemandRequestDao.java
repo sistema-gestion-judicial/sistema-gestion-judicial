@@ -6,6 +6,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLIntegrityConstraintViolationException;
+import java.sql.Statement;
 import java.sql.Timestamp;
 import java.sql.Types;
 import java.time.LocalDate;
@@ -381,18 +382,33 @@ public class JdbcDemandRequestDao implements DemandRequestDao {
     }
 
     @Override
-    public void recordCancelledAttempt(CancelledAttempt attempt) {
+    public void recordCancelledAttempt(CancelledAttempt attempt, User clerk) {
         String sql = "INSERT INTO duplicity_warning_decisions (folio, court_code, matched_court, matched_matter, "
             + "matched_instance, decision, decided_by, decided_at) VALUES (NULL, ?, ?, ?, ?, 'CANCEL', ?, ?)";
-        try (Connection connection = database.getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setString(1, attempt.courtCode());
-            statement.setString(2, attempt.matchedCourt());
-            statement.setString(3, attempt.matchedMatter());
-            statement.setString(4, attempt.matchedInSecondInstance() ? "SECOND" : "FIRST");
-            statement.setString(5, attempt.cancelledBy());
-            statement.setTimestamp(6, timestamp(attempt.cancelledAt()));
-            statement.executeUpdate();
+        try (Connection connection = database.getConnection()) {
+            connection.setAutoCommit(false);
+            try (PreparedStatement statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+                statement.setString(1, attempt.courtCode());
+                statement.setString(2, attempt.matchedCourt());
+                statement.setString(3, attempt.matchedMatter());
+                statement.setString(4, attempt.matchedInSecondInstance() ? "SECOND" : "FIRST");
+                statement.setString(5, attempt.cancelledBy());
+                statement.setTimestamp(6, timestamp(attempt.cancelledAt()));
+                statement.executeUpdate();
+                String decisionId;
+                try (ResultSet keys = statement.getGeneratedKeys()) {
+                    keys.next();
+                    decisionId = keys.getString(1);
+                }
+                // The log points to the decision, since a cancelled registration has no folio
+                AuditLog.record(connection, clerk, attempt.courtCode(), "DUPLICITY_WARNING_CANCELLED",
+                    "DUPLICITY_DECISION", decisionId, null, Map.of("matchedCourt", attempt.matchedCourt(),
+                        "matchedMatter", attempt.matchedMatter()));
+                connection.commit();
+            } catch (SQLException | RuntimeException e) {
+                connection.rollback();
+                throw e;
+            }
         } catch (SQLException e) {
             throw new DataAccessException("Could not record the cancelled attempt of " + attempt.cancelledBy(), e);
         }
