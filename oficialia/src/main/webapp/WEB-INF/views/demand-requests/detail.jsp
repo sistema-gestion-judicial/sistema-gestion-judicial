@@ -82,6 +82,8 @@
                       <dd><c:out value="${empty party.phone ? 'No registrado' : party.phone}" /></dd></div>
                     <div><dt>Correo</dt>
                       <dd><c:out value="${empty party.email ? 'No registrado' : party.email}" /></dd></div>
+                    <div><dt>Domicilio</dt>
+                      <dd><c:out value="${empty party.address ? 'No registrado' : party.address}" /></dd></div>
                   </dl>
                 </c:when>
                 <c:otherwise>
@@ -96,6 +98,8 @@
         </div>
         <hr class="section-divider">
         <dl class="field-list">
+          <div><dt>Tipo de presentación</dt>
+            <dd><c:out value="${empty demandRequest.filingType ? 'No registrado' : demandRequest.filingType.label}" /></dd></div>
           <div><dt>Representante legal</dt>
             <dd><c:out value="${empty demandRequest.legalRepresentative ? 'No registrado' : demandRequest.legalRepresentative}" /></dd></div>
         </dl>
