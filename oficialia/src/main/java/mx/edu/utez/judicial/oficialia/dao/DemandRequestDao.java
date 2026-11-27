@@ -21,6 +21,22 @@ public interface DemandRequestDao {
     void insert(DemandRequest demandRequest);
 
     /**
+     * Registers a new request (DFR 3.1) with the next folio of the year (S-NNNNNN/AAAA), pending to be ruled.
+     * The parties, annexes, duplicity decision and audit record are saved together or not at all, and the
+     * folio is never given twice. The folio of the draft is ignored.
+     *
+     * @return the folio given to the request
+     */
+    String register(DemandRequest draft, User clerk, LocalDateTime registeredAt);
+
+    /**
+     * Keeps a registration the clerk cancelled after a duplicity warning: no request is saved, only the
+     * attempt with the court found, the user and the date (DFR 3.1).
+     */
+    void recordCancelledAttempt(String courtCode, String matchedCourt, String matchedMatter, User clerk,
+                                LocalDateTime at);
+
+    /**
      * Rules a pending request as admissible and opens its case file with the next number of its court
      * for that year (AAAA/NNNNN/JJ). Everything is saved together or not at all (DFR 3.3.2), the number
      * is never given twice, and the desk stays pending until {@link #assignHearingDesk} runs.

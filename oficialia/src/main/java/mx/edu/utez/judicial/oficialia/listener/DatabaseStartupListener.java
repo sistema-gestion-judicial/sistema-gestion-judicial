@@ -31,7 +31,8 @@ public class DatabaseStartupListener implements ServletContextListener {
         "V005__create_users.sql",
         "V006__add_roles_case_files_and_logs.sql",
         "V007__add_case_file_sequences_and_audit_log.sql",
-        "V008__cascade_subject_matter_renames.sql");
+        "V008__cascade_subject_matter_renames.sql",
+        "V010__add_request_registration_details.sql");
 
     private static final Logger LOG = Logger.getLogger(DatabaseStartupListener.class.getName());
 

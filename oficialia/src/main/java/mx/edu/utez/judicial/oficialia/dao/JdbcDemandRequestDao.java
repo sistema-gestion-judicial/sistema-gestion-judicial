@@ -14,10 +14,13 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import mx.edu.utez.judicial.common.db.Database;
 import mx.edu.utez.judicial.oficialia.model.Annex;
 import mx.edu.utez.judicial.oficialia.model.DemandRequest;
 import mx.edu.utez.judicial.oficialia.model.DuplicityWarning;
+import mx.edu.utez.judicial.oficialia.model.FilingType;
 import mx.edu.utez.judicial.oficialia.model.Party;
 import mx.edu.utez.judicial.oficialia.model.PartyRole;
 import mx.edu.utez.judicial.oficialia.model.RequestStatus;
@@ -32,6 +35,7 @@ import mx.edu.utez.judicial.oficialia.model.User;
 public class JdbcDemandRequestDao implements DemandRequestDao {
 
     private static final String REQUEST = "DEMAND_REQUEST";
+    private static final Pattern FOLIO = Pattern.compile("S-(\\d{6})/(\\d{4})");
 
     private static final String SELECT_REQUESTS = "SELECT r.*, c.name AS court_name FROM demand_requests r "
         + "JOIN courts c ON c.code = r.court_code";
@@ -77,12 +81,14 @@ public class JdbcDemandRequestDao implements DemandRequestDao {
             connection.setAutoCommit(false);
             try {
                 insertRequest(connection, request);
+                keepFolioSequenceAhead(connection, request.getFolio());
                 insertParty(connection, request.getFolio(), request.getPlaintiff());
                 insertParty(connection, request.getFolio(), request.getDefendant());
                 for (Annex annex : request.getAnnexes()) {
                     insertAnnex(connection, request.getFolio(), annex);
                 }
-                insertWarningDecision(connection, request);
+                insertWarningDecision(connection, request, request.getCapturedBy(),
+                    registeredAt(request.getReceivedDate()));
                 insertStatusChange(connection, request.getFolio(), null, RequestStatus.PENDING, null,
                     request.getCapturedBy(), registeredAt(request.getReceivedDate()));
                 saveRuling(connection, request, RequestStatus.PENDING);
@@ -94,6 +100,100 @@ public class JdbcDemandRequestDao implements DemandRequestDao {
         } catch (SQLException e) {
             throw new DataAccessException("Could not save demand request " + request.getFolio(), e);
         }
+    }
+
+    @Override
+    public String register(DemandRequest draft, User clerk, LocalDateTime registeredAt) {
+        try (Connection connection = database.getConnection()) {
+            connection.setAutoCommit(false);
+            try {
+                String folio = String.format("S-%06d/%d", nextFolioSequence(connection, registeredAt.getYear()),
+                    registeredAt.getYear());
+                DemandRequest request = withFolio(draft, folio);
+                insertRequest(connection, request);
+                insertParty(connection, folio, request.getPlaintiff());
+                insertParty(connection, folio, request.getDefendant());
+                for (Annex annex : request.getAnnexes()) {
+                    insertAnnex(connection, folio, annex);
+                }
+                insertWarningDecision(connection, request, clerk.getFullName(), registeredAt);
+                insertStatusChange(connection, folio, null, RequestStatus.PENDING, null, clerk.getFullName(),
+                    registeredAt);
+                Map<String, Object> details = new LinkedHashMap<>();
+                details.put("matter", request.getMatter());
+                details.put("annexes", request.getAnnexes().size());
+                details.put("duplicityWarning", request.getDuplicityWarning() != null);
+                AuditLog.record(connection, clerk, request.getCourtCode(), "REQUEST_REGISTERED", REQUEST, folio,
+                    null, details);
+                connection.commit();
+                return folio;
+            } catch (SQLException | RuntimeException e) {
+                connection.rollback();
+                throw e;
+            }
+        } catch (SQLException e) {
+            throw new DataAccessException("Could not register the demand request", e);
+        }
+    }
+
+    @Override
+    public void recordCancelledAttempt(String courtCode, String matchedCourt, String matchedMatter, User clerk,
+                                       LocalDateTime at) {
+        String sql = "INSERT INTO duplicity_warning_decisions (folio, court_code, matched_court, matched_matter, "
+            + "decision, decided_by, decided_at) VALUES (NULL, ?, ?, ?, 'CANCEL', ?, ?)";
+        try (Connection connection = database.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, courtCode);
+            statement.setString(2, matchedCourt);
+            statement.setString(3, matchedMatter);
+            statement.setString(4, clerk.getFullName());
+            statement.setTimestamp(5, Timestamp.valueOf(at));
+            statement.executeUpdate();
+        } catch (SQLException e) {
+            throw new DataAccessException("Could not save the cancelled registration", e);
+        }
+    }
+
+    /** Same upsert as {@link #nextSequence}: the row stays locked until the registration commits. */
+    private static int nextFolioSequence(Connection connection, int year) throws SQLException {
+        try (PreparedStatement statement = connection.prepareStatement("INSERT INTO request_folio_sequences "
+            + "(year, last_sequence) VALUES (?, LAST_INSERT_ID(1)) "
+            + "ON DUPLICATE KEY UPDATE last_sequence = LAST_INSERT_ID(last_sequence + 1)")) {
+            statement.setInt(1, year);
+            statement.executeUpdate();
+        }
+        try (PreparedStatement statement = connection.prepareStatement("SELECT LAST_INSERT_ID()");
+             ResultSet rows = statement.executeQuery()) {
+            rows.next();
+            return rows.getInt(1);
+        }
+    }
+
+    /**
+     * Requests saved with their own folio (sample or imported data) move the sequence past it, so a request
+     * registered later never gets a folio that already exists.
+     */
+    private static void keepFolioSequenceAhead(Connection connection, String folio) throws SQLException {
+        Matcher parts = FOLIO.matcher(folio);
+        if (!parts.matches()) {
+            return;
+        }
+        try (PreparedStatement statement = connection.prepareStatement("INSERT INTO request_folio_sequences "
+            + "(year, last_sequence) VALUES (?, ?) ON DUPLICATE KEY UPDATE "
+            + "last_sequence = GREATEST(last_sequence, VALUES(last_sequence))")) {
+            statement.setInt(1, Integer.parseInt(parts.group(2)));
+            statement.setInt(2, Integer.parseInt(parts.group(1)));
+            statement.executeUpdate();
+        }
+    }
+
+    /** The same request with the folio it was given. */
+    static DemandRequest withFolio(DemandRequest draft, String folio) {
+        DemandRequest request = new DemandRequest(folio, draft.getReceivedDate(), draft.getCourtName(),
+            draft.getCourtCode(), draft.getMatter(), draft.getPlaintiff(), draft.getDefendant(),
+            draft.getLegalRepresentative(), draft.getCapturedBy(), draft.getAnnexes(), draft.getDuplicityWarning());
+        request.setFilingType(draft.getFilingType());
+        return request;
     }
 
     @Override
@@ -309,7 +409,8 @@ public class JdbcDemandRequestDao implements DemandRequestDao {
     }
 
     /** A request saved after a warning is one whose clerk chose to continue (DFR 3.1). */
-    private static void insertWarningDecision(Connection connection, DemandRequest request) throws SQLException {
+    private static void insertWarningDecision(Connection connection, DemandRequest request, String decidedBy,
+                                              LocalDateTime decidedAt) throws SQLException {
         DuplicityWarning warning = request.getDuplicityWarning();
         if (warning == null) {
             return;
@@ -321,8 +422,8 @@ public class JdbcDemandRequestDao implements DemandRequestDao {
             statement.setString(2, request.getCourtCode());
             statement.setString(3, warning.getCourtName());
             statement.setString(4, warning.getMatter() == null ? request.getMatter() : warning.getMatter());
-            statement.setString(5, request.getCapturedBy());
-            statement.setTimestamp(6, timestamp(registeredAt(request.getReceivedDate())));
+            statement.setString(5, decidedBy);
+            statement.setTimestamp(6, timestamp(decidedAt));
             statement.executeUpdate();
         }
     }
@@ -380,7 +481,8 @@ public class JdbcDemandRequestDao implements DemandRequestDao {
                     }
                     PartyRole role = PartyRole.valueOf(rows.getString("role"));
                     Party party = new Party(role, rows.getString("name"), rows.getString("person_type"),
-                        rows.getString("person_id"), rows.getString("phone"), rows.getString("email"));
+                        rows.getString("person_id"), rows.getString("phone"), rows.getString("email"),
+                        rows.getString("address"));
                     if (role == PartyRole.PLAINTIFF) {
                         owner.plaintiff = party;
                     } else {
@@ -413,7 +515,8 @@ public class JdbcDemandRequestDao implements DemandRequestDao {
     static void insertRequest(Connection connection, DemandRequest request) throws SQLException {
         String sql = "INSERT INTO demand_requests (folio, received_date, court_code, matter, legal_representative, "
             + "captured_by, duplicity_court, duplicity_matter, duplicity_decision, status, case_file_number, "
-            + "desk_name, rejection_reason, ruled_by, ruled_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            + "desk_name, rejection_reason, ruled_by, ruled_at, filing_type) "
+            + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         DuplicityWarning warning = request.getDuplicityWarning();
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, request.getFolio());
@@ -435,13 +538,14 @@ public class JdbcDemandRequestDao implements DemandRequestDao {
             } else {
                 statement.setTimestamp(15, Timestamp.valueOf(request.getRuledAt()));
             }
+            statement.setString(16, request.getFilingType() == null ? null : request.getFilingType().name());
             statement.executeUpdate();
         }
     }
 
     static void insertParty(Connection connection, String folio, Party party) throws SQLException {
-        String sql = "INSERT INTO parties (folio, role, name, person_type, person_id, phone, email) "
-            + "VALUES (?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO parties (folio, role, name, person_type, person_id, phone, email, address) "
+            + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, folio);
             statement.setString(2, party.getRole().name());
@@ -450,6 +554,7 @@ public class JdbcDemandRequestDao implements DemandRequestDao {
             statement.setString(5, party.getPersonId());
             statement.setString(6, party.getPhone());
             statement.setString(7, party.getEmail());
+            statement.setString(8, party.getAddress());
             statement.executeUpdate();
         }
     }
@@ -473,6 +578,7 @@ public class JdbcDemandRequestDao implements DemandRequestDao {
         private String courtCode;
         private String matter;
         private String legalRepresentative;
+        private String filingType;
         private String capturedBy;
         private DuplicityWarning duplicityWarning;
         private RequestStatus status;
@@ -494,6 +600,7 @@ public class JdbcDemandRequestDao implements DemandRequestDao {
             row.matter = rows.getString("matter");
             row.legalRepresentative = rows.getString("legal_representative");
             row.capturedBy = rows.getString("captured_by");
+            row.filingType = rows.getString("filing_type");
             String duplicityCourt = rows.getString("duplicity_court");
             if (duplicityCourt != null) {
                 row.duplicityWarning = new DuplicityWarning(duplicityCourt, rows.getString("duplicity_matter"),
@@ -512,6 +619,7 @@ public class JdbcDemandRequestDao implements DemandRequestDao {
         DemandRequest toDemandRequest() {
             DemandRequest request = new DemandRequest(folio, receivedDate, courtName, courtCode, matter, plaintiff,
                 defendant, legalRepresentative, capturedBy, annexes, duplicityWarning);
+            request.setFilingType(filingType == null ? null : FilingType.valueOf(filingType));
             if (status == RequestStatus.ADMISSIBLE) {
                 request.recordAdmissible(caseFileNumber, deskName, ruledBy, ruledAt);
             } else if (status == RequestStatus.INADMISSIBLE) {
