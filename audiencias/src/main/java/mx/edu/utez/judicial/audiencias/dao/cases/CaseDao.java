@@ -13,5 +13,10 @@ public interface CaseDao {
     List<Case> findActive();
     List<Case> findByCourtAndMatter(String courtId, String matter);
     int insert(Case caseEntity);
-    void close(Case caseToBeClosed, LocalDateTime closedAt);
+    void close(int id, LocalDateTime closedAt);
+    /** Records where the single merged PDF of the case's documents was saved, and when. */
+    void saveCompiledDocument(int id, String compiledUrl, LocalDateTime compiledAt);
+
+    /** Clears the compiled PDF reference; call this whenever the case's documents change. */
+    void invalidateCompiledDocument(int id);
 }

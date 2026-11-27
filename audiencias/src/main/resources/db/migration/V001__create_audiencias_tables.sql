@@ -1,4 +1,3 @@
-
 CREATE TABLE users (
                        id                   INT AUTO_INCREMENT PRIMARY KEY,
                        professional_license VARCHAR(15) NULL,
@@ -22,8 +21,10 @@ CREATE TABLE cases (
                        defendant   VARCHAR(150) NULL,
                        plaintiff   VARCHAR(150) NULL,
                        status      TINYINT(1) NOT NULL DEFAULT 1,
-                       created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                       closed_at   DATETIME NULL
+                       created_at   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                       closed_at    DATETIME NULL,
+                       compiled_url VARCHAR(500) NULL,
+                       compiled_at  DATETIME NULL
 );
 
 CREATE INDEX idx_cases_case_number ON cases (case_number);
@@ -47,18 +48,20 @@ CREATE INDEX idx_desks_matter ON desks (matter);
 CREATE INDEX idx_desks_court ON desks (court_id);
 
 
-CREATE TABLE case_files (
-                            id          INT AUTO_INCREMENT PRIMARY KEY,
-                            case_id     INT NULL,
-                            url         VARCHAR(500) NOT NULL,
-                            description VARCHAR(200) NULL,
-                            uploaded_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                            CONSTRAINT fk_case_file_case
-                                FOREIGN KEY (case_id) REFERENCES cases (id)
-                                    ON UPDATE CASCADE ON DELETE SET NULL
+CREATE TABLE case_documents (
+                                id          INT AUTO_INCREMENT PRIMARY KEY,
+                                case_id     INT NULL,
+                                url         VARCHAR(500) NOT NULL,
+                                description VARCHAR(200) NULL,
+                                uploaded_at      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                                sequence_number  INT NOT NULL,
+                                CONSTRAINT uq_case_documents_case_sequence UNIQUE (case_id, sequence_number),
+                                CONSTRAINT fk_case_document_case
+                                    FOREIGN KEY (case_id) REFERENCES cases (id)
+                                        ON UPDATE CASCADE ON DELETE SET NULL
 );
 
-CREATE INDEX idx_case_files_case ON case_files (case_id);
+CREATE INDEX idx_case_documents_case ON case_documents (case_id);
 
 
 CREATE TABLE hearings (
@@ -86,4 +89,3 @@ CREATE INDEX idx_hearings_status ON hearings (status);
 CREATE INDEX idx_hearings_desk ON hearings (desk_id);
 CREATE INDEX idx_hearings_case ON hearings (case_id);
 CREATE INDEX idx_hearings_lawyer ON hearings (lawyer_id);
-
