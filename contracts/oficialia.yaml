@@ -179,6 +179,52 @@ paths:
           $ref: "#/components/responses/InvalidCredentials"
         "404":
           $ref: "#/components/responses/NotFound"
+  /api/v1/case-files/{year}/{sequence}/{courtCode}/{event}:
+    post:
+      summary: Otro sistema informa un evento del expediente (DFR 3.6)
+      description: >
+        Audiencias informa la resolución de primera instancia con first-instance-resolution, y el sistema que
+        cierra el asunto informa la conclusión con conclusion. Sin cuerpo. Repetir el aviso conserva la primera
+        fecha. Un expediente concluido deja de contar para la duplicidad.
+      parameters:
+        - name: year
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: "^\\d{4}$"
+        - name: sequence
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: "^\\d{5}$"
+        - name: courtCode
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: "^\\d{2}$"
+        - name: event
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [first-instance-resolution, conclusion]
+      responses:
+        "200":
+          description: El expediente con el evento registrado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/CaseFile"
+        "401":
+          $ref: "#/components/responses/InvalidCredentials"
+        "404":
+          $ref: "#/components/responses/NotFound"
 components:
   securitySchemes:
     apiKey:
@@ -350,6 +396,38 @@ components:
         annexCount:
           type: integer
           example: 1
+        status:
+          type: string
+          enum: [ACTIVE, SECOND_INSTANCE, CONCLUDED]
+        firstInstanceResolvedAt:
+          type: string
+          format: date-time
+          nullable: true
+        instance:
+          type: string
+          enum: [FIRST, SECOND]
+        secondInstanceAt:
+          type: string
+          format: date-time
+          nullable: true
+        chamber:
+          type: object
+          nullable: true
+          description: Sala de segunda instancia; null en primera instancia o mientras está pendiente
+          properties:
+            code:
+              type: string
+              example: SCU
+            name:
+              type: string
+              example: Sala Regional de Cuautla
+        chamberPending:
+          type: boolean
+          description: En segunda instancia sin sala porque el sistema de tocas no respondió
+        concludedAt:
+          type: string
+          format: date-time
+          nullable: true
     Error:
       type: object
       properties:

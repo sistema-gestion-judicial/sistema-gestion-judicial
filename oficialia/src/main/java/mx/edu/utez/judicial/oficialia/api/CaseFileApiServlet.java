@@ -11,6 +11,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import mx.edu.utez.judicial.oficialia.model.CaseFileState;
 import mx.edu.utez.judicial.oficialia.model.DemandRequest;
 import mx.edu.utez.judicial.oficialia.model.Party;
 import mx.edu.utez.judicial.oficialia.service.CaseFileService;
@@ -21,6 +24,9 @@ import mx.edu.utez.judicial.oficialia.service.CaseFileService;
  */
 @WebServlet("/api/v1/case-files/*")
 public class CaseFileApiServlet extends HttpServlet {
+
+    private static final Pattern EVENT_PATH =
+        Pattern.compile("/(\\d{4}/\\d{5}/\\d{2})/(first-instance-resolution|conclusion)");
 
     private final CaseFileService caseFileService = new CaseFileService();
 
@@ -47,7 +53,8 @@ public class CaseFileApiServlet extends HttpServlet {
         List<Map<String, Object>> caseFiles = caseFileService.search(
                 blankToNull(request.getParameter("courtCode")),
                 blankToNull(request.getParameter("subjectMatter")), admittedSince)
-            .stream().map(CaseFileApiServlet::toJson).toList();
+            .stream().map(caseFile -> toJson(caseFile, caseFileService.stateOf(caseFile.getCaseFileNumber())))
+            .toList();
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("data", caseFiles);
         body.put("count", caseFiles.size());
@@ -66,10 +73,36 @@ public class CaseFileApiServlet extends HttpServlet {
                 "No case file has the number " + number + ".");
             return;
         }
-        ApiResponses.ok(response, Map.of("data", toJson(caseFile.get())));
+        ApiResponses.ok(response, Map.of("data", toJson(caseFile.get(), caseFileService.stateOf(number))));
     }
 
-    static Map<String, Object> toJson(DemandRequest request) {
+    /**
+     * Another system reports an event of a case file (DFR 3.6):
+     * POST /api/v1/case-files/{year}/{sequence}/{court}/first-instance-resolution when the first instance is
+     * resolved, and POST .../conclusion when the case file concludes. Reporting the same event again keeps the
+     * first date.
+     */
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        Matcher event = EVENT_PATH.matcher(request.getPathInfo() == null ? "" : request.getPathInfo());
+        if (!event.matches()) {
+            ApiResponses.error(response, HttpServletResponse.SC_NOT_FOUND, "NOT_FOUND",
+                "Use /api/v1/case-files/{year}/{sequence}/{court}/first-instance-resolution or .../conclusion.");
+            return;
+        }
+        String number = event.group(1);
+        boolean found = "conclusion".equals(event.group(2)) ? caseFileService.recordConclusion(number)
+            : caseFileService.recordFirstInstanceResolution(number);
+        if (!found) {
+            ApiResponses.error(response, HttpServletResponse.SC_NOT_FOUND, "CASE_FILE_NOT_FOUND",
+                "No case file has the number " + number + ".");
+            return;
+        }
+        Optional<DemandRequest> caseFile = caseFileService.findByNumber(number);
+        ApiResponses.ok(response, Map.of("data", toJson(caseFile.orElseThrow(), caseFileService.stateOf(number))));
+    }
+
+    static Map<String, Object> toJson(DemandRequest request, CaseFileState state) {
         Map<String, Object> json = new LinkedHashMap<>();
         json.put("caseFileNumber", request.getCaseFileNumber());
         json.put("requestFolio", request.getFolio());
@@ -86,6 +119,19 @@ public class CaseFileApiServlet extends HttpServlet {
         json.put("defendant", party(request.getDefendant()));
         json.put("legalRepresentative", request.getLegalRepresentative());
         json.put("annexCount", request.getAnnexes().size());
+        json.put("status", state.status().name());
+        json.put("firstInstanceResolvedAt", state.firstInstanceResolvedAt());
+        json.put("instance", state.secondInstance() ? "SECOND" : "FIRST");
+        json.put("secondInstanceAt", state.secondInstanceAt());
+        Map<String, Object> chamber = null;
+        if (state.chamberCode() != null) {
+            chamber = new LinkedHashMap<>();
+            chamber.put("code", state.chamberCode());
+            chamber.put("name", state.chamberName());
+        }
+        json.put("chamber", chamber);
+        json.put("chamberPending", state.secondInstance() && state.chamberCode() == null);
+        json.put("concludedAt", state.concludedAt());
         return json;
     }
 
