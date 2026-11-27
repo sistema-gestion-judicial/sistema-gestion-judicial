@@ -24,7 +24,6 @@ public class RulingService {
 
     private final DemandRequestDao demandRequestDao;
     private final DemandRequestService demandRequestService;
-    private final CaseFileNumberGenerator caseFileNumberGenerator;
     private final HearingDeskClient hearingDeskClient;
     private final Clock clock;
 
@@ -35,7 +34,6 @@ public class RulingService {
     public RulingService(DemandRequestDao demandRequestDao, HearingDeskClient hearingDeskClient, Clock clock) {
         this.demandRequestDao = demandRequestDao;
         this.demandRequestService = new DemandRequestService(demandRequestDao);
-        this.caseFileNumberGenerator = new CaseFileNumberGenerator(demandRequestDao);
         this.hearingDeskClient = hearingDeskClient;
         this.clock = clock;
     }
@@ -60,21 +58,23 @@ public class RulingService {
     }
 
     /**
-     * Applies a valid ruling. An admissible request gets its case file number and, when the Audiencias
-     * system answers, its desk; otherwise the desk stays pending.
+     * Applies a valid ruling. An admissible request gets its case file number first, saved together with
+     * the ruling; the desk is asked for afterwards, outside that transaction, so the case file keeps its
+     * number even when the Audiencias system does not answer and the desk stays pending (DFR 3.5).
      */
     public synchronized DemandRequest rule(String folio, User user, RulingForm form) {
         DemandRequest request = getRulable(folio, user);
         LocalDateTime now = LocalDateTime.now(clock);
         if (form.getDecision() == RequestStatus.ADMISSIBLE) {
-            String caseFileNumber = caseFileNumberGenerator.next(request.getCourtCode(), now.getYear());
-            request.recordAdmissible(caseFileNumber, askForDesk(caseFileNumber, request.getMatter()),
-                    user.getFullName(), now);
+            String caseFileNumber = demandRequestDao.admit(request, user, now);
+            String desk = askForDesk(caseFileNumber, request.getMatter());
+            if (desk != null) {
+                demandRequestDao.assignHearingDesk(caseFileNumber, desk, LocalDateTime.now(clock));
+            }
         } else {
-            request.recordInadmissible(form.getReason(), user.getFullName(), now);
+            demandRequestDao.reject(request, form.getReason(), user, now);
         }
-        demandRequestDao.update(request);
-        return request;
+        return demandRequestDao.findByFolio(folio).orElseThrow();
     }
 
     private String askForDesk(String caseFileNumber, String matter) {

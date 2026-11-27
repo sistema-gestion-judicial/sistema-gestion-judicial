@@ -7,17 +7,22 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import mx.edu.utez.judicial.oficialia.model.Annex;
 import mx.edu.utez.judicial.oficialia.model.DemandRequest;
 import mx.edu.utez.judicial.oficialia.model.DuplicityWarning;
 import mx.edu.utez.judicial.oficialia.model.Party;
 import mx.edu.utez.judicial.oficialia.model.PartyRole;
+import mx.edu.utez.judicial.oficialia.model.User;
 
 /**
  * Keeps the demand requests in memory with sample data, shared by every servlet of the application.
  * Changes last until Tomcat restarts.
  */
 public class InMemoryDemandRequestDao implements DemandRequestDao {
+
+    private static final Pattern CASE_FILE = Pattern.compile("(\\d{4})/(\\d{5})/(\\d{2})");
 
     private static final InMemoryDemandRequestDao INSTANCE = new InMemoryDemandRequestDao(sampleRequests());
 
@@ -53,10 +58,46 @@ public class InMemoryDemandRequestDao implements DemandRequestDao {
         requestsByFolio.put(demandRequest.getFolio(), demandRequest);
     }
 
+    /** Synchronized, so two clerks of the same court never get the same number. */
     @Override
-    public void update(DemandRequest demandRequest) {
-        // The object in the map is the one that was changed; a JDBC DAO runs the UPDATE here
-        requestsByFolio.put(demandRequest.getFolio(), demandRequest);
+    public synchronized String admit(DemandRequest request, User clerk, LocalDateTime ruledAt) {
+        String number = nextCaseFileNumber(request.getCourtCode(), ruledAt.getYear());
+        stored(request).recordAdmissible(number, null, clerk.getFullName(), ruledAt);
+        return number;
+    }
+
+    @Override
+    public synchronized void assignHearingDesk(String caseFileNumber, String deskName, LocalDateTime assignedAt) {
+        requestsByFolio.values().stream()
+                .filter(request -> caseFileNumber.equals(request.getCaseFileNumber()))
+                .findFirst()
+                .ifPresent(request -> request.assignDesk(deskName));
+    }
+
+    @Override
+    public synchronized void reject(DemandRequest request, String reason, User clerk, LocalDateTime ruledAt) {
+        stored(request).recordInadmissible(reason, clerk.getFullName(), ruledAt);
+    }
+
+    private DemandRequest stored(DemandRequest request) {
+        DemandRequest stored = requestsByFolio.get(request.getFolio());
+        if (stored == null) {
+            throw new IllegalStateException("Request " + request.getFolio() + " does not exist");
+        }
+        return stored;
+    }
+
+    private String nextCaseFileNumber(String courtCode, int year) {
+        int last = requestsByFolio.values().stream()
+                .map(DemandRequest::getCaseFileNumber)
+                .filter(number -> number != null)
+                .map(CASE_FILE::matcher)
+                .filter(Matcher::matches)
+                .filter(m -> Integer.parseInt(m.group(1)) == year && m.group(3).equals(courtCode))
+                .mapToInt(m -> Integer.parseInt(m.group(2)))
+                .max()
+                .orElse(0);
+        return String.format("%d/%05d/%s", year, last + 1, courtCode);
     }
 
     /** Sample requests of the demo; also used to fill an empty database. */

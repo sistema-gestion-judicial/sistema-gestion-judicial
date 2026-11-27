@@ -79,10 +79,14 @@ cambiar una tabla, crea el siguiente (`V003__add_column_x.sql`).
 | `case_files` | Expedientes `AAAA/NNNNN/JJ`, su mesa, su instancia y su sala |
 | `request_status_history` | Bitácora de cambios de estado de cada solicitud |
 | `second_instance_transfers` | Bitácora de pases a segunda instancia |
+| `case_file_sequences` | Último consecutivo de expediente por juzgado y año |
+| `audit_log` | Bitácora legal: quién calificó o asignó mesa, cuándo y con qué detalle; no se edita ni se borra |
 
 `JdbcDemandRequestDao` llena `case_files`, `duplicity_warning_decisions` y `request_status_history` en la
-misma transacción en que guarda la solicitud. Los datos semilla (catálogos y roles) vienen en los propios
-scripts.
+misma transacción en que guarda la solicitud. Al calificar, el número de expediente sale de
+`case_file_sequences` dentro de esa misma transacción, así que nunca se repite aunque dos oficiales
+califiquen al mismo tiempo, y la calificación queda en `audit_log` con su autor. Los datos semilla
+(catálogos y roles) vienen en los propios scripts.
 
 ## En la nube
 

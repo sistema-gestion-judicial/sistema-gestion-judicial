@@ -62,6 +62,17 @@ public class DemandRequest {
         this.ruledAt = ruledAt;
     }
 
+    /**
+     * Records the desk the hearings service assigned after the case file was opened. Only an admissible
+     * request whose desk is still pending gets one.
+     */
+    public void assignDesk(String deskName) {
+        if (!isDeskPending()) {
+            throw new IllegalStateException("Request " + folio + " has no pending desk");
+        }
+        this.deskName = deskName;
+    }
+
     /** Rules the request as inadmissible, keeping the reason for the receipt given to the plaintiff. */
     public void recordInadmissible(String rejectionReason, String ruledBy, LocalDateTime ruledAt) {
         ensurePending();

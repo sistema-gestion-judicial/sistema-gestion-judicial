@@ -21,13 +21,17 @@ import mx.edu.utez.judicial.oficialia.model.DuplicityWarning;
 import mx.edu.utez.judicial.oficialia.model.Party;
 import mx.edu.utez.judicial.oficialia.model.PartyRole;
 import mx.edu.utez.judicial.oficialia.model.RequestStatus;
+import mx.edu.utez.judicial.oficialia.model.User;
 
 /**
  * Demand requests stored in the sgj_oficialia database (tables demand_requests, parties and annexes).
  * Each save also keeps the case file, the duplicity warning decision and the status log up to date
- * (case_files, duplicity_warning_decisions and request_status_history), in the same transaction.
+ * (case_files, duplicity_warning_decisions and request_status_history), in the same transaction; a ruling
+ * also takes its case file number from case_file_sequences and leaves its record in audit_log.
  */
 public class JdbcDemandRequestDao implements DemandRequestDao {
+
+    private static final String REQUEST = "DEMAND_REQUEST";
 
     private static final String SELECT_REQUESTS = "SELECT r.*, c.name AS court_name FROM demand_requests r "
         + "JOIN courts c ON c.code = r.court_code";
@@ -93,45 +97,159 @@ public class JdbcDemandRequestDao implements DemandRequestDao {
     }
 
     @Override
-    public void update(DemandRequest request) {
-        String sql = "UPDATE demand_requests SET status = ?, case_file_number = ?, desk_name = ?, "
-            + "rejection_reason = ?, ruled_by = ?, ruled_at = ? WHERE folio = ?";
+    public String admit(DemandRequest request, User clerk, LocalDateTime ruledAt) {
+        String folio = request.getFolio();
         try (Connection connection = database.getConnection()) {
             connection.setAutoCommit(false);
             try {
-                RequestStatus stored = storedStatus(connection, request.getFolio());
-                try (PreparedStatement statement = connection.prepareStatement(sql)) {
-                    statement.setString(1, request.getStatus().name());
-                    statement.setString(2, request.getCaseFileNumber());
-                    statement.setString(3, request.getDeskName());
-                    statement.setString(4, request.getRejectionReason());
-                    statement.setString(5, request.getRuledBy());
-                    statement.setTimestamp(6, timestamp(request.getRuledAt()));
-                    statement.setString(7, request.getFolio());
+                requirePending(connection, folio);
+                int year = ruledAt.getYear();
+                int sequence = nextSequence(connection, request.getCourtCode(), year);
+                String number = String.format("%d/%05d/%s", year, sequence, request.getCourtCode());
+                try (PreparedStatement statement = connection.prepareStatement("UPDATE demand_requests SET "
+                    + "status = 'ADMISSIBLE', case_file_number = ?, ruled_by = ?, ruled_at = ? WHERE folio = ?")) {
+                    statement.setString(1, number);
+                    statement.setString(2, clerk.getFullName());
+                    statement.setTimestamp(3, timestamp(ruledAt));
+                    statement.setString(4, folio);
                     statement.executeUpdate();
                 }
-                saveRuling(connection, request, stored);
+                try (PreparedStatement statement = connection.prepareStatement("INSERT INTO case_files "
+                    + "(number, folio, court_code, year, sequence, opened_at) VALUES (?, ?, ?, ?, ?, ?)")) {
+                    statement.setString(1, number);
+                    statement.setString(2, folio);
+                    statement.setString(3, request.getCourtCode());
+                    statement.setInt(4, year);
+                    statement.setInt(5, sequence);
+                    statement.setTimestamp(6, timestamp(ruledAt));
+                    statement.executeUpdate();
+                }
+                insertStatusChange(connection, folio, RequestStatus.PENDING, RequestStatus.ADMISSIBLE, null,
+                    clerk.getFullName(), ruledAt);
+                AuditLog.record(connection, clerk, request.getCourtCode(), "REQUEST_ADMITTED", REQUEST, folio,
+                    null, Map.of("caseFileNumber", number));
                 connection.commit();
-            } catch (SQLException e) {
+                return number;
+            } catch (SQLException | RuntimeException e) {
                 connection.rollback();
                 throw e;
             }
         } catch (SQLException e) {
-            throw new DataAccessException("Could not update demand request " + request.getFolio(), e);
+            throw new DataAccessException("Could not open the case file of request " + folio, e);
         }
     }
 
-    /** The status saved before this change, locked until the transaction ends. */
-    private static RequestStatus storedStatus(Connection connection, String folio) throws SQLException {
+    @Override
+    public void assignHearingDesk(String caseFileNumber, String deskName, LocalDateTime assignedAt) {
+        try (Connection connection = database.getConnection()) {
+            connection.setAutoCommit(false);
+            try {
+                String courtCode;
+                try (PreparedStatement statement = connection.prepareStatement(
+                    "SELECT court_code FROM case_files WHERE number = ? AND desk_name IS NULL FOR UPDATE")) {
+                    statement.setString(1, caseFileNumber);
+                    try (ResultSet rows = statement.executeQuery()) {
+                        if (!rows.next()) {
+                            // Unknown, or the desk was already assigned: nothing to change or to log
+                            connection.rollback();
+                            return;
+                        }
+                        courtCode = rows.getString(1);
+                    }
+                }
+                try (PreparedStatement statement = connection.prepareStatement(
+                    "UPDATE case_files SET desk_name = ? WHERE number = ?")) {
+                    statement.setString(1, deskName);
+                    statement.setString(2, caseFileNumber);
+                    statement.executeUpdate();
+                }
+                // Kept until demand_requests drops its case file columns (see V006)
+                try (PreparedStatement statement = connection.prepareStatement(
+                    "UPDATE demand_requests SET desk_name = ? WHERE case_file_number = ?")) {
+                    statement.setString(1, deskName);
+                    statement.setString(2, caseFileNumber);
+                    statement.executeUpdate();
+                }
+                // The system assigns the desk, not a person (business rule 6)
+                AuditLog.record(connection, null, courtCode, "HEARING_DESK_ASSIGNED", "CASE_FILE", caseFileNumber,
+                    null, Map.of("hearingDesk", deskName, "assignedAt", assignedAt.toString()));
+                connection.commit();
+            } catch (SQLException | RuntimeException e) {
+                connection.rollback();
+                throw e;
+            }
+        } catch (SQLException e) {
+            throw new DataAccessException("Could not assign the desk of case file " + caseFileNumber, e);
+        }
+    }
+
+    @Override
+    public void reject(DemandRequest request, String reason, User clerk, LocalDateTime ruledAt) {
+        String folio = request.getFolio();
+        try (Connection connection = database.getConnection()) {
+            connection.setAutoCommit(false);
+            try {
+                requirePending(connection, folio);
+                try (PreparedStatement statement = connection.prepareStatement("UPDATE demand_requests SET "
+                    + "status = 'INADMISSIBLE', rejection_reason = ?, ruled_by = ?, ruled_at = ? WHERE folio = ?")) {
+                    statement.setString(1, reason);
+                    statement.setString(2, clerk.getFullName());
+                    statement.setTimestamp(3, timestamp(ruledAt));
+                    statement.setString(4, folio);
+                    statement.executeUpdate();
+                }
+                insertStatusChange(connection, folio, RequestStatus.PENDING, RequestStatus.INADMISSIBLE, reason,
+                    clerk.getFullName(), ruledAt);
+                AuditLog.record(connection, clerk, request.getCourtCode(), "REQUEST_REJECTED", REQUEST, folio,
+                    reason, null);
+                connection.commit();
+            } catch (SQLException | RuntimeException e) {
+                connection.rollback();
+                throw e;
+            }
+        } catch (SQLException e) {
+            throw new DataAccessException("Could not reject request " + folio, e);
+        }
+    }
+
+    /**
+     * Locks the request until the transaction ends and checks it is still pending, so a ruling made by
+     * another clerk in the meantime is never overwritten.
+     */
+    private static void requirePending(Connection connection, String folio) throws SQLException {
         try (PreparedStatement statement = connection.prepareStatement(
             "SELECT status FROM demand_requests WHERE folio = ? FOR UPDATE")) {
             statement.setString(1, folio);
             try (ResultSet rows = statement.executeQuery()) {
                 if (!rows.next()) {
-                    throw new SQLException("Demand request " + folio + " does not exist");
+                    throw new IllegalStateException("Request " + folio + " does not exist");
                 }
-                return RequestStatus.valueOf(rows.getString(1));
+                if (RequestStatus.valueOf(rows.getString(1)) != RequestStatus.PENDING) {
+                    throw new IllegalStateException("Request " + folio + " is not pending anymore");
+                }
             }
+        }
+    }
+
+    /**
+     * Takes the next number of the court for the year in one statement: the first ruling of a year inserts 1,
+     * the next ones add 1 to the row, and LAST_INSERT_ID(expr) hands the new value back to this connection.
+     * The statement locks the row exclusively until the transaction ends, so a second clerk waits and never
+     * gets the same number. (INSERT IGNORE followed by SELECT ... FOR UPDATE deadlocks when two clerks of a
+     * court rule at once: both take a shared lock and then both wait for an exclusive one.)
+     */
+    private static int nextSequence(Connection connection, String courtCode, int year) throws SQLException {
+        try (PreparedStatement statement = connection.prepareStatement("INSERT INTO case_file_sequences "
+            + "(court_code, year, last_sequence) VALUES (?, ?, LAST_INSERT_ID(1)) "
+            + "ON DUPLICATE KEY UPDATE last_sequence = LAST_INSERT_ID(last_sequence + 1)")) {
+            statement.setString(1, courtCode);
+            statement.setInt(2, year);
+            statement.executeUpdate();
+        }
+        try (PreparedStatement statement = connection.prepareStatement("SELECT LAST_INSERT_ID()");
+             ResultSet rows = statement.executeQuery()) {
+            rows.next();
+            return rows.getInt(1);
         }
     }
 
@@ -161,6 +279,15 @@ public class JdbcDemandRequestDao implements DemandRequestDao {
             statement.setInt(5, Integer.parseInt(parts[1]));
             statement.setString(6, request.getDeskName());
             statement.setTimestamp(7, timestamp(request.getRuledAt() == null ? LocalDateTime.now() : request.getRuledAt()));
+            statement.executeUpdate();
+        }
+        // A request saved with its number already given (sample or imported data) moves the sequence past it
+        try (PreparedStatement statement = connection.prepareStatement("INSERT INTO case_file_sequences "
+            + "(court_code, year, last_sequence) VALUES (?, ?, ?) "
+            + "ON DUPLICATE KEY UPDATE last_sequence = GREATEST(last_sequence, VALUES(last_sequence))")) {
+            statement.setString(1, request.getCourtCode());
+            statement.setInt(2, Integer.parseInt(parts[0]));
+            statement.setInt(3, Integer.parseInt(parts[1]));
             statement.executeUpdate();
         }
     }
