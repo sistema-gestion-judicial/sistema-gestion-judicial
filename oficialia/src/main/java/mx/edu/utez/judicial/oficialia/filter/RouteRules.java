@@ -18,6 +18,8 @@ final class RouteRules {
     // The system API skips the session check because ApiKeyFilter guards /api/v1/* with X-Api-Key
     private static final List<String> PUBLIC_FOLDERS = List.of("/assets/", "/webjars/", "/api/v1/");
     private static final String NEW_REQUEST_PATH = "/demand-requests/new";
+    // Only the clerk corrects a request that was not ruled yet (DFR 3.4)
+    private static final String CORRECT_REQUEST_PATH = "/demand-requests/edit";
     private static final String PASSWORD_CHANGE_PATH = "/password/change";
     // The users of a court are managed only by its administrator (RF 1.4)
     private static final Set<String> COURT_ADMIN_PATHS = Set.of("/users", "/users/new");
@@ -50,6 +52,9 @@ final class RouteRules {
         // DEMO (temporary): the judicial body administrator reaches every page the Oficial de Partes reaches
         if (path.equals(NEW_REQUEST_PATH)) {
             return role == UserRole.CLERK || role == UserRole.JUDICIAL_BODY_ADMIN;
+        }
+        if (path.equals(CORRECT_REQUEST_PATH)) {
+            return role == UserRole.CLERK;
         }
         if (COURT_ADMIN_PATHS.contains(path)) {
             return role == UserRole.COURT_ADMIN;
