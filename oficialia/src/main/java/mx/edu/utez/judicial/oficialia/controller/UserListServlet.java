@@ -14,7 +14,7 @@ import mx.edu.utez.judicial.oficialia.model.User;
 import mx.edu.utez.judicial.oficialia.service.UserService;
 
 /**
- * Lists the users of the administrator's court (RF 1.4: a registered user is added to this list).
+ * Lists the users of the administrator's court (RF 1.4 and 1.6: a registered or corrected user shows up here).
  */
 @WebServlet("/users")
 public class UserListServlet extends HttpServlet {
@@ -37,6 +37,7 @@ public class UserListServlet extends HttpServlet {
             return;
         }
         moveRegisteredUser(request);
+        DemandRequestListServlet.moveFlashMessage(request);
         request.getRequestDispatcher(VIEW).forward(request, response);
     }
 
