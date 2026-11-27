@@ -1,30 +1,46 @@
 package mx.edu.utez.judicial.oficialia.controller;
 
 import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.Part;
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
+import mx.edu.utez.judicial.oficialia.exception.AccessDeniedException;
+import mx.edu.utez.judicial.oficialia.filter.AuthFilter;
 import mx.edu.utez.judicial.oficialia.model.DuplicityCheckForm;
 import mx.edu.utez.judicial.oficialia.model.DuplicityMatch;
+import mx.edu.utez.judicial.oficialia.model.FilingType;
+import mx.edu.utez.judicial.oficialia.model.RequestDetailsForm;
+import mx.edu.utez.judicial.oficialia.model.User;
+import mx.edu.utez.judicial.oficialia.service.DemandRequestRegistrationService;
 import mx.edu.utez.judicial.oficialia.service.DuplicityService;
 import mx.edu.utez.judicial.oficialia.service.SubjectMatterService;
 
 /**
- * Step 1 of registering a demand request: checks duplicity before the full capture (RF 3.1).
+ * Registers a demand request (DFR 3.1): step 1 checks duplicity before the full capture, step 2 saves the
+ * details and annexes with a new folio.
  */
 @WebServlet("/demand-requests/new")
+// No per-file limit here: if the container refused a file it would drop the whole form, so the 10 MB rule
+// is checked by RequestDetailsForm, which keeps what was typed. The request still has an overall cap.
+@MultipartConfig(maxRequestSize = 110L * 1024 * 1024, fileSizeThreshold = 1024 * 1024)
 public class DemandRequestCreateServlet extends HttpServlet {
 
     private static final String VIEW = "/WEB-INF/views/demand-requests/new.jsp";
     private final DuplicityService duplicityService = new DuplicityService();
     private final SubjectMatterService subjectMatterService = new SubjectMatterService();
+    private final DemandRequestRegistrationService registrationService = new DemandRequestRegistrationService();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -36,14 +52,36 @@ public class DemandRequestCreateServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         String action = request.getParameter("action");
+        DuplicityCheckForm form = readForm(request);
+        String contentType = request.getContentType();
+        if (action == null && contentType != null && contentType.startsWith("multipart/")) {
+            // The container dropped the whole upload because it went over the overall cap, fields included
+            request.setAttribute("errors", Map.of("parties", "Los anexos pesan más de lo permitido en total. "
+                + "Capture de nuevo la solicitud con archivos más ligeros."));
+            show(request, response, form);
+            return;
+        }
         if ("cancel".equals(action)) {
+            try {
+                registrationService.cancel(currentUser(request), form);
+            } catch (AccessDeniedException e) {
+                ErrorView.forbidden(request, response, e.getMessage());
+                return;
+            }
             request.getSession().setAttribute(DemandRequestListServlet.FLASH_MESSAGE,
                     "Se canceló el registro. El intento quedó guardado con su usuario y la fecha.");
             response.sendRedirect(request.getContextPath() + "/demand-requests");
             return;
         }
+        if ("back".equals(action)) {
+            show(request, response, form);
+            return;
+        }
+        if ("register".equals(action)) {
+            register(request, response, form);
+            return;
+        }
 
-        DuplicityCheckForm form = readForm(request);
         Map<String, String> errors = new LinkedHashMap<>(form.validate());
         // A deactivated subject matter is no longer offered for new requests (DFR 2.8)
         if (!errors.containsKey("matter") && !subjectMatterService.activeNames().contains(form.getMatter())) {
@@ -67,8 +105,76 @@ public class DemandRequestCreateServlet extends HttpServlet {
         show(request, response, form);
     }
 
+    /** Step 2: saves the request with the details and annexes, or shows what is missing. */
+    private void register(HttpServletRequest request, HttpServletResponse response, DuplicityCheckForm form)
+            throws ServletException, IOException {
+        boolean warningAccepted = "true".equals(request.getParameter("warningAccepted"));
+        RequestDetailsForm details = readDetails(request);
+        DemandRequestRegistrationService.Registration registration;
+        try {
+            registration = details == null ? null
+                : registrationService.register(currentUser(request), form, details, warningAccepted);
+        } catch (AccessDeniedException e) {
+            ErrorView.forbidden(request, response, e.getMessage());
+            return;
+        }
+        if (registration != null && registration.isSaved()) {
+            request.getSession().setAttribute(DemandRequestListServlet.FLASH_MESSAGE,
+                    "La solicitud quedó registrada con el folio " + registration.folio()
+                        + " y está pendiente de calificación.");
+            response.sendRedirect(request.getContextPath() + "/demand-requests/detail?folio="
+                + URLEncoder.encode(registration.folio(), StandardCharsets.UTF_8));
+            return;
+        }
+        if (registration != null && registration.warning() != null) {
+            request.setAttribute("duplicityMatch", registration.warning());
+            show(request, response, form);
+            return;
+        }
+        // Back to step 2 with what was typed; the files have to be chosen again
+        request.setAttribute("verified", true);
+        if (warningAccepted) {
+            duplicityService.findMatch(form).ifPresent(match -> request.setAttribute("continuedWithWarning", match));
+        }
+        request.setAttribute("details", details == null ? new RequestDetailsForm() : details);
+        request.setAttribute("detailErrors", registration == null
+            ? Map.of("annexes", "Cada anexo puede pesar como máximo 10 MB.") : registration.errors());
+        show(request, response, form);
+    }
+
+    /** The step 2 fields and the chosen files; null when a file is larger than the container allows. */
+    private static RequestDetailsForm readDetails(HttpServletRequest request) throws IOException, ServletException {
+        RequestDetailsForm details = new RequestDetailsForm();
+        details.setPlaintiffAddress(request.getParameter("plaintiffAddress"));
+        details.setPlaintiffPhone(request.getParameter("plaintiffPhone"));
+        details.setPlaintiffEmail(request.getParameter("plaintiffEmail"));
+        details.setDefendantAddress(request.getParameter("defendantAddress"));
+        details.setDefendantPhone(request.getParameter("defendantPhone"));
+        details.setDefendantEmail(request.getParameter("defendantEmail"));
+        details.setLegalRepresentative(request.getParameter("legalRepresentative"));
+        details.setFilingType(request.getParameter("filingType"));
+        try {
+            for (Part part : request.getParts()) {
+                if ("annexes".equals(part.getName()) && part.getSize() > 0 && part.getSubmittedFileName() != null) {
+                    details.addAnnex(new RequestDetailsForm.AnnexUpload(
+                        Paths.get(part.getSubmittedFileName()).getFileName().toString(), part.getSize(),
+                        part.getContentType()));
+                }
+            }
+        } catch (IllegalStateException e) {
+            return null;
+        }
+        return details;
+    }
+
+    private static User currentUser(HttpServletRequest request) {
+        return (User) request.getSession().getAttribute(AuthFilter.SESSION_USER);
+    }
+
     private void show(HttpServletRequest request, HttpServletResponse response, DuplicityCheckForm form)
             throws ServletException, IOException {
+        request.setAttribute("filingTypes", FilingType.values());
+        request.setAttribute("maxAnnexes", RequestDetailsForm.MAX_ANNEXES);
         request.setAttribute("form", form);
         request.setAttribute("matters", subjectMatterService.activeNames());
         request.setAttribute("receivedDate", LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));

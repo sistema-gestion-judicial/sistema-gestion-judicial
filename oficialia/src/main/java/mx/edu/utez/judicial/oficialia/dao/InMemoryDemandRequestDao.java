@@ -58,6 +58,25 @@ public class InMemoryDemandRequestDao implements DemandRequestDao {
         requestsByFolio.put(demandRequest.getFolio(), demandRequest);
     }
 
+    @Override
+    public synchronized String register(DemandRequest draft, User clerk, LocalDateTime registeredAt) {
+        int year = registeredAt.getYear();
+        int last = requestsByFolio.keySet().stream()
+                .filter(folio -> folio.matches("S-\\d{6}/" + year))
+                .mapToInt(folio -> Integer.parseInt(folio.substring(2, 8)))
+                .max()
+                .orElse(0);
+        String folio = String.format("S-%06d/%d", last + 1, year);
+        requestsByFolio.put(folio, JdbcDemandRequestDao.withFolio(draft, folio));
+        return folio;
+    }
+
+    /** Without a database the attempt is not kept anywhere: the in-memory data is only for demos. */
+    @Override
+    public void recordCancelledAttempt(String courtCode, String matchedCourt, String matchedMatter, User clerk,
+                                       LocalDateTime at) {
+    }
+
     /** Synchronized, so two clerks of the same court never get the same number. */
     @Override
     public synchronized String admit(DemandRequest request, User clerk, LocalDateTime ruledAt) {

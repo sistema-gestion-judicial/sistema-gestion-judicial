@@ -12,8 +12,15 @@ public class Party {
     private final String personId;
     private final String phone;
     private final String email;
+    private final String address;
 
     public Party(PartyRole role, String name, String personType, String personId, String phone, String email) {
+        this(role, name, personType, personId, phone, email, null);
+    }
+
+    public Party(PartyRole role, String name, String personType, String personId, String phone, String email,
+                 String address) {
+        this.address = address;
         this.role = role;
         this.name = name;
         this.personType = personType;
@@ -58,6 +65,11 @@ public class Party {
     /** RFC for a company or a person with one, CURP otherwise. */
     public String getPersonIdLabel() {
         return personId != null && personId.length() == 18 ? "CURP" : "RFC";
+    }
+
+    /** Null when it was not captured. */
+    public String getAddress() {
+        return address;
     }
 
     public String getPhone() {

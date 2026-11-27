@@ -27,6 +27,7 @@ public class DemandRequest {
     private final DuplicityWarning duplicityWarning;
 
     private RequestStatus status = RequestStatus.PENDING;
+    private FilingType filingType;
     private String caseFileNumber;
     private String deskName;
     private String rejectionReason;
@@ -147,6 +148,16 @@ public class DemandRequest {
 
     public DuplicityWarning getDuplicityWarning() {
         return duplicityWarning;
+    }
+
+    /** Null for requests registered before step 2 existed (sample and imported data). */
+    public FilingType getFilingType() {
+        return filingType;
+    }
+
+    /** Set when the request is registered or read back; it never changes afterwards. */
+    public void setFilingType(FilingType filingType) {
+        this.filingType = filingType;
     }
 
     public RequestStatus getStatus() {

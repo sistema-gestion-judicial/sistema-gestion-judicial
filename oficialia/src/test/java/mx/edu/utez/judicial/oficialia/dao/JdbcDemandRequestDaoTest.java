@@ -9,6 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -18,8 +19,12 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import mx.edu.utez.judicial.common.db.Database;
+import mx.edu.utez.judicial.oficialia.model.Annex;
 import mx.edu.utez.judicial.oficialia.model.DemandRequest;
+import mx.edu.utez.judicial.oficialia.model.FilingType;
 import mx.edu.utez.judicial.oficialia.model.NewUserAccount;
+import mx.edu.utez.judicial.oficialia.model.Party;
+import mx.edu.utez.judicial.oficialia.model.PartyRole;
 import mx.edu.utez.judicial.oficialia.model.RequestStatus;
 import mx.edu.utez.judicial.oficialia.model.User;
 import mx.edu.utez.judicial.oficialia.model.UserRole;
@@ -205,5 +210,35 @@ class JdbcDemandRequestDaoTest {
             rows.next();
             return rows.getInt(1);
         }
+    }
+
+    @Test
+    void registersWithFolioDetailsAndAuditAndNeverRepeatsTheFolio() throws Exception {
+        DemandRequest draft = new DemandRequest("", LocalDate.parse("2026-11-27"), "Juzgado de Cuautla", "12",
+            "Civil", new Party(PartyRole.PLAINTIFF, "Juan López", "Persona física", "LOJU900512KL3", "7351124598",
+                null, "Av. Reforma 10, Cuautla"), Party.unidentified(PartyRole.DEFENDANT), null, "Laura Méndez",
+            List.of(new Annex("Escrito inicial.pdf", 1465)), null);
+        draft.setFilingType(FilingType.MAIL);
+
+        String first = dao.register(draft, clerk, LocalDateTime.parse("2026-11-27T09:30"));
+        String second = dao.register(draft, clerk, LocalDateTime.parse("2026-11-27T09:31"));
+
+        assertEquals("S-000128/2026", first);
+        assertEquals("S-000129/2026", second);
+        DemandRequest saved = dao.findByFolio(first).orElseThrow();
+        assertTrue(saved.isPending());
+        assertEquals(FilingType.MAIL, saved.getFilingType());
+        assertEquals("Av. Reforma 10, Cuautla", saved.getPlaintiff().getAddress());
+        assertEquals(1, saved.getAnnexes().size());
+        assertTrue(auditEntries().contains("USER|lmendez@utez.edu.mx|REQUEST_REGISTERED|S-000128/2026"));
+        assertEquals("S-000001/2027", dao.register(draft, clerk, LocalDateTime.parse("2027-01-02T09:00")));
+    }
+
+    @Test
+    void keepsACancelledAttemptWithoutARequest() throws Exception {
+        dao.recordCancelledAttempt("12", "Juzgado de Jojutla", "Familiar", clerk, RULED_AT);
+
+        assertEquals(1, count("SELECT COUNT(*) FROM duplicity_warning_decisions "
+            + "WHERE decision = 'CANCEL' AND folio IS NULL AND decided_by = 'Laura Méndez'"));
     }
 }
