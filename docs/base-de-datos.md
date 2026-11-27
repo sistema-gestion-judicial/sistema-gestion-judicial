@@ -74,7 +74,7 @@ cambiar una tabla, crea el siguiente (`V003__add_column_x.sql`).
 | `users`, `password_reset_codes` | Cuentas, bloqueo por intentos y códigos de recuperación |
 | `judicial_districts`, `courts`, `subject_matters`, `court_subject_matters` | Catálogos; las materias tienen clave estable (`CIV`, `FAM`…) para la integración |
 | `rejection_reasons` | Motivos de no procedencia |
-| `demand_requests`, `parties`, `annexes` | Solicitudes con sus partes y anexos. Desde V007 guardan el tipo de presentación (individual o colectiva), las observaciones, el domicilio de cada parte y el tipo de cada anexo |
+| `demand_requests`, `parties`, `annexes` | Solicitudes con sus partes y anexos. Desde V008 guardan el tipo de presentación (individual o colectiva), las observaciones, el domicilio de cada parte y el tipo de cada anexo |
 | `duplicity_warning_decisions` | Cada advertencia de duplicidad y si el oficial continuó o canceló (un intento cancelado no tiene folio) |
 | `case_files` | Expedientes `AAAA/NNNNN/JJ`, su mesa, su instancia y su sala |
 | `request_status_history` | Bitácora de cambios de estado de cada solicitud |

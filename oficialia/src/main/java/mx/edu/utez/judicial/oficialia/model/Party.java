@@ -76,7 +76,7 @@ public class Party {
         return email;
     }
 
-    /** Null when the address is not known, as for the requests registered before V007. */
+    /** Null when the address is not known, as for the requests registered before V008. */
     public PartyAddress getAddress() {
         return address;
     }
