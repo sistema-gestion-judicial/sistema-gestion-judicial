@@ -8,6 +8,11 @@ public final class AuthSettings {
     public static final int MAX_FAILED_ATTEMPTS = 3;
     public static final int LOCK_MINUTES = 15;
     public static final int SESSION_TIMEOUT_MINUTES = 20;
+    /**
+     * How long a page trusts that the signed in account is still active before asking the database again; it is
+     * also the longest a deactivation made directly in the database takes to end the session.
+     */
+    public static final int ACTIVE_ACCOUNT_CHECK_SECONDS = 60;
 
     // Password recovery (RF 1.3)
     public static final int RECOVERY_CODE_MINUTES = 15;
