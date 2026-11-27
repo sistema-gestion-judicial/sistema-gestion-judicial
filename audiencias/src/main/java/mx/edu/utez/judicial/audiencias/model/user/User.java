@@ -11,6 +11,9 @@ public class User {
     private String matter;
 
     private String phone;
+    private boolean mustChangePassword;
+    private Integer deskId;
+    private String deskName;
 
     public User() {
     }
@@ -102,6 +105,30 @@ public class User {
 
     public void setId(Integer id) {
         this.id = id;
+    }
+
+    public boolean isMustChangePassword() {
+        return mustChangePassword;
+    }
+
+    public void setMustChangePassword(boolean mustChangePassword) {
+        this.mustChangePassword = mustChangePassword;
+    }
+
+    public Integer getDeskId() {
+        return deskId;
+    }
+
+    public void setDeskId(Integer deskId) {
+        this.deskId = deskId;
+    }
+
+    public String getDeskName() {
+        return deskName;
+    }
+
+    public void setDeskName(String deskName) {
+        this.deskName = deskName;
     }
 
 }

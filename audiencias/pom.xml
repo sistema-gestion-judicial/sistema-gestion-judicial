@@ -15,6 +15,10 @@
 
   <dependencies>
     <dependency>
+      <groupId>at.favre.lib</groupId>
+      <artifactId>bcrypt</artifactId>
+    </dependency>
+    <dependency>
       <groupId>mx.edu.utez.judicial</groupId>
       <artifactId>common</artifactId>
     </dependency>

@@ -18,5 +18,11 @@ public interface UserDao {
 
     List<User> findActiveLawyers(Role role);
 
+    List<User> findByRole(Role role);
+
     Optional<User> findById(int id);
+
+    void setStatus(int userId, boolean status);
+
+    void updatePassword(int userId, String passwordHash, boolean mustChangePassword);
 }

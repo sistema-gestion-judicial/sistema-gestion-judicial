@@ -19,6 +19,7 @@
   </modules>
 
   <properties>
+
     <maven.compiler.release>21</maven.compiler.release>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
@@ -34,6 +35,8 @@
     <jackson.version>3.2.4</jackson.version>
     <!-- Library versio, for Mail SMTP -->
     <jakarta-mail.version>2.0.1</jakarta-mail.version>
+
+    <bcrypt.version>0.10.2</bcrypt.version>
   </properties>
 
   <dependencyManagement>
@@ -95,6 +98,13 @@
         <version>${junit.version}</version>
         <type>pom</type>
         <scope>import</scope>
+      </dependency>
+
+      <!-- BCrypt to hash passwords -->
+      <dependency>
+        <groupId>at.favre.lib</groupId>
+        <artifactId>bcrypt</artifactId>
+        <version>${bcrypt.version}</version>
       </dependency>
     </dependencies>
   </dependencyManagement>

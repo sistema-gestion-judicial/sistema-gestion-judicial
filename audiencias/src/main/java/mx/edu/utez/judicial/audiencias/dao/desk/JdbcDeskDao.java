@@ -99,6 +99,18 @@ public class JdbcDeskDao implements DeskDao {
     }
 
     @Override
+    public void clearUserAssignment(int userId) {
+        try (Connection connection = database.getConnection();
+             PreparedStatement statement =
+                 connection.prepareStatement("UPDATE desks SET user_id = NULL WHERE user_id = ?")) {
+            statement.setInt(1, userId);
+            statement.executeUpdate();
+        } catch (SQLException e) {
+            throw new DataAccessException("Could not clear desk assignment for user " + userId, e);
+        }
+    }
+
+    @Override
     public void setActive(int deskId, boolean active) {
         try (Connection connection = database.getConnection();
              PreparedStatement statement =

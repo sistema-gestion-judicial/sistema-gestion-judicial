@@ -10,20 +10,37 @@ function togglePassword() {
   }
 }
 
-// Redirección temporal para probar la interfaz antes de crear el LoginServlet
-document.addEventListener('DOMContentLoaded', () => {
-  const loginForm = document.querySelector('form');
-  if (!loginForm) return;
+"use strict";
 
-  loginForm.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const correo = document.getElementById('email').value.trim().toLowerCase();
-    const context = window.APP_CONTEXT || '';
+document.addEventListener("DOMContentLoaded", () => {
+  const form = document.querySelector("form");
+  const password = document.getElementById("password");
+  const toggle = document.getElementById("btnTogglePassword");
 
-    if (correo.includes('admin')) {
-      window.location.href = `${context}/mesas.jsp`;
-    } else {
-      window.location.href = `${context}/inicioabogados.jsp`;
-    }
-  });
+  if (password && toggle) {
+    toggle.addEventListener("click", () => {
+      const show = password.type === "password";
+      password.type = show ? "text" : "password";
+      toggle.textContent = show ? "Ocultar" : "Mostrar";
+      toggle.setAttribute("aria-pressed", String(show));
+    });
+  }
+
+  // La verificación de la contraseña tarda un instante: evita enviar el formulario dos veces
+  if (form) {
+    form.addEventListener("submit", () => {
+      const submit = form.querySelector('[type="submit"]');
+      if (submit) submit.disabled = true;
+    });
+  }
 });
+
+// Si el servidor responde con error, el navegador vuelve a cargar la página y el botón queda activo.
+// Al volver con "atrás" desde caché se restablece también.
+window.addEventListener("pageshow", (event) => {
+  if (event.persisted) {
+    const submit = document.querySelector('form [type="submit"]');
+    if (submit) submit.disabled = false;
+  }
+});
+

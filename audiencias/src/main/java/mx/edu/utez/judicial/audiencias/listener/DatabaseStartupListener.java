@@ -11,13 +11,15 @@ import mx.edu.utez.judicial.common.db.Database;
 import mx.edu.utez.judicial.common.db.SqlMigrator;
 
 /**
- * Apply the Audiences database migration scripts when the application starts.
+ * Apply the Audiences database migration scripts when the application starts, then make sure the
+ * first administrator exists.
  */
 @WebListener
 public class DatabaseStartupListener implements ServletContextListener {
 
     static final List<String> MIGRATIONS = List.of(
-        "V001__create_audiencias_tables.sql"
+        "V001__create_audiencias_tables.sql",
+        "V002__add_lawyer_account_fields.sql"
     );
 
     private static final Logger LOG = Logger.getLogger(DatabaseStartupListener.class.getName());
@@ -36,7 +38,9 @@ public class DatabaseStartupListener implements ServletContextListener {
             LOG.log(Level.SEVERE, "The Audiences database could not be prepared: " + rootCause(e).getMessage(), e);
             throw new IllegalStateException("The Audiences database could not be prepared.", e);
         }
+
     }
+
 
     private static Throwable rootCause(Throwable error) {
         Throwable cause = error;

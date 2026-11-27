@@ -13,6 +13,7 @@ public interface DeskDao {
     Optional<Desk> findByUserId(int userId);
     int insert(Desk desk);
     void assignUser(int deskId, Integer userId);
+    void clearUserAssignment(int userId);
     void setActive(int deskId, boolean active);
     void update(Desk desk);
 }

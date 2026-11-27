@@ -6,18 +6,19 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#e9e9e2">
+  <meta name="csrf-token" content="<c:out value='${csrfToken}'/>">
   <title>SGA Audiencias | Mesas</title>
 
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/styles.css">
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/abogados.css?v=<%= System.currentTimeMillis() %>">
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/styles.css?v=1.2">
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/abogados.css?v=1.2">
 </head>
-<body>
+<body data-ctx="<c:out value='${pageContext.request.contextPath}'/>">
 <div class="page layout-figma">
 
   <!-- Barra Lateral Institucional -->
   <aside class="sidebar" aria-label="Menú lateral">
     <div>
-      <a class="sidebar-brand" href="#" aria-label="SGA Audiencias, inicio">
+      <a class="sidebar-brand" href="${pageContext.request.contextPath}/mesas" aria-label="SGA Audiencias, inicio">
         <svg width="46" height="46" viewBox="0 0 48 48" fill="none" aria-hidden="true">
           <path d="M24 7v33M15 40h18M11 15h26" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
           <path d="M11 15 6 26h10l-5-11ZM37 15l-5 11h10l-5-11Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
@@ -35,7 +36,7 @@
           <span>Mesas</span>
         </button>
 
-        <a href="abogados.jsp" class="sidebar-link">
+        <a href="${pageContext.request.contextPath}/abogados.jsp" class="sidebar-link">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
             <circle cx="9" cy="8" r="3.5" stroke="currentColor" stroke-width="1.7"/>
             <path d="M3 19c.6-3.8 3-5.5 6-5.5s5.4 1.7 6 5.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
@@ -48,7 +49,7 @@
     </div>
 
     <div class="sidebar-footer">
-      <a href="${pageContext.request.contextPath}/views/auth/login.jsp" class="sidebar-logout">
+      <a href="${pageContext.request.contextPath}/logout" class="sidebar-logout">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
           <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
@@ -60,7 +61,6 @@
   <!-- Columna Derecha: Topbar + Contenido -->
   <div class="content-shell">
 
-    <!-- Topbar Flotante (sin flecha en perfil) -->
     <header class="topbar">
       <div class="topbar-left">
         <div class="topbar-brand-compact">
@@ -87,12 +87,12 @@
             </span>
           </button>
 
-          <span class="profile-menu" id="profileMenu" role="menu">
+          <div class="profile-menu" id="profileMenu" role="menu">
             <button type="button" role="menuitem">Mi perfil</button>
-            <a href="${pageContext.request.contextPath}/views/auth/login.jsp" style="text-decoration: none;">
-              <button type="button" role="menuitem" style="width:100%; border:0; background:transparent; text-align:left; cursor:pointer;">Cerrar sesión</button>
-            </a>
-          </span>
+            <form method="post" action="${pageContext.request.contextPath}/logout" style="margin:0;">
+              <button type="submit" role="menuitem">Cerrar sesión</button>
+            </form>
+          </div>
         </div>
       </div>
     </header>
@@ -106,11 +106,12 @@
 
         <form class="filters" id="mesasFilters">
           <div class="search-wrap">
-            <svg class="search-icon" viewBox="0 0 20 20" fill="none" width="16" height="16">
+            <svg class="search-icon" viewBox="0 0 20 20" fill="none" width="16" height="16" aria-hidden="true">
               <circle cx="9" cy="9" r="6" stroke="currentColor" stroke-width="1.8"/>
               <path d="m13.5 13.5 4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
             </svg>
-            <input class="search-field" id="expedienteSearch" type="search" placeholder="Buscar por expediente" aria-label="Buscar por expediente">
+            <input class="search-field" id="mesaSearch" type="search" maxlength="50" autocomplete="off"
+                   placeholder="Buscar por mesa o juzgado" aria-label="Buscar por mesa o juzgado">
           </div>
 
           <select class="subject-filter" id="materiaFilter" aria-label="Materia">
@@ -160,7 +161,7 @@
         </div>
 
         <footer class="table-footer">
-          <span id="paginationSummary" aria-live="polite">Mostrando 1–4 de 36</span>
+          <span id="paginationSummary" aria-live="polite">Cargando mesas…</span>
           <nav class="pagination" aria-label="Paginación de mesas" id="pagination"></nav>
         </footer>
       </section>
@@ -169,34 +170,30 @@
 </div>
 
 <!-- Modal 1: Registrar Mesa -->
-<dialog id="modalRegistrarMesa" class="custom-modal">
+<dialog id="modalRegistrarMesa" class="custom-modal" aria-labelledby="titleRegistrarMesa">
   <div class="modal-body-custom">
-    <h2 class="font-serif modal-title">Registrar mesa</h2>
+    <h2 class="font-serif modal-title" id="titleRegistrarMesa">Registrar mesa</h2>
     <p class="modal-subtitle">Ingresa los datos para dar de alta una nueva mesa en el sistema</p>
     <hr class="modal-divider">
 
     <form id="formRegistrarMesa" class="modal-form-grid">
       <div class="form-group">
         <label for="regNumero">Número de mesa</label>
-        <input type="text" id="regNumero" class="form-control" placeholder="Ej. M-06" required>
+        <input type="text" id="regNumero" class="form-control" placeholder="Ej. M-06" maxlength="50"
+               autocomplete="off" required>
       </div>
 
       <div class="form-group">
         <label for="regJuzgado">Juzgado asignado</label>
         <select id="regJuzgado" class="form-select" required>
-          <option value="" disabled selected>Ej. Juzgado 2°</option>
-          <option value="Juzgado 1°">Juzgado 1°</option>
-          <option value="Juzgado 2°">Juzgado 2°</option>
-          <option value="Juzgado 3°">Juzgado 3°</option>
+          <option value="" disabled selected>Cargando juzgados…</option>
         </select>
       </div>
 
       <div class="form-group">
         <label for="regDistrito">Distrito judicial</label>
-        <select id="regDistrito" class="form-select" required>
-          <option value="Distrito 1 - Cuernavaca">Distrito 1 - Cuernavaca</option>
-          <option value="Distrito 2 - Cuautla">Distrito 2 - Cuautla</option>
-        </select>
+        <input type="text" id="regDistrito" class="form-control" placeholder="Se completa con el juzgado"
+               readonly tabindex="-1">
       </div>
 
       <div class="form-group">
@@ -213,14 +210,12 @@
       <div class="form-group">
         <label for="regAbogado">Abogado de audiencia</label>
         <select id="regAbogado" class="form-select" required>
-          <option value="" disabled selected>Selecciona un abogado</option>
-          <option value="Lic. Ricardo Salgado">Lic. Ricardo Salgado</option>
-          <option value="Lic. María Gómez">Lic. María Gómez</option>
+          <option value="" disabled selected>Cargando abogados…</option>
         </select>
       </div>
 
       <div class="form-group">
-        <label>Estado inicial</label>
+        <label for="regEstado">Estado inicial</label>
         <div class="d-flex align-items-center gap-2 mt-1">
           <label class="switch-toggle">
             <input type="checkbox" id="regEstado" checked>
@@ -230,9 +225,8 @@
         </div>
       </div>
 
-      <!-- Banner Informativo Modal Registrar -->
       <div class="info-banner full-width">
-        <svg viewBox="0 0 20 20" fill="none" width="18" height="18" style="flex-shrink:0;">
+        <svg viewBox="0 0 20 20" fill="none" width="18" height="18" style="flex-shrink:0;" aria-hidden="true">
           <circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="1.6"/>
           <path d="M10 9v5M10 6.5h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
         </svg>
@@ -248,9 +242,9 @@
 </dialog>
 
 <!-- Modal 2: Editar Mesa -->
-<dialog id="modalEditarMesa" class="custom-modal">
+<dialog id="modalEditarMesa" class="custom-modal" aria-labelledby="titleEditarMesa">
   <div class="modal-body-custom">
-    <h2 class="font-serif modal-title">Editar mesa</h2>
+    <h2 class="font-serif modal-title" id="titleEditarMesa">Editar mesa</h2>
     <p class="modal-subtitle">Actualiza la información, materia o estado de la mesa seleccionada</p>
     <hr class="modal-divider">
 
@@ -259,24 +253,17 @@
 
       <div class="form-group">
         <label for="editNumero">Número de mesa</label>
-        <input type="text" id="editNumero" class="form-control" required>
+        <input type="text" id="editNumero" class="form-control" maxlength="50" autocomplete="off" required>
       </div>
 
       <div class="form-group">
         <label for="editJuzgado">Juzgado asignado</label>
-        <select id="editJuzgado" class="form-select" required>
-          <option value="Juzgado 1°">Juzgado 1°</option>
-          <option value="Juzgado 2°">Juzgado 2°</option>
-          <option value="Juzgado 3°">Juzgado 3°</option>
-        </select>
+        <select id="editJuzgado" class="form-select" required></select>
       </div>
 
       <div class="form-group">
         <label for="editDistrito">Distrito judicial</label>
-        <select id="editDistrito" class="form-select" required>
-          <option value="Distrito 1 - Cuernavaca">Distrito 1 - Cuernavaca</option>
-          <option value="Distrito 2 - Cuautla">Distrito 2 - Cuautla</option>
-        </select>
+        <input type="text" id="editDistrito" class="form-control" readonly tabindex="-1">
       </div>
 
       <div class="form-group">
@@ -291,14 +278,11 @@
 
       <div class="form-group">
         <label for="editAbogado">Abogado de audiencia</label>
-        <select id="editAbogado" class="form-select" required>
-          <option value="Lic. Ricardo Salgado">Lic. Ricardo Salgado</option>
-          <option value="Lic. María Gómez">Lic. María Gómez</option>
-        </select>
+        <select id="editAbogado" class="form-select"></select>
       </div>
 
       <div class="form-group">
-        <label>Estado de la mesa</label>
+        <label for="editEstado">Estado de la mesa</label>
         <div class="d-flex align-items-center gap-2 mt-1">
           <label class="switch-toggle">
             <input type="checkbox" id="editEstado">
@@ -309,7 +293,10 @@
       </div>
 
       <div class="info-banner full-width">
-        <i class="bi bi-info-circle me-2"></i>
+        <svg viewBox="0 0 20 20" fill="none" width="18" height="18" style="flex-shrink:0;" aria-hidden="true">
+          <circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="1.6"/>
+          <path d="M10 9v5M10 6.5h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
         <span>Los cambios afectarán la disponibilidad de la mesa para nuevos agendamientos.</span>
       </div>
 
@@ -321,6 +308,7 @@
   </div>
 </dialog>
 
-<script src="${pageContext.request.contextPath}/assets/js/mesas.js?v=1.1"></script>
+<script src="${pageContext.request.contextPath}/assets/js/mesas.js?v=1.3"></script>
 </body>
 </html>
+

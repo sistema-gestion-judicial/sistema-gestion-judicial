@@ -1,6 +1,7 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
-<c:set var="hasError" value="${param.error != null || not empty error}" />
+<%-- errorMessage y email los pone LoginServlet cuando el inicio de sesión falla --%>
+<c:set var="hasError" value="${not empty errorMessage}" />
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -47,7 +48,11 @@
                    class="form-control py-2 ${hasError ? 'is-invalid' : ''}"
                    id="email"
                    name="email"
+                   value="<c:out value='${email}'/>"
                    placeholder="mperez@utez.edu.mx"
+                   maxlength="150"
+                   autocomplete="username"
+                   autofocus
                    required>
           </div>
 
@@ -58,8 +63,11 @@
                      class="form-control py-2 pe-5 ${hasError ? 'is-invalid' : ''}"
                      id="password"
                      name="password"
+                     maxlength="72"
+                     autocomplete="current-password"
                      required>
-              <button type="button" id="btnTogglePassword" class="btn btn-link position-absolute end-0 top-50 translate-middle-y text-dark text-decoration-none small me-2" onclick="togglePassword()">
+              <button type="button" id="btnTogglePassword" aria-pressed="false" aria-controls="password"
+                      class="btn btn-link position-absolute end-0 top-50 translate-middle-y text-dark text-decoration-none small me-2">
                 Mostrar
               </button>
             </div>
@@ -67,14 +75,14 @@
 
           <!-- Fila inferior: Mensaje de Error + Enlace Olvidó contraseña -->
           <div class="d-flex justify-content-between align-items-center mb-4 mt-2">
-            <div>
+            <div role="alert" aria-live="polite">
               <c:if test="${hasError}">
                 <span class="error-msg d-inline-flex align-items-center gap-1">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" class="bi bi-exclamation-circle" viewBox="0 0 16 16">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true">
                     <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
                     <path d="M7.002 11a1 1 0 1 0 2 0 1 1 0 0 0-2 0zM7.1 4.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 4.995z"/>
                   </svg>
-                  Correo o contraseña incorrectos.
+                  <c:out value="${errorMessage}"/>
                 </span>
               </c:if>
             </div>
@@ -89,7 +97,6 @@
   </div>
 </div>
 
-<script>window.APP_CONTEXT = "${pageContext.request.contextPath}";</script>
-<script src="${pageContext.request.contextPath}/assets/js/login.js?v=1.1"></script>
+<script src="${pageContext.request.contextPath}/assets/js/login.js?v=1.2"></script>
 </body>
 </html>
