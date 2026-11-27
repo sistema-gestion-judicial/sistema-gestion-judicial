@@ -5,6 +5,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLIntegrityConstraintViolationException;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -14,7 +15,9 @@ import mx.edu.utez.judicial.common.db.Database;
 import mx.edu.utez.judicial.oficialia.model.Court;
 import mx.edu.utez.judicial.oficialia.model.CourtAddress;
 import mx.edu.utez.judicial.oficialia.model.JudicialDistrict;
+import mx.edu.utez.judicial.oficialia.model.NewUserAccount;
 import mx.edu.utez.judicial.oficialia.model.SubjectMatter;
+import mx.edu.utez.judicial.oficialia.util.EmailValidator;
 
 /**
  * Reads the catalogs from the sgj_oficialia database.
@@ -114,6 +117,109 @@ public class JdbcCatalogDao implements CatalogDao {
     @Override
     public Optional<Court> findCourt(String code) {
         return queryCourts(SELECT_COURTS + " WHERE c.code = ?", code).stream().findFirst();
+    }
+
+    /**
+     * The court, its subject matters and its administrator are written in one transaction: a failure on any
+     * of them, such as an e-mail that is already registered, leaves no court behind.
+     */
+    @Override
+    public void insertCourt(Court court, NewUserAccount administrator) {
+        try (Connection connection = database.getConnection()) {
+            connection.setAutoCommit(false);
+            try {
+                insertCourtRow(connection, court);
+                insertCourtMatters(connection, court);
+                insertAdministrator(connection, administrator);
+                connection.commit();
+            } catch (SQLException e) {
+                connection.rollback();
+                throw e;
+            }
+        } catch (SQLIntegrityConstraintViolationException e) {
+            if (e.getErrorCode() == MYSQL_DUPLICATE_ENTRY) {
+                throw duplicate(court, administrator, e);
+            }
+            throw new DataAccessException("Could not register the court " + court.getCode(), e);
+        } catch (SQLException e) {
+            throw new DataAccessException("Could not register the court " + court.getCode(), e);
+        }
+    }
+
+    private static void insertCourtRow(Connection connection, Court court) throws SQLException {
+        // judicial_district is the text copy of the district name that V001 left in the table
+        String sql = "INSERT INTO courts (code, number, name, district_code, judicial_district, street, "
+            + "neighborhood, postal_code, municipality, phone, active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        CourtAddress address = court.getAddress();
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, court.getCode());
+            statement.setInt(2, court.getNumber());
+            statement.setString(3, court.getName());
+            statement.setString(4, court.getDistrictCode());
+            statement.setString(5, court.getJudicialDistrict());
+            setNullable(statement, 6, address.street());
+            setNullable(statement, 7, address.neighborhood());
+            setNullable(statement, 8, address.postalCode());
+            setNullable(statement, 9, address.municipality());
+            setNullable(statement, 10, address.phone());
+            statement.setBoolean(11, court.isActive());
+            statement.executeUpdate();
+        }
+    }
+
+    private static void insertCourtMatters(Connection connection, Court court) throws SQLException {
+        String sql = "INSERT INTO court_subject_matters (court_code, matter_id) "
+            + "SELECT ?, id FROM subject_matters WHERE code = ?";
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            for (String matterCode : court.getSubjectMatterCodes()) {
+                statement.setString(1, court.getCode());
+                statement.setString(2, matterCode);
+                if (statement.executeUpdate() != 1) {
+                    throw new SQLException("Unknown subject matter " + matterCode);
+                }
+            }
+        }
+    }
+
+    private static void insertAdministrator(Connection connection, NewUserAccount account) throws SQLException {
+        String sql = "INSERT INTO users (first_name, last_name, email, phone, role, court_code, password_hash, "
+            + "must_change_password, active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, account.firstName());
+            statement.setString(2, account.lastName());
+            statement.setString(3, EmailValidator.normalize(account.email()));
+            setNullable(statement, 4, account.phone());
+            statement.setString(5, account.role().name());
+            statement.setString(6, account.courtCode());
+            statement.setString(7, account.passwordHash());
+            statement.setBoolean(8, account.mustChangePassword());
+            statement.setBoolean(9, account.active());
+            statement.executeUpdate();
+        }
+    }
+
+    /** MySQL names the UNIQUE key that clashed: the primary key is the code, uq_courts_number the number. */
+    private static DataAccessException duplicate(Court court, NewUserAccount administrator,
+                                                 SQLIntegrityConstraintViolationException e) {
+        String message = e.getMessage() == null ? "" : e.getMessage();
+        if (message.contains("uq_courts_number")) {
+            return new DuplicateNumberException(court.getNumber(), e);
+        }
+        if (message.contains("PRIMARY")) {
+            return new DuplicateCodeException(court.getCode(), e);
+        }
+        if (message.contains("email")) {
+            return new DuplicateEmailException(administrator.email(), e);
+        }
+        return new DuplicateNameException(court.getName(), e);
+    }
+
+    private static void setNullable(PreparedStatement statement, int index, String value) throws SQLException {
+        if (value == null) {
+            statement.setNull(index, Types.VARCHAR);
+        } else {
+            statement.setString(index, value);
+        }
     }
 
     @Override

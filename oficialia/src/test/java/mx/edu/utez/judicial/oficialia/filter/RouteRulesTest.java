@@ -123,6 +123,13 @@ class RouteRulesTest {
     }
 
     @Test
+    void onlyTheJudicialBodyAdministratorRegistersCourts() {
+        assertTrue(RouteRules.canAccess("/courts/new", UserRole.JUDICIAL_BODY_ADMIN));
+        assertFalse(RouteRules.canAccess("/courts/new", UserRole.COURT_ADMIN));
+        assertFalse(RouteRules.canAccess("/courts/new", UserRole.CLERK));
+    }
+
+    @Test
     void everyRoleLooksUpTheCourtsCatalog() {
         for (UserRole role : UserRole.values()) {
             assertTrue(RouteRules.canAccess("/courts", role), role.name());

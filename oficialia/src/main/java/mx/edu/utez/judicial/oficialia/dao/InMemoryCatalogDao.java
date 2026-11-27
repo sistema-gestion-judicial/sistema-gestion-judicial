@@ -4,9 +4,11 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Supplier;
 import mx.edu.utez.judicial.oficialia.model.Court;
 import mx.edu.utez.judicial.oficialia.model.CourtAddress;
 import mx.edu.utez.judicial.oficialia.model.JudicialDistrict;
+import mx.edu.utez.judicial.oficialia.model.NewUserAccount;
 import mx.edu.utez.judicial.oficialia.model.SubjectMatter;
 import mx.edu.utez.judicial.oficialia.util.CatalogNames;
 
@@ -33,6 +35,19 @@ public class InMemoryCatalogDao implements CatalogDao {
         court("05", "Juzgado de Yautepec", "YAU", "Distrito judicial de Yautepec", "Yautepec"),
         court("07", "Juzgado de Jojutla", "JOJ", "Distrito judicial de Jojutla", "Jojutla"),
         court("12", "Juzgado de Cuautla", "CUA", "Distrito judicial de Cuautla", "Cuautla"));
+
+    // Looked up when a court is registered, not before: InMemoryUserDao builds a catalog of its own while it
+    // starts, and asking for its instance here would make the two wait for each other
+    private final Supplier<InMemoryUserDao> users;
+
+    /** A catalog whose registered administrators go to the shared in-memory accounts. */
+    public InMemoryCatalogDao() {
+        this(InMemoryUserDao::getInstance);
+    }
+
+    public InMemoryCatalogDao(Supplier<InMemoryUserDao> users) {
+        this.users = users;
+    }
 
     @Override
     public synchronized List<JudicialDistrict> findJudicialDistricts() {
@@ -83,6 +98,27 @@ public class InMemoryCatalogDao implements CatalogDao {
     @Override
     public synchronized Optional<Court> findCourt(String code) {
         return courts.stream().filter(court -> court.getCode().equals(code)).findFirst();
+    }
+
+    /**
+     * Checks every unique value before changing anything, and adds the administrator before the court so a
+     * repeated e-mail leaves the catalog as it was.
+     */
+    @Override
+    public synchronized void insertCourt(Court court, NewUserAccount administrator) {
+        if (courts.stream().anyMatch(other -> other.getCode().equals(court.getCode()))) {
+            throw new DuplicateCodeException(court.getCode(), null);
+        }
+        if (courts.stream().anyMatch(other -> other.getNumber() == court.getNumber())) {
+            throw new DuplicateNumberException(court.getNumber(), null);
+        }
+        if (courts.stream().anyMatch(other -> CatalogNames.sameName(other.getName(), court.getName()))) {
+            throw new DuplicateNameException(court.getName(), null);
+        }
+        users.get().insert(administrator, court.getName());
+        List<Court> updated = new ArrayList<>(courts);
+        updated.add(court);
+        courts = List.copyOf(updated);
     }
 
     @Override

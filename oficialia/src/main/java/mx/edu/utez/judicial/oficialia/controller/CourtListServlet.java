@@ -9,6 +9,7 @@ import java.io.IOException;
 import mx.edu.utez.judicial.oficialia.exception.AccessDeniedException;
 import mx.edu.utez.judicial.oficialia.filter.AuthFilter;
 import mx.edu.utez.judicial.oficialia.model.User;
+import mx.edu.utez.judicial.oficialia.model.UserRole;
 import mx.edu.utez.judicial.oficialia.service.CourtService;
 
 /**
@@ -26,6 +27,8 @@ public class CourtListServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         User user = (User) request.getSession().getAttribute(AuthFilter.SESSION_USER);
+        // Shows the confirmation left by the page that registered a court
+        DemandRequestListServlet.moveFlashMessage(request);
         boolean canSeeInactive = CourtService.canSeeInactive(user);
         String query = trimmed(request.getParameter("q"));
         String district = trimmed(request.getParameter("district"));
@@ -42,6 +45,8 @@ public class CourtListServlet extends HttpServlet {
         request.setAttribute("districts", courtService.districts());
         request.setAttribute("subjectMatters", courtService.subjectMatters());
         request.setAttribute("canSeeInactive", canSeeInactive);
+        // Only the judicial body administrator registers courts (DFR 2.9)
+        request.setAttribute("canRegister", user != null && user.getRole() == UserRole.JUDICIAL_BODY_ADMIN);
         request.setAttribute("query", query);
         request.setAttribute("selectedDistrict", district);
         request.setAttribute("selectedMatter", matter);
