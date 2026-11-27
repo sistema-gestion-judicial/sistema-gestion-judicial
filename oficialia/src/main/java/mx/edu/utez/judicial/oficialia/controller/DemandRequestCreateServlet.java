@@ -8,12 +8,13 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 import mx.edu.utez.judicial.oficialia.model.DuplicityCheckForm;
 import mx.edu.utez.judicial.oficialia.model.DuplicityMatch;
 import mx.edu.utez.judicial.oficialia.service.DuplicityService;
+import mx.edu.utez.judicial.oficialia.service.SubjectMatterService;
 
 /**
  * Step 1 of registering a demand request: checks duplicity before the full capture (RF 3.1).
@@ -22,9 +23,8 @@ import mx.edu.utez.judicial.oficialia.service.DuplicityService;
 public class DemandRequestCreateServlet extends HttpServlet {
 
     private static final String VIEW = "/WEB-INF/views/demand-requests/new.jsp";
-    private static final List<String> MATTERS = List.of("Civil", "Familiar", "Mercantil", "Penal");
-
     private final DuplicityService duplicityService = new DuplicityService();
+    private final SubjectMatterService subjectMatterService = new SubjectMatterService();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -44,7 +44,11 @@ public class DemandRequestCreateServlet extends HttpServlet {
         }
 
         DuplicityCheckForm form = readForm(request);
-        Map<String, String> errors = form.validate();
+        Map<String, String> errors = new LinkedHashMap<>(form.validate());
+        // A deactivated subject matter is no longer offered for new requests (DFR 2.8)
+        if (!errors.containsKey("matter") && !subjectMatterService.activeNames().contains(form.getMatter())) {
+            errors.put("matter", "Seleccione una materia activa del catálogo.");
+        }
         if (!errors.isEmpty()) {
             request.setAttribute("errors", errors);
             show(request, response, form);
@@ -66,7 +70,7 @@ public class DemandRequestCreateServlet extends HttpServlet {
     private void show(HttpServletRequest request, HttpServletResponse response, DuplicityCheckForm form)
             throws ServletException, IOException {
         request.setAttribute("form", form);
-        request.setAttribute("matters", MATTERS);
+        request.setAttribute("matters", subjectMatterService.activeNames());
         request.setAttribute("receivedDate", LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
         request.getRequestDispatcher(VIEW).forward(request, response);
     }
