@@ -18,11 +18,12 @@ import mx.edu.utez.judicial.oficialia.model.User;
 import mx.edu.utez.judicial.oficialia.model.UserDetails;
 import mx.edu.utez.judicial.oficialia.model.UserEditForm;
 import mx.edu.utez.judicial.oficialia.model.UserRole;
+import mx.edu.utez.judicial.oficialia.model.UserStatusForm;
 import mx.edu.utez.judicial.oficialia.model.UserSummary;
 import mx.edu.utez.judicial.oficialia.util.EmailValidator;
 
 /**
- * Registers, lists and corrects the users of a court (RF 1.4 to 1.6). Only the Administrador de Juzgado does
+ * Registers, lists, corrects, activates and deactivates the users of a court (RF 1.4 to 1.7). Only the Administrador de Juzgado does
  * it, and only for their own court: the court is never taken from the form.
  */
 public class UserService {
@@ -31,6 +32,7 @@ public class UserService {
     static final String EMAIL_OF_ANOTHER_USER = "Este correo ya pertenece a otro usuario.";
     static final String OWN_ROLE = "No puede cambiar su propio perfil.";
     static final String USER_NOT_FOUND = "No se encontró el usuario en su juzgado.";
+    static final String OWN_DEACTIVATION = "No puede desactivar su propia cuenta.";
 
     private final UserDao userDao;
     private final CatalogDao catalogDao;
@@ -155,6 +157,45 @@ public class UserService {
         }
         UserDetails saved = userDao.findById(current.getId()).orElseThrow(() -> new NotFoundException(USER_NOT_FOUND));
         return Correction.saved(saved, isSelf(admin, current));
+    }
+
+    /**
+     * Activates or deactivates the account of a user of the administrator's court (RF 1.7). Users are never
+     * deleted, so the requests they captured keep their name. A deactivated user cannot sign in and is signed
+     * out on their next request.
+     *
+     * @param id the id as it came in the request
+     * @throws AccessDeniedException when the user is not an Administrador de Juzgado
+     * @throws NotFoundException when the id is not one of a user of the administrator's court
+     * @throws BusinessRuleException when the form is not valid or the administrator tries to deactivate their
+     *     own account; nothing is changed
+     */
+    public StatusChange changeStatus(User admin, String id, UserStatusForm form) {
+        UserDetails user = getForEdit(admin, id);
+        Map<String, String> errors = form.validate();
+        if (!errors.isEmpty()) {
+            throw new BusinessRuleException(errors.values().iterator().next());
+        }
+        if (!form.isActivating() && isSelf(admin, user)) {
+            throw new BusinessRuleException(OWN_DEACTIVATION);
+        }
+        boolean changed = userDao.updateStatus(user.getId(), form.isActivating(), form.getReasonOrNull(), admin);
+        return new StatusChange(user.getFullName(), form.isActivating(), changed);
+    }
+
+    /**
+     * Outcome of a status change: whose account it was, the status it has now, and whether it changed (it does
+     * not when the account already had that status).
+     */
+    public record StatusChange(String fullName, boolean active, boolean changed) {
+
+        /** The confirmation shown in the listing, in Spanish. */
+        public String message() {
+            String status = active ? "activa" : "inactiva";
+            return changed
+                ? "La cuenta de " + fullName + " quedó " + status + "."
+                : "La cuenta de " + fullName + " ya estaba " + status + ".";
+        }
     }
 
     private static boolean isSelf(User admin, UserDetails user) {

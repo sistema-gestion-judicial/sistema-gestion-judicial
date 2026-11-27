@@ -10,8 +10,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.util.List;
 import java.util.Map;
 import mx.edu.utez.judicial.oficialia.dao.InMemoryCatalogDao;
+import mx.edu.utez.judicial.oficialia.dao.InMemoryDemandRequestDao;
 import mx.edu.utez.judicial.oficialia.dao.InMemoryUserDao;
+import mx.edu.utez.judicial.oficialia.dao.SampleUsers;
 import mx.edu.utez.judicial.oficialia.exception.AccessDeniedException;
+import mx.edu.utez.judicial.oficialia.exception.BusinessRuleException;
 import mx.edu.utez.judicial.oficialia.exception.NotFoundException;
 import mx.edu.utez.judicial.oficialia.model.NewUserForm;
 import mx.edu.utez.judicial.oficialia.model.User;
@@ -19,6 +22,7 @@ import mx.edu.utez.judicial.oficialia.model.UserAccount;
 import mx.edu.utez.judicial.oficialia.model.UserDetails;
 import mx.edu.utez.judicial.oficialia.model.UserEditForm;
 import mx.edu.utez.judicial.oficialia.model.UserRole;
+import mx.edu.utez.judicial.oficialia.model.UserStatusForm;
 import mx.edu.utez.judicial.oficialia.model.UserSummary;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -299,5 +303,112 @@ class UserServiceTest {
         assertThrows(AccessDeniedException.class, () -> service.getForEdit(clerk, id));
         assertThrows(AccessDeniedException.class, () -> service.update(clerk, id, form));
         assertEquals("Ana Ruiz", users.findByEmail("ana@utez.edu.mx").orElseThrow().user().getFullName());
+    }
+
+    // RF 1.7: change the status of a user
+
+    private static UserStatusForm statusForm(String status, String reason) {
+        UserStatusForm form = new UserStatusForm();
+        form.setStatus(status);
+        form.setReason(reason);
+        return form;
+    }
+
+    private boolean listedAsActive(String email) {
+        return service.listForCourt(courtAdmin).stream().filter(user -> user.getEmail().equals(email))
+            .findFirst().orElseThrow().isActive();
+    }
+
+    @Test
+    void deactivatesAUserRightAwayWithoutDeletingIt() {
+        String id = registeredClerkId();
+
+        UserService.StatusChange change = service.changeStatus(courtAdmin, id, statusForm("inactive", "Cambió de área"));
+
+        assertTrue(change.changed());
+        assertEquals("La cuenta de Ana Ruiz quedó inactiva.", change.message());
+        assertFalse(listedAsActive("ana@utez.edu.mx"));
+        AuthService auth = new AuthService(users, new LoginAttemptTracker(java.time.Instant::now));
+        assertFalse(auth.isActive("ana@utez.edu.mx"));
+    }
+
+    @Test
+    void activatesAnInactiveUserAgain() {
+        String id = registeredClerkId();
+        service.changeStatus(courtAdmin, id, statusForm("inactive", null));
+
+        UserService.StatusChange change = service.changeStatus(courtAdmin, id, statusForm("active", null));
+
+        assertEquals("La cuenta de Ana Ruiz quedó activa.", change.message());
+        assertTrue(listedAsActive("ana@utez.edu.mx"));
+    }
+
+    @Test
+    void tellsWhenTheAccountAlreadyHadThatStatus() {
+        UserService.StatusChange change = service.changeStatus(courtAdmin, registeredClerkId(),
+            statusForm("active", null));
+
+        assertFalse(change.changed());
+        assertEquals("La cuenta de Ana Ruiz ya estaba activa.", change.message());
+    }
+
+    @Test
+    void theAdministratorCannotDeactivateTheirOwnAccount() {
+        String ownId = idIn(COURT, "admin@utez.edu.mx");
+
+        BusinessRuleException error = assertThrows(BusinessRuleException.class,
+            () -> service.changeStatus(courtAdmin, ownId, statusForm("inactive", null)));
+
+        assertEquals("No puede desactivar su propia cuenta.", error.getMessage());
+        assertTrue(listedAsActive("admin@utez.edu.mx"));
+    }
+
+    @Test
+    void changesNothingWithoutAValidNewStatus() {
+        String id = registeredClerkId();
+
+        assertThrows(BusinessRuleException.class, () -> service.changeStatus(courtAdmin, id, statusForm("", null)));
+        assertThrows(BusinessRuleException.class,
+            () -> service.changeStatus(courtAdmin, id, statusForm("inactive", "x".repeat(501))));
+        assertTrue(listedAsActive("ana@utez.edu.mx"));
+    }
+
+    @Test
+    void doesNotChangeTheStatusOfUsersOfOtherCourts() {
+        String otherId = idIn("Juzgado de Jojutla", "otra@utez.edu.mx");
+
+        assertThrows(NotFoundException.class,
+            () -> service.changeStatus(courtAdmin, otherId, statusForm("inactive", null)));
+        assertTrue(users.findByEmail("otra@utez.edu.mx").orElseThrow().active());
+    }
+
+    @Test
+    void onlyTheCourtAdministratorChangesTheStatusOfUsers() {
+        String id = registeredClerkId();
+        User clerk = new User("c@utez.edu.mx", "Clara Soto", UserRole.CLERK, COURT);
+
+        assertThrows(AccessDeniedException.class,
+            () -> service.changeStatus(clerk, id, statusForm("inactive", null)));
+        assertTrue(listedAsActive("ana@utez.edu.mx"));
+    }
+
+    @Test
+    void theRequestsCapturedByADeactivatedUserKeepShowingTheirName() {
+        InMemoryUserDao sampleUsers = new InMemoryUserDao(List.of());
+        SampleUsers.accounts().forEach(sampleUsers::insert);
+        UserService sampleService = new UserService(sampleUsers, new InMemoryCatalogDao());
+        User cuautlaAdmin = sampleUsers.findByEmail("admin.cuautla@utez.edu.mx").orElseThrow().user();
+        String lauraId = String.valueOf(sampleService.listForCourt(cuautlaAdmin).stream()
+            .filter(user -> user.getEmail().equals("lmendez@utez.edu.mx")).findFirst().orElseThrow().getId());
+        DemandRequestService requests = new DemandRequestService(
+            new InMemoryDemandRequestDao(InMemoryDemandRequestDao.sampleRequests()));
+        long capturedBefore = requests.search(COURT, "", null).stream()
+            .filter(request -> request.getCapturedBy().equals("Laura Méndez")).count();
+
+        sampleService.changeStatus(cuautlaAdmin, lauraId, statusForm("inactive", "Cambió de área"));
+
+        assertTrue(capturedBefore > 0);
+        assertEquals(capturedBefore, requests.search(COURT, "", null).stream()
+            .filter(request -> request.getCapturedBy().equals("Laura Méndez")).count());
     }
 }
