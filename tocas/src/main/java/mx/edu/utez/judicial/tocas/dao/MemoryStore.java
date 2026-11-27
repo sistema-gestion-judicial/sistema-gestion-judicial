@@ -33,6 +33,7 @@ final class MemoryStore {
     final AtomicInteger hearingSeq = new AtomicInteger(1000);
     final AtomicInteger notificationSeq = new AtomicInteger(1000);
     final AtomicInteger auditSeq = new AtomicInteger(1000);
+    final AtomicInteger entrySeq = new AtomicInteger(1000);
 
     private MemoryStore() {
         seed();
@@ -125,6 +126,97 @@ final class MemoryStore {
         hearing(500, LocalDate.of(2026, 10, 28), LocalTime.of(10, 0), "FIRST", "UPCOMING", judge2, true);
         hearing(501, LocalDate.of(2026, 11, 4), LocalTime.of(12, 0), "FIRST", "UPCOMING", judge2, true);
         notification(2, 500, "NEW_APPEAL", "Nueva toca asignada a su sala", "Toca T-000500/2026 · Elena Castillo vs Valeria Núñez · Juzgado 1.º Civil", LocalDateTime.of(2026, 10, 1, 9, 0), true);
+
+        // Every appeal gets hearings, audit trail and an initial resolution so any of them works end to end
+        int k = 0;
+        java.util.List<Appeal> ordered = new java.util.ArrayList<>(appeals.values());
+        ordered.sort(java.util.Comparator.comparingInt(Appeal::getId));
+        for (Appeal a : ordered) {
+            if (a.getId() == 418) continue;
+            completeDemo(a, a.getOwnerId() == 1 ? judge : judge2, k++);
+        }
+        seedHearingEntries();
+    }
+
+    /** Record of the hearing in progress (T-000418, 26/10) as in Figma, plus a short record for every finished hearing. */
+    private void seedHearingEntries() {
+        String[][] script = {
+            {"ATTENDANCE", "Se da inicio a la ponencia, comparecen ambas partes."},
+            {"EXPOSITION", "La parte apelante expone sus agravios."},
+            {"EVIDENCE", "Se admiten pruebas documentales."},
+            {"AGREEMENT", "Se cierra el periodo de alegatos."}
+        };
+        int[][] offsets = {{2, 14}, {5, 40}, {20, 3}, {41, 27}};
+        for (Hearing h : hearings) {
+            boolean live = h.getAppealId() == 418 && h.getDate().equals(LocalDate.of(2026, 10, 26));
+            if (!live && !"DONE".equals(h.getStatus())) continue;
+            LocalDateTime base = LocalDateTime.of(h.getDate(), h.getTime());
+            int n = live ? 4 : 3;
+            LocalDateTime last = base;
+            for (int i = 0; i < n; i++) {
+                HearingEntry e = new HearingEntry();
+                e.setId(entrySeq.incrementAndGet());
+                e.setHearingId(h.getId());
+                last = base.plusMinutes(offsets[i][0]).plusSeconds(offsets[i][1]);
+                e.setTimestamp(last);
+                e.setType(script[i][0]);
+                e.setText(script[i][1]);
+                e.setEdited(live && i == 2);
+                h.getEntries().add(e);
+                if (i == 0) h.setStartedAt(last);
+            }
+            if (!live) h.setFinishedAt(last.plusMinutes(1));
+        }
+    }
+
+    /** Fills missing demo data of an appeal: hearing, audit trail and initial resolution draft. */
+    private void completeDemo(Appeal a, User judge, int k) {
+        int id = a.getId();
+        boolean hasHearing = false;
+        for (Hearing h : hearings) if (h.getAppealId() == id) { hasHearing = true; break; }
+        LocalDate received = a.getReceivedDate();
+        if (!hasHearing) {
+            if (a.isConcluded()) {
+                hearing(id, nextWorkday(received.plusDays(10)), LocalTime.of(10, 0), "FIRST", "DONE", judge, true);
+            } else {
+                hearing(id, nextWorkday(LocalDate.of(2026, 11, 10).plusDays(k)), k % 2 == 0 ? LocalTime.of(10, 0) : LocalTime.of(12, 30), "FIRST", "UPCOMING", judge, true);
+            }
+        }
+        boolean hasRouted = false;
+        for (AuditEntry e : audit) if (e.getAppealId() == id && "Turnar a ponencia".equals(e.getAction())) hasRouted = true;
+        if (!hasRouted) {
+            audit(id, received.atTime(10, 5), "lmendez", "Turnar a ponencia", "Turnada a " + judge.getFullName());
+            audit(id, received.atTime(10, 20), "Sistema", "Agendar ponencia", "1.ª ponencia asignada automáticamente");
+        }
+        Resolution existing = resolutions.get(id);
+        if (existing == null) {
+            Resolution r = new Resolution();
+            r.setAppealId(id);
+            r.setStatus("DRAFT");
+            r.setVersion(1);
+            r.setStartedDate(received.plusDays(3));
+            r.setLastModified(received.plusDays(3).atTime(12, 0));
+            r.setResultando("<p>1. Con fecha " + FormatDate.num(received) + " se recibió en esta Sala el recurso de apelación interpuesto por " + a.getPlaintiff() + " en contra de la sentencia dictada por el " + a.getOriginCourt() + ".</p>");
+            r.setConsiderando("<p>I. Esta Sala es competente para conocer del presente recurso de apelación.</p>");
+            r.setResuelve("");
+            r.setPages(1);
+            resolutions.put(id, r);
+            audit(id, received.plusDays(3).atTime(12, 0), judge.getUsername(), "Crear resolución", "Inició la redacción de la resolución");
+        } else if (existing.isFinalized()) {
+            audit(id, existing.getStartedDate().atTime(9, 30), judge.getUsername(), "Crear resolución", "Inició la redacción de la resolución");
+            audit(id, existing.getFinalizedAt(), judge.getUsername(), "Finalizar resolución", "Finalizó la resolución (versión " + existing.getVersion() + ")");
+            if (existing.isSigned()) audit(id, existing.getSignedUploadedAt(), judge.getUsername(), "Subir resolución firmada", "Cargó el PDF firmado " + existing.getSignedFileName());
+            if (a.getConcludedDate() != null) audit(id, a.getConcludedDate().atTime(13, 0), judge.getUsername(), "Concluir toca", "Toca concluida");
+        }
+    }
+
+    private static LocalDate nextWorkday(LocalDate d) {
+        while (d.getDayOfWeek() == java.time.DayOfWeek.SATURDAY || d.getDayOfWeek() == java.time.DayOfWeek.SUNDAY) d = d.plusDays(1);
+        return d;
+    }
+
+    private static final class FormatDate {
+        static String num(LocalDate d) { return mx.edu.utez.judicial.tocas.service.FormatUtils.dateNum(d); }
     }
 
     private User user(int id, String username, String fullName, String email, String title, String room, String password) {

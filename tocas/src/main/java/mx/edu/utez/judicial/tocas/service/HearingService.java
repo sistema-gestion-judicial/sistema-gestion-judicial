@@ -8,6 +8,8 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
@@ -174,6 +176,108 @@ public class HearingService {
 
     private boolean isWeekend(LocalDate d) {
         return d.getDayOfWeek() == DayOfWeek.SATURDAY || d.getDayOfWeek() == DayOfWeek.SUNDAY;
+    }
+
+    // ---------------------------------------------------------------- record of the hearing
+
+    public static final Map<String, String> ENTRY_TYPES = new LinkedHashMap<>();
+    static {
+        ENTRY_TYPES.put("OBSERVATION", "Observación");
+        ENTRY_TYPES.put("ATTENDANCE", "Asistencia");
+        ENTRY_TYPES.put("EXPOSITION", "Exposición");
+        ENTRY_TYPES.put("EVIDENCE", "Pruebas");
+        ENTRY_TYPES.put("AGREEMENT", "Acuerdo");
+    }
+
+    /** Returns the hearing only when its appeal belongs to the user. */
+    public Hearing getOwned(User user, int hearingId) {
+        Hearing h = hearingDao.findById(hearingId);
+        if (h == null) throw new NotFoundException("Ponencia no encontrada.");
+        appealService.getOwned(user, h.getAppealId());
+        refresh(h);
+        return h;
+    }
+
+    public synchronized HearingEntry addEntry(User user, int hearingId, String type, String text) {
+        Hearing h = getOwned(user, hearingId);
+        if (h.isDone()) throw new BusinessException("La ponencia ya fue finalizada. El registro no puede modificarse.");
+        String clean = text == null ? "" : text.trim();
+        if (clean.isEmpty()) throw new BusinessException("Escriba lo que sucede en la ponencia antes de agregar la anotación.");
+        if (clean.length() > 2000) throw new BusinessException("La anotación no puede exceder 2000 caracteres.");
+        if (type == null || !ENTRY_TYPES.containsKey(type)) throw new BusinessException("Seleccione el tipo de anotación.");
+        HearingEntry e = new HearingEntry();
+        java.time.LocalDateTime ts = AppClock.now();
+        if (!h.getEntries().isEmpty()) {
+            java.time.LocalDateTime last = h.getEntries().get(h.getEntries().size() - 1).getTimestamp();
+            if (!ts.isAfter(last)) ts = last.plusSeconds(1); // keeps the record chronological in the demo clock
+        }
+        e.setTimestamp(ts);
+        e.setType(type);
+        e.setText(clean);
+        hearingDao.addEntry(h, e);
+        if (h.getStartedAt() == null) {
+            h.setStartedAt(e.getTimestamp());
+            log(user, h, "Iniciar ponencia", FormatUtils.hearingType(h.getType()) + " iniciada");
+        }
+        hearingDao.save(h);
+        return e;
+    }
+
+    public synchronized Hearing finish(User user, int hearingId) {
+        Hearing h = getOwned(user, hearingId);
+        if (h.isDone()) throw new BusinessException("La ponencia ya fue finalizada.");
+        if (h.getEntries().isEmpty()) throw new BusinessException("Agregue al menos una anotación antes de finalizar la ponencia.");
+        h.setStatus("DONE");
+        h.setFinishedAt(AppClock.now());
+        hearingDao.save(h);
+        log(user, h, "Finalizar ponencia", FormatUtils.hearingType(h.getType()) + " finalizada con " + h.getEntries().size() + " anotaciones");
+        return h;
+    }
+
+    private void log(User user, Hearing h, String action, String detail) {
+        AuditEntry entry = new AuditEntry();
+        entry.setAppealId(h.getAppealId());
+        entry.setTimestamp(AppClock.now());
+        entry.setUsername(user.getUsername());
+        entry.setAction(action);
+        entry.setDetail(detail);
+        auditDao.add(entry);
+    }
+
+    /** "41 minutos (10:00 – 10:41)": from the scheduled time (or first annotation) to the last annotation. */
+    public String durationText(Hearing h) {
+        if (h.getEntries().isEmpty()) return "Sin anotaciones";
+        java.time.LocalDateTime first = h.getEntries().get(0).getTimestamp();
+        java.time.LocalDateTime last = h.getEntries().get(h.getEntries().size() - 1).getTimestamp();
+        java.time.LocalDateTime start = java.time.LocalDateTime.of(h.getDate(), h.getTime());
+        if (start.isAfter(first)) start = first;
+        long minutes = Math.max(0, java.time.Duration.between(start, last).toMinutes());
+        String span = " (" + String.format("%02d:%02d", start.getHour(), start.getMinute()) + " – " + String.format("%02d:%02d", last.getHour(), last.getMinute()) + ")";
+        if (minutes < 1) return "Menos de 1 minuto" + span;
+        if (minutes >= 60) return (minutes / 60) + " h " + String.format("%02d", minutes % 60) + " min" + span;
+        return minutes + (minutes == 1 ? " minuto" : " minutos") + span;
+    }
+
+    /** Sample attendees: both parties plus the appellant's lawyer (name, role). */
+    public List<String[]> attendees(Appeal appeal) {
+        String[][] lawyers = {{"Lic. Marta Ruiz", "Abogada apelante"}, {"Lic. Héctor Beltrán", "Abogado apelante"},
+                {"Lic. Sandra Olvera", "Abogada apelante"}, {"Lic. Pablo Cervantes", "Abogado apelante"}};
+        List<String[]> list = new ArrayList<>();
+        list.add(new String[]{appeal.getPlaintiff(), "Parte apelante"});
+        list.add(new String[]{appeal.getDefendant(), "Parte apelada"});
+        list.add(lawyers[appeal.getId() % lawyers.length]);
+        return list;
+    }
+
+    public static String location(String room) {
+        if (room == null) return "Edificio A, piso 1";
+        return switch (room) {
+            case "Primera Sala Civil" -> "Edificio A, piso 1";
+            case "Segunda Sala Civil" -> "Edificio A, piso 2";
+            case "Tercera Sala Civil" -> "Edificio B, piso 1";
+            case "Sala Penal" -> "Edificio C, piso 3";
+            default -> "Edificio A, piso 1";
+        };
     }
 
     // ---------------------------------------------------------------- agenda

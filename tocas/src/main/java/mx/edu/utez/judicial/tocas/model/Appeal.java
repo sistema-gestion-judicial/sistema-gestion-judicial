@@ -16,6 +16,7 @@ public class Appeal {
     private int ownerId;
     private LocalDate concludedDate;
     private Hearing nextHearing;
+    private Resolution resolution;
 
     public Appeal() {}
 
@@ -43,6 +44,8 @@ public class Appeal {
     public void setOwnerId(int ownerId) { this.ownerId = ownerId; }
     public LocalDate getConcludedDate() { return concludedDate; }
     public void setConcludedDate(LocalDate concludedDate) { this.concludedDate = concludedDate; }
+    public Resolution getResolution() { return resolution; }
+    public void setResolution(Resolution resolution) { this.resolution = resolution; }
     public Hearing getNextHearing() { return nextHearing; }
     public void setNextHearing(Hearing nextHearing) { this.nextHearing = nextHearing; }
 

@@ -69,6 +69,14 @@ public final class FormatUtils {
         return d == null ? "" : dateNum(d.toLocalDate()) + " · " + time12(d.toLocalTime());
     }
 
+    public static String timeSec(LocalDateTime d) {
+        return d == null ? "" : f("%02d:%02d:%02d", d.getHour(), d.getMinute(), d.getSecond());
+    }
+
+    public static String time24(LocalDateTime d) {
+        return d == null ? "" : f("%02d:%02d", d.getHour(), d.getMinute());
+    }
+
     public static String hearingType(String type) {
         if (type == null) return "";
         return switch (type) {
@@ -85,7 +93,7 @@ public final class FormatUtils {
     }
 
     public static String hearingStatus(String status) {
-        return "DONE".equals(status) ? "Concluida" : "Próxima";
+        return "DONE".equals(status) ? "Finalizada" : "Próxima";
     }
 
     public static String resolutionStatus(String status) {
