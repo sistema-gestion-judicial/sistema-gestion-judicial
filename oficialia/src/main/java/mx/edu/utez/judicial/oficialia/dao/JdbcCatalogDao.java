@@ -30,6 +30,8 @@ public class JdbcCatalogDao implements CatalogDao {
         + "c.neighborhood, c.postal_code, c.municipality, c.phone, d.code AS district_code, "
         + "d.name AS district_name FROM courts c JOIN judicial_districts d ON d.code = c.district_code";
 
+    private static final String SELECT_MATTERS = "SELECT id, code, name, description, active FROM subject_matters";
+
     private final Database database;
 
     public JdbcCatalogDao(Database database) {
@@ -118,14 +120,82 @@ public class JdbcCatalogDao implements CatalogDao {
 
     @Override
     public List<SubjectMatter> findSubjectMatters() {
-        List<SubjectMatter> matters = new ArrayList<>();
+        return querySubjectMatters(SELECT_MATTERS + " ORDER BY name", null);
+    }
+
+    @Override
+    public Optional<SubjectMatter> findSubjectMatter(String code) {
+        return querySubjectMatters(SELECT_MATTERS + " WHERE code = ?", code).stream().findFirst();
+    }
+
+    /** The code and the name are both UNIQUE keys, so the key in the message tells which one clashed. */
+    @Override
+    public void insertSubjectMatter(SubjectMatter matter) {
+        String sql = "INSERT INTO subject_matters (code, name, description, active) VALUES (?, ?, ?, ?)";
+        try (Connection connection = database.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, matter.getCode());
+            statement.setString(2, matter.getName());
+            statement.setString(3, matter.getDescription());
+            statement.setBoolean(4, matter.isActive());
+            statement.executeUpdate();
+        } catch (SQLIntegrityConstraintViolationException e) {
+            if (e.getErrorCode() == MYSQL_DUPLICATE_ENTRY) {
+                boolean codeClashed = e.getMessage() != null && e.getMessage().contains("uq_subject_matters_code");
+                throw codeClashed ? new DuplicateCodeException(matter.getCode(), e)
+                    : new DuplicateNameException(matter.getName(), e);
+            }
+            throw new DataAccessException("Could not save the subject matter " + matter.getCode(), e);
+        } catch (SQLException e) {
+            throw new DataAccessException("Could not save the subject matter " + matter.getCode(), e);
+        }
+    }
+
+    /** demand_requests.matter follows the name with ON UPDATE CASCADE (V008), so the requests keep it. */
+    @Override
+    public void updateSubjectMatter(String code, String name, String description) {
         try (Connection connection = database.getConnection();
              PreparedStatement statement = connection.prepareStatement(
-                 "SELECT id, code, name, description, active FROM subject_matters ORDER BY name");
-             ResultSet rows = statement.executeQuery()) {
-            while (rows.next()) {
-                matters.add(new SubjectMatter(rows.getInt("id"), rows.getString("code"), rows.getString("name"),
-                    rows.getString("description"), rows.getBoolean("active")));
+                 "UPDATE subject_matters SET name = ?, description = ? WHERE code = ?")) {
+            statement.setString(1, name);
+            statement.setString(2, description);
+            statement.setString(3, code);
+            statement.executeUpdate();
+        } catch (SQLIntegrityConstraintViolationException e) {
+            if (e.getErrorCode() == MYSQL_DUPLICATE_ENTRY) {
+                throw new DuplicateNameException(name, e);
+            }
+            throw new DataAccessException("Could not update the subject matter " + code, e);
+        } catch (SQLException e) {
+            throw new DataAccessException("Could not update the subject matter " + code, e);
+        }
+    }
+
+    @Override
+    public void updateSubjectMatterStatus(String code, boolean active) {
+        try (Connection connection = database.getConnection();
+             PreparedStatement statement = connection.prepareStatement(
+                 "UPDATE subject_matters SET active = ? WHERE code = ?")) {
+            statement.setBoolean(1, active);
+            statement.setString(2, code);
+            statement.executeUpdate();
+        } catch (SQLException e) {
+            throw new DataAccessException("Could not change the status of the subject matter " + code, e);
+        }
+    }
+
+    private List<SubjectMatter> querySubjectMatters(String sql, String code) {
+        List<SubjectMatter> matters = new ArrayList<>();
+        try (Connection connection = database.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            if (code != null) {
+                statement.setString(1, code);
+            }
+            try (ResultSet rows = statement.executeQuery()) {
+                while (rows.next()) {
+                    matters.add(new SubjectMatter(rows.getInt("id"), rows.getString("code"), rows.getString("name"),
+                        rows.getString("description"), rows.getBoolean("active")));
+                }
             }
         } catch (SQLException e) {
             throw new DataAccessException("Could not read subject matters", e);
