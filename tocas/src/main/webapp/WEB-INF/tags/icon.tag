@@ -27,5 +27,16 @@
 <c:when test="${name == 'check-filled'}"><circle cx="12" cy="12" r="10" fill="currentColor" stroke="none"/><path d="m7.5 12.2 3 3 6-6.4" stroke="#fff" stroke-width="2.2"/></c:when>
 <c:when test="${name == 'ring'}"><circle cx="12" cy="12" r="8.5" stroke-width="2.2"/></c:when>
 <c:when test="${name == 'ring-dot'}"><circle cx="12" cy="12" r="8.5" stroke-width="2.2"/><circle cx="12" cy="12" r="3.2" fill="currentColor" stroke="none"/></c:when>
+<c:when test="${name == 'home'}"><path d="M4 11 12 4l8 7v9H4z"/><path d="M10 20v-6h4v6"/></c:when>
+<c:when test="${name == 'gavel'}"><path d="m14 5 5 5M11 8l5 5M4 20l7-7"/><path d="m12 4 3-1 6 6-1 3z"/></c:when>
+<c:when test="${name == 'bell'}"><path d="M6 17V11a6 6 0 0 1 12 0v6l1.5 2h-15z"/><path d="M10 21h4"/></c:when>
+<c:when test="${name == 'settings'}"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></c:when>
+<c:when test="${name == 'logout'}"><path d="M10 4H5v16h5M15 8l4 4-4 4M19 12H9"/></c:when>
+<c:when test="${name == 'list-ul'}"><path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r="1" fill="currentColor"/><circle cx="4.5" cy="12" r="1" fill="currentColor"/><circle cx="4.5" cy="18" r="1" fill="currentColor"/></c:when>
+<c:when test="${name == 'list-ol'}"><path d="M10 6h10M10 12h10M10 18h10M4 5l1-1v4M3.5 13h2l-2 3h2.2"/></c:when>
+<c:when test="${name == 'align-left'}"><path d="M4 6h16M4 10h10M4 14h16M4 18h10"/></c:when>
+<c:when test="${name == 'align-center'}"><path d="M4 6h16M7 10h10M4 14h16M7 18h10"/></c:when>
+<c:when test="${name == 'align-right'}"><path d="M4 6h16M10 10h10M4 14h16M10 18h10"/></c:when>
+<c:when test="${name == 'align-justify'}"><path d="M4 6h16M4 10h16M4 14h16M4 18h16"/></c:when>
 </c:choose>
 </svg>

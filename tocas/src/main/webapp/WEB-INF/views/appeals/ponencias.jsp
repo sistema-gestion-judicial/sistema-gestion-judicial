@@ -16,8 +16,8 @@
             <tr class="${h.id == selectedHearing.id ? 'row-selected' : ''}">
               <td><strong>${f:dateNum(h.date)}</strong><small>${f:time12(h.time)}</small></td>
               <td><c:out value="${h.judgeName}"/></td><td>${f:hearingType(h.type)}</td>
-              <td><span class="tag ${h.done ? 'tag-green tag-dot' : 'tag-tan'}">${f:hearingStatus(h.status)}</span></td>
-              <td class="text-end"><a class="row-action" href="${ctx}/tocas/detail?id=${appeal.id}&tab=ponencias&hearing=${h.id}"><t:icon name="eye" size="16"/> Ver</a></td>
+              <td><span class="tag ${h.done ? 'tag-green tag-dot' : h.inProgress ? 'tag-sage' : 'tag-tan'}">${h.statusLabel}</span></td>
+              <td class="text-end"><a class="row-action" href="${ctx}/tocas/hearing?id=${h.id}"><t:icon name="eye" size="16"/> Ver</a></td>
             </tr>
           </c:forEach>
           </tbody></table></div>
@@ -30,13 +30,14 @@
         <c:if test="${not empty selectedHearing}">
         <div class="p-3">
           <div class="d-flex gap-3 mb-3"><span class="date-tile"><strong>${f:dayNum(selectedHearing.date)}</strong><small>${f:monthAbbr(selectedHearing.date)}</small></span>
-            <div class="small"><strong>${f:hearingType(selectedHearing.type)}</strong><br>${f:dateNum(selectedHearing.date)} · ${f:hearingStatus(selectedHearing.status)}</div></div>
+            <div class="small"><strong>${f:hearingType(selectedHearing.type)}</strong><br>${f:dateNum(selectedHearing.date)} · ${selectedHearing.statusLabel}</div></div>
           <div class="kv"><span>Hora</span><strong>${f:time12(selectedHearing.time)}</strong></div>
           <div class="kv"><span>Ponente</span><strong><c:out value="${selectedHearing.judgeName}"/></strong></div>
           <div class="kv"><span>Tipo</span><strong>${f:hearingType(selectedHearing.type)}</strong></div>
           <div class="kv"><span>Sala</span><strong>${selectedHearing.roomName}</strong></div>
           <c:if test="${selectedHearing.autoAssigned}"><p class="small">Fecha asignada automáticamente.</p></c:if>
-          <a class="btn btn-outline-g w-100 mt-3" href="${ctx}/agenda?month=${f:isoMonth(selectedHearing.date)}&date=${selectedHearing.date}">Ver en la agenda</a>
+          <a class="btn btn-dark-g w-100 mt-3" href="${ctx}/tocas/hearing?id=${selectedHearing.id}">Abrir registro de la ponencia</a>
+          <a class="btn btn-outline-g w-100 mt-2" href="${ctx}/agenda?month=${f:isoMonth(selectedHearing.date)}&date=${selectedHearing.date}">Ver en la agenda</a>
         </div></c:if>
         <c:if test="${empty selectedHearing}"><p class="text-muted p-3 m-0">Seleccione una ponencia.</p></c:if>
       </section>

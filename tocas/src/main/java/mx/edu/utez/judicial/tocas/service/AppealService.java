@@ -42,6 +42,7 @@ public class AppealService {
             String haystack = (a.getNumber() + " " + a.getOriginCourt() + " " + a.getPlaintiff() + " " + a.getDefendant()).toLowerCase();
             if (!needle.isEmpty() && !haystack.contains(needle)) continue;
             a.setNextHearing(nextHearing(a.getId(), today));
+            a.setResolution(resolutionDao.findByAppeal(a.getId()));
             filtered.add(a);
         }
         filtered.sort((x, y) -> {

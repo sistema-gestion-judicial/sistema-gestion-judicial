@@ -25,6 +25,7 @@ public class ResolutionService {
     private static final Set<String> ALLOWED_TAGS = Set.of("b", "i", "u", "strong", "em", "ul", "ol", "li", "br", "p", "div", "span");
     private static final Pattern TAG = Pattern.compile("<(/?)([a-zA-Z0-9]+)([^>]*)>");
     private static final Pattern ALIGN = Pattern.compile("text-align\\s*:\\s*(left|right|center|justify)");
+    private static final Pattern ALIGN_ATTR = Pattern.compile("align\\s*=\\s*[\"']?(left|right|center|justify)");
     private static final Pattern PDF_PAGE = Pattern.compile("/Type\\s*/Page(?![s])");
 
     private final ResolutionDao resolutionDao = new ResolutionDao();
@@ -183,7 +184,9 @@ public class ResolutionService {
                 } else {
                     replacement = "<" + tag;
                     Matcher a = ALIGN.matcher(m.group(3));
+                    Matcher al = ALIGN_ATTR.matcher(m.group(3));
                     if (a.find()) replacement += " style=\"text-align:" + a.group(1) + "\"";
+                    else if (al.find()) replacement += " style=\"text-align:" + al.group(1) + "\"";
                     replacement += ">";
                 }
             }

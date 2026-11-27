@@ -10,7 +10,7 @@
   <title>Iniciar sesión · SSCT</title>
   <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="${ctx}/webjars/bootstrap/5.3.3/css/bootstrap.min.css">
-  <link rel="stylesheet" href="${ctx}/assets/css/app.css">
+  <link rel="stylesheet" href="${ctx}/assets/css/styles.css">
 </head>
 <body class="login-body">
 <div class="login-split">

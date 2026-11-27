@@ -2,7 +2,7 @@
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="t" tagdir="/WEB-INF/tags" %>
 <%@ attribute name="appeal" required="true" type="mx.edu.utez.judicial.tocas.model.Appeal" %>
-<%@ attribute name="proposal" required="true" %>
+<%@ attribute name="proposal" required="true" type="java.lang.Object" %>
 <%@ attribute name="returnTab" required="true" %>
 <%@ attribute name="minDate" required="true" %>
 <c:set var="ctx" value="${pageContext.request.contextPath}"/>

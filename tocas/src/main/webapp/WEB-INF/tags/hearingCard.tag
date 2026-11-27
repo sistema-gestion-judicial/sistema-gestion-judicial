@@ -8,7 +8,7 @@
   <span class="hc-date"><strong>${f:dayNum(hearing.date)}</strong><small>${f:monthAbbr(hearing.date)}</small></span>
   <span class="hc-body">
     <span class="hc-top"><strong>${hearing.appeal.number}</strong>
-      <span class="tag ${hearing.done ? 'tag-green' : 'tag-tan'}">${f:hearingStatus(hearing.status)}</span></span>
+      <span class="tag ${hearing.done ? 'tag-green' : hearing.inProgress ? 'tag-sage' : 'tag-tan'}">${hearing.statusLabel}</span></span>
     <span>${hearing.appeal.originCourt}</span>
     <span>${hearing.appeal.parties}</span>
   </span>

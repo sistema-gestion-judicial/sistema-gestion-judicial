@@ -36,7 +36,7 @@ Las contraseñas se guardan con PBKDF2, no en texto plano. Son cuentas de ejempl
   subcarpeta `tocas-uploads`).
 
 ## Base de datos (pendiente)
-
+[webapp](src/main/webapp)
 Todavía no se conecta: la capa `dao/` usa datos en memoria (`MemoryStore`, se reinician al reiniciar Tomcat).
 Cuando se conecte, se usa lo que ya ofrece `common` (ver `docs/base-de-datos.md`):
 

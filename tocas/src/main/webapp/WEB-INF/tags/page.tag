@@ -4,6 +4,7 @@
 <%@ attribute name="title" required="true" %>
 <%@ attribute name="subtitle" required="false" %>
 <%@ attribute name="active" required="false" %>
+<%@ attribute name="crumb" required="false" %>
 <%@ attribute name="titleExtra" fragment="true" required="false" %>
 <%@ attribute name="actions" fragment="true" required="false" %>
 <%@ attribute name="tabs" fragment="true" required="false" %>
@@ -19,38 +20,14 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="${ctx}/webjars/bootstrap/5.3.3/css/bootstrap.min.css">
-  <link rel="stylesheet" href="${ctx}/assets/css/app.css">
+  <link rel="stylesheet" href="${ctx}/assets/css/styles.css">
 </head>
 <body class="app-body">
 <div class="hero" aria-hidden="true"></div>
-<div class="app-shell container-xl">
-  <header class="topbar">
-    <a class="brand" href="${ctx}/home">
-      <span class="logo-box">Logo</span>
-      <span class="brand-text"><strong>SSCT</strong><small>Segunda instancia</small></span>
-    </a>
-    <button class="nav-toggle d-lg-none" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav" aria-controls="mainNav" aria-expanded="false" aria-label="Abrir menú">
-      <t:icon name="chevron-down"/>
-    </button>
-    <nav id="mainNav" class="main-nav collapse d-lg-flex">
-      <a class="${active == 'home' ? 'active' : ''}" href="${ctx}/home">Inicio</a>
-      <a class="${active == 'tocas' ? 'active' : ''}" href="${ctx}/tocas">Mis tocas</a>
-      <a class="${active == 'agenda' ? 'active' : ''}" href="${ctx}/agenda">Agenda</a>
-      <a class="${active == 'notifications' ? 'active' : ''}" href="${ctx}/notifications">Notificaciones</a>
-    </nav>
-    <div class="dropdown user-menu">
-      <button class="user-btn" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-        <span class="avatar"><t:icon name="user" size="20"/></span>
-        <span class="user-text"><strong><c:out value="${sessionScope.user.fullName}"/></strong><small><c:out value="${sessionScope.user.roleTitle}"/></small></span>
-        <t:icon name="chevron-down" size="16"/>
-      </button>
-      <ul class="dropdown-menu dropdown-menu-end">
-        <li>
-          <form method="post" action="${ctx}/logout"><button class="dropdown-item" type="submit">Cerrar sesión</button></form>
-        </li>
-      </ul>
-    </div>
-  </header>
+<div class="app-layout">
+  <jsp:include page="/WEB-INF/views/includes/sidebar.jsp"><jsp:param name="active" value="${active}"/></jsp:include>
+  <div class="app-main">
+  <jsp:include page="/WEB-INF/views/includes/topbar.jsp"><jsp:param name="title" value="${title}"/><jsp:param name="crumb" value="${crumb}"/></jsp:include>
 
   <section class="page-head">
     <div class="page-head-row">
@@ -75,7 +52,9 @@
     </c:if>
     <jsp:doBody/>
   </main>
+  </div>
 </div>
+<jsp:include page="/WEB-INF/views/includes/confirm-modal.jsp"/>
 <script src="${ctx}/webjars/bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
 <script src="${ctx}/assets/js/app.js"></script>
 <c:if test="${not empty scripts}"><jsp:invoke fragment="scripts"/></c:if>

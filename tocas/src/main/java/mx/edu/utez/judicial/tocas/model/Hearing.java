@@ -1,7 +1,10 @@
 package mx.edu.utez.judicial.tocas.model;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class Hearing {
     private int id;
@@ -15,6 +18,9 @@ public class Hearing {
     private String roomName;
     private boolean autoAssigned;
     private Appeal appeal;
+    private LocalDateTime startedAt;
+    private LocalDateTime finishedAt;
+    private final List<HearingEntry> entries = new CopyOnWriteArrayList<>();
 
     public Hearing() {}
 
@@ -40,6 +46,16 @@ public class Hearing {
     public void setAutoAssigned(boolean autoAssigned) { this.autoAssigned = autoAssigned; }
     public Appeal getAppeal() { return appeal; }
     public void setAppeal(Appeal appeal) { this.appeal = appeal; }
+
+    public LocalDateTime getStartedAt() { return startedAt; }
+    public void setStartedAt(LocalDateTime startedAt) { this.startedAt = startedAt; }
+    public LocalDateTime getFinishedAt() { return finishedAt; }
+    public void setFinishedAt(LocalDateTime finishedAt) { this.finishedAt = finishedAt; }
+    public List<HearingEntry> getEntries() { return entries; }
+
+    /** Upcoming hearing that already has annotations. */
+    public boolean isInProgress() { return "UPCOMING".equals(status) && !entries.isEmpty(); }
+    public String getStatusLabel() { return isDone() ? "Finalizada" : isInProgress() ? "En curso" : "Próxima"; }
 
     public boolean isUpcoming() { return "UPCOMING".equals(status); }
     public boolean isDone() { return "DONE".equals(status); }

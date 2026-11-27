@@ -39,7 +39,8 @@
           <td><c:out value="${a.plaintiff}"/><small>vs. <c:out value="${a.defendant}"/></small></td>
           <td><c:choose><c:when test="${not empty a.nextHearing}">${f:dateShort(a.nextHearing.date)}</c:when><c:otherwise><span class="text-muted">Sin ponencia</span></c:otherwise></c:choose>
               <small>Recepción: ${f:dateShort(a.receivedDate)}</small></td>
-          <td><span class="tag ${a.concluded ? 'tag-green' : 'tag-blue'} tag-dot">${f:appealStatus(a.status)}</span></td>
+          <td><span class="tag ${a.concluded ? 'tag-green' : 'tag-blue'} tag-dot">${f:appealStatus(a.status)}</span>
+              <c:if test="${not empty a.resolution}"><small>Resolución: ${f:resolutionStatus(a.resolution.status)} · v${a.resolution.version}<c:if test="${a.resolution.signed}"> · firmada</c:if></small></c:if></td>
           <td class="text-end"><a class="row-action" href="${ctx}/tocas/detail?id=${a.id}"><t:icon name="eye" size="16"/> Ver</a></td>
         </tr>
       </c:forEach>

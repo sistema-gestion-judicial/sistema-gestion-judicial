@@ -7,7 +7,8 @@
 <%@ attribute name="actions" fragment="true" required="false" %>
 <%@ attribute name="scripts" fragment="true" required="false" %>
 <c:set var="ctx" value="${pageContext.request.contextPath}"/>
-<t:page title="Toca ${appeal.number}" subtitle="${appeal.parties} · ${appeal.originCourt}" active="tocas">
+<c:set var="tabLabel" value="${tab == 'expediente' ? 'Expediente completo' : tab == 'ponencias' ? 'Ponencias' : tab == 'resolucion' ? 'Resolución' : tab == 'bitacora' ? 'Bitácora' : 'Resumen'}"/>
+<t:page title="Toca ${appeal.number}" subtitle="${appeal.parties} · ${appeal.originCourt}" active="tocas" crumb="Mis tocas › ${appeal.number} › ${tabLabel}">
   <jsp:attribute name="titleExtra">
     <span class="tag ${appeal.concluded ? 'tag-green' : 'tag-blue'} tag-dot align-middle">${f:appealStatus(appeal.status)}</span>
   </jsp:attribute>

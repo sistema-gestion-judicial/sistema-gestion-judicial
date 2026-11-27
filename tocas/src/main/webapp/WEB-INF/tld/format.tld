@@ -56,6 +56,16 @@
     <function-signature>java.lang.String dateTime24(java.time.LocalDateTime)</function-signature>
   </function>
   <function>
+    <name>timeSec</name>
+    <function-class>mx.edu.utez.judicial.tocas.service.FormatUtils</function-class>
+    <function-signature>java.lang.String timeSec(java.time.LocalDateTime)</function-signature>
+  </function>
+  <function>
+    <name>time24</name>
+    <function-class>mx.edu.utez.judicial.tocas.service.FormatUtils</function-class>
+    <function-signature>java.lang.String time24(java.time.LocalDateTime)</function-signature>
+  </function>
+  <function>
     <name>dateTime12</name>
     <function-class>mx.edu.utez.judicial.tocas.service.FormatUtils</function-class>
     <function-signature>java.lang.String dateTime12(java.time.LocalDateTime)</function-signature>

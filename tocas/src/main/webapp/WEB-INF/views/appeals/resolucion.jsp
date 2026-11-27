@@ -33,7 +33,7 @@
               <a class="btn btn-outline-g" href="${ctx}/tocas/resolution/preview?id=${appeal.id}">Vista previa</a>
               <a class="btn btn-outline-g" href="${ctx}/tocas/resolution/preview?id=${appeal.id}&print=1">Imprimir</a>
               <c:if test="${resolution.draft && !appeal.concluded}">
-                <form method="post" action="${ctx}/tocas/resolution/finalize" data-confirm="¿Finalizar la resolución? Ya no podrá editarse.">
+                <form method="post" action="${ctx}/tocas/resolution/finalize" data-confirm="¿Desea finalizar la resolución de la toca ${appeal.number}?" data-confirm-title="FINALIZAR RESOLUCIÓN" data-confirm-rows="Toca|${appeal.number};Versión del borrador|${resolution.version}" data-confirm-warning="La resolución ya no podrá editarse." data-confirm-ok="Finalizar resolución">
                   <input type="hidden" name="id" value="${appeal.id}">
                   <input type="hidden" name="resultando" value="<c:out value='${resolution.resultando}'/>">
                   <input type="hidden" name="considerando" value="<c:out value='${resolution.considerando}'/>">
