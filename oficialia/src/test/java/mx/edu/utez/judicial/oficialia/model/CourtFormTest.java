@@ -72,6 +72,15 @@ class CourtFormTest {
     }
 
     @Test
+    void rejectsAPhoneWithOnlySymbols() {
+        for (String onlySymbols : new String[] {"---", "()", "+"}) {
+            CourtForm form = validForm();
+            form.setPhone(onlySymbols);
+            assertTrue(form.validate().containsKey("phone"), onlySymbols);
+        }
+    }
+
+    @Test
     void rejectsAPhoneThatIsNotTenDigitsAndHasNoDigitsWhenEmpty() {
         CourtForm form = validForm();
         form.setPhone("12345");

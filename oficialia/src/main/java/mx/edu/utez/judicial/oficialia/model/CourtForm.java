@@ -129,7 +129,9 @@ public class CourtForm {
             errors.put("postalCode", "El código postal debe tener 5 dígitos.");
         }
         required(errors, "municipality", municipality, MAX_MUNICIPALITY_LENGTH, "el municipio");
-        if (!phone.isEmpty() && (!phone.matches("[0-9 ()+-]+") || getPhoneDigits().length() != PHONE_DIGITS)) {
+        // Only symbols, such as "---", leave no digits at all
+        String digits = getPhoneDigits();
+        if (!phone.isEmpty() && (!phone.matches("[0-9 ()+-]+") || digits == null || digits.length() != PHONE_DIGITS)) {
             errors.put("phone", "Escriba un teléfono de " + PHONE_DIGITS + " dígitos.");
         }
         if (subjectMatterCodes.isEmpty()) {
