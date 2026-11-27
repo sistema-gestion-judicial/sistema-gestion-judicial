@@ -126,3 +126,9 @@ fieldset:disabled .form-check-label {
 .party-role::first-letter {
   text-transform: uppercase;
 }
+
+/* A row action that posts a change is a button: it keeps the look of the row links */
+button.row-action {
+  border: 0;
+  background: transparent;
+}

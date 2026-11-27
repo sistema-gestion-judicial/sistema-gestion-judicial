@@ -11,10 +11,12 @@ import mx.edu.utez.judicial.oficialia.exception.AccessDeniedException;
 import mx.edu.utez.judicial.oficialia.filter.AuthFilter;
 import mx.edu.utez.judicial.oficialia.model.RegisteredUser;
 import mx.edu.utez.judicial.oficialia.model.User;
+import mx.edu.utez.judicial.oficialia.model.UserStatusForm;
 import mx.edu.utez.judicial.oficialia.service.UserService;
 
 /**
- * Lists the users of the administrator's court (RF 1.4 and 1.6: a registered or corrected user shows up here).
+ * Lists the users of the administrator's court (RF 1.4 to 1.7): a registered or corrected user
+ * shows up here, and each row can be activated or deactivated after a confirmation.
  */
 @WebServlet("/users")
 public class UserListServlet extends HttpServlet {
@@ -38,6 +40,7 @@ public class UserListServlet extends HttpServlet {
         }
         moveRegisteredUser(request);
         DemandRequestListServlet.moveFlashMessage(request);
+        request.setAttribute("maxReasonLength", UserStatusForm.MAX_REASON_LENGTH);
         request.getRequestDispatcher(VIEW).forward(request, response);
     }
 

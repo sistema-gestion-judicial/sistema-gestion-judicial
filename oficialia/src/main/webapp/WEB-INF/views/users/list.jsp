@@ -2,6 +2,7 @@
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <c:set var="pageTitle" value="Usuarios" />
 <c:set var="activeNav" value="users" />
+<c:set var="pageScript" value="user-status.js" />
 <%@ include file="/WEB-INF/views/layout/head.jspf" %>
 <%@ include file="/WEB-INF/views/layout/app-start.jspf" %>
 
@@ -39,6 +40,12 @@
 <c:if test="${not empty flashMessage}">
   <div class="alert alert-mor-success d-flex gap-2 align-items-start" role="status">
     <i class="bi bi-check-circle mt-1"></i> <span><c:out value="${flashMessage}" /></span>
+  </div>
+</c:if>
+
+<c:if test="${not empty flashWarning}">
+  <div class="alert alert-mor-warning d-flex gap-2 align-items-start" role="alert">
+    <i class="bi bi-exclamation-triangle mt-1"></i> <span><c:out value="${flashWarning}" /></span>
   </div>
 </c:if>
 
@@ -90,6 +97,19 @@
                   <a class="row-action" href="${editUrl}" aria-label="Editar a <c:out value='${listedUser.fullName}' />">
                     <i class="bi bi-pencil" aria-hidden="true"></i> Editar
                   </a>
+                  <%-- Opens the confirmation that names the user; the change is posted from there --%>
+                  <button type="button" class="row-action" data-bs-toggle="modal" data-bs-target="#statusModal"
+                          data-user-id="${listedUser.id}" data-user-name="<c:out value='${listedUser.fullName}' />"
+                          data-next-status="${listedUser.active ? 'inactive' : 'active'}">
+                    <c:choose>
+                      <c:when test="${listedUser.active}">
+                        <i class="bi bi-person-dash" aria-hidden="true"></i> Desactivar
+                      </c:when>
+                      <c:otherwise>
+                        <i class="bi bi-person-check" aria-hidden="true"></i> Activar
+                      </c:otherwise>
+                    </c:choose>
+                  </button>
                 </td>
               </tr>
             </c:forEach>
@@ -101,6 +121,30 @@
       </div>
     </c:otherwise>
   </c:choose>
+</div>
+
+<div class="modal modal-mor fade" id="statusModal" tabindex="-1" aria-labelledby="statusModalTitle">
+  <div class="modal-dialog modal-dialog-centered">
+    <form class="modal-content" method="post" action="${ctx}/users/status">
+      <input type="hidden" name="id" data-status-id>
+      <input type="hidden" name="status" data-status-value>
+      <div class="modal-header">
+        <h2 class="modal-title" id="statusModalTitle" data-status-title>Cambiar el estado de la cuenta</h2>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-lead" data-status-question></p>
+        <p class="mb-3" data-status-effect></p>
+        <label for="statusReason" class="form-label">Motivo del cambio</label>
+        <textarea id="statusReason" name="reason" class="form-control" rows="3" maxlength="${maxReasonLength}"
+                  placeholder="Opcional. Queda registrado en la bitácora."></textarea>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="submit" class="btn btn-primary" data-status-submit>Confirmar</button>
+      </div>
+    </form>
+  </div>
 </div>
 
 <%@ include file="/WEB-INF/views/layout/app-end.jspf" %>

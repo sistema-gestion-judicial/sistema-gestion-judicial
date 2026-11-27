@@ -90,7 +90,7 @@ class RouteRulesTest {
 
     @Test
     void onlyTheCourtAdministratorManagesUsers() {
-        for (String path : new String[] {"/users", "/users/new", "/users/edit"}) {
+        for (String path : new String[] {"/users", "/users/new", "/users/edit", "/users/status"}) {
             assertTrue(RouteRules.canAccess(path, UserRole.COURT_ADMIN), path);
             assertFalse(RouteRules.canAccess(path, UserRole.CLERK), path);
             assertFalse(RouteRules.canAccess(path, UserRole.JUDICIAL_BODY_ADMIN), path);
