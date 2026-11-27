@@ -1,5 +1,6 @@
-package mx.edu.utez.judicial.audiencias.dao.cases;
 
+package mx.edu.utez.judicial.audiencias.dao.cases;
+import mx.edu.utez.judicial.audiencias.dao.DataAccessException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -11,15 +12,13 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-
-import mx.edu.utez.judicial.audiencias.dao.DataAccessException;
 import mx.edu.utez.judicial.audiencias.model.Case;
 import mx.edu.utez.judicial.common.db.Database;
 
 public class JdbcCaseDao implements CaseDao {
 
     private static final String SELECT = "SELECT id, case_number, court_id, matter, defendant, "
-        + "plaintiff, status, created_at, closed_at FROM cases";
+        + "plaintiff, status, created_at, closed_at, compiled_url, compiled_at FROM cases";
 
     private final Database database;
 
@@ -76,7 +75,7 @@ public class JdbcCaseDao implements CaseDao {
             statement.setString(3, caseEntity.getMatter());
             setNullableString(statement, 4, caseEntity.getDefendant());
             setNullableString(statement, 5, caseEntity.getPlaintiff());
-            statement.setBoolean(6, caseEntity.isStatus());
+            statement.setBoolean(6, caseEntity.isActive());
             statement.executeUpdate();
             try (ResultSet keys = statement.getGeneratedKeys()) {
                 keys.next();
@@ -88,15 +87,41 @@ public class JdbcCaseDao implements CaseDao {
     }
 
     @Override
-    public void close(Case caseEntity, LocalDateTime closedAt) {
+    public void close(int id, LocalDateTime closedAt) {
         try (Connection connection = database.getConnection();
              PreparedStatement statement =
                  connection.prepareStatement("UPDATE cases SET status = 0, closed_at = ? WHERE id = ?")) {
             statement.setTimestamp(1, Timestamp.valueOf(closedAt));
-            statement.setInt(2, caseEntity.getId());
+            statement.setInt(2, id);
             statement.executeUpdate();
         } catch (SQLException e) {
-            throw new DataAccessException("Could not close the case " + caseEntity.getId(), e);
+            throw new DataAccessException("Could not close the case " + id, e);
+        }
+    }
+
+    @Override
+    public void saveCompiledDocument(int id, String compiledUrl, LocalDateTime compiledAt) {
+        try (Connection connection = database.getConnection();
+             PreparedStatement statement = connection.prepareStatement(
+                 "UPDATE cases SET compiled_url = ?, compiled_at = ? WHERE id = ?")) {
+            statement.setString(1, compiledUrl);
+            statement.setTimestamp(2, Timestamp.valueOf(compiledAt));
+            statement.setInt(3, id);
+            statement.executeUpdate();
+        } catch (SQLException e) {
+            throw new DataAccessException("Could not save the compiled document of case " + id, e);
+        }
+    }
+
+    @Override
+    public void invalidateCompiledDocument(int id) {
+        try (Connection connection = database.getConnection();
+             PreparedStatement statement = connection.prepareStatement(
+                 "UPDATE cases SET compiled_url = NULL, compiled_at = NULL WHERE id = ?")) {
+            statement.setInt(1, id);
+            statement.executeUpdate();
+        } catch (SQLException e) {
+            throw new DataAccessException("Could not invalidate the compiled document of case " + id, e);
         }
     }
 
@@ -134,9 +159,11 @@ public class JdbcCaseDao implements CaseDao {
 
     private static Case toCase(ResultSet rows) throws SQLException {
         Timestamp closedAt = rows.getTimestamp("closed_at");
+        Timestamp compiledAt = rows.getTimestamp("compiled_at");
         return new Case(rows.getInt("id"), rows.getString("case_number"), rows.getString("court_id"),
             rows.getString("matter"), rows.getString("defendant"), rows.getString("plaintiff"),
             rows.getBoolean("status"), rows.getTimestamp("created_at").toLocalDateTime(),
-            closedAt == null ? null : closedAt.toLocalDateTime());
+            closedAt == null ? null : closedAt.toLocalDateTime(), rows.getString("compiled_url"),
+            compiledAt == null ? null : compiledAt.toLocalDateTime());
     }
 }
