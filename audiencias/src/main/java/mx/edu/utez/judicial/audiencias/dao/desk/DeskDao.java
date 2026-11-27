@@ -14,5 +14,6 @@ public interface DeskDao {
     int insert(Desk desk);
     void assignUser(int deskId, Integer userId);
     void setActive(int deskId, boolean active);
+    void update(Desk desk);
 }
 
