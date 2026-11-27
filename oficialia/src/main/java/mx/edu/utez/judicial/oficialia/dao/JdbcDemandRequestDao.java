@@ -95,6 +95,28 @@ public class JdbcDemandRequestDao implements DemandRequestDao {
 
     @Override
     public void insert(DemandRequest request) {
+        save(request, null);
+    }
+
+    private static void logRegistration(Connection connection, DemandRequest request, User clerk)
+            throws SQLException {
+        AuditLog.record(connection, clerk, request.getCourtCode(), "REQUEST_REGISTERED", REQUEST, request.getFolio(),
+            null, Map.of("matter", request.getMatter()));
+        DuplicityWarning warning = request.getDuplicityWarning();
+        if (warning != null) {
+            AuditLog.record(connection, clerk, request.getCourtCode(), "DUPLICITY_WARNING_CONTINUED", REQUEST,
+                request.getFolio(), null, Map.of("matchedCourt", warning.getCourtName(),
+                    "matchedMatter", warning.getMatter()));
+        }
+    }
+
+    @Override
+    public void register(DemandRequest request, User clerk) {
+        save(request, clerk);
+    }
+
+    /** Saves the request in one transaction; with a clerk, the registration also goes to the audit log. */
+    private void save(DemandRequest request, User clerk) {
         try (Connection connection = database.getConnection()) {
             connection.setAutoCommit(false);
             try {
@@ -108,8 +130,11 @@ public class JdbcDemandRequestDao implements DemandRequestDao {
                 insertStatusChange(connection, request.getFolio(), null, RequestStatus.PENDING, null,
                     request.getCapturedBy(), registeredAt(request.getReceivedDate()));
                 saveRuling(connection, request, RequestStatus.PENDING);
+                if (clerk != null) {
+                    logRegistration(connection, request, clerk);
+                }
                 connection.commit();
-            } catch (SQLException e) {
+            } catch (SQLException | RuntimeException e) {
                 connection.rollback();
                 throw e;
             }

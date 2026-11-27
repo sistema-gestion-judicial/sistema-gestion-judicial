@@ -22,6 +22,7 @@ import mx.edu.utez.judicial.common.db.Database;
 import mx.edu.utez.judicial.oficialia.model.Annex;
 import mx.edu.utez.judicial.oficialia.model.CancelledAttempt;
 import mx.edu.utez.judicial.oficialia.model.DemandRequest;
+import mx.edu.utez.judicial.oficialia.model.DuplicityWarning;
 import mx.edu.utez.judicial.oficialia.model.NewUserAccount;
 import mx.edu.utez.judicial.oficialia.model.Party;
 import mx.edu.utez.judicial.oficialia.model.PartyAddress;
@@ -135,6 +136,31 @@ class JdbcDemandRequestDaoTest {
             + "AND folio IS NULL AND court_code = '12' AND matched_court = 'Juzgado de Jojutla' "
             + "AND matched_instance = 'SECOND' AND decided_by = 'Laura Méndez'"));
         assertEquals(10, dao.count());
+    }
+
+    @Test
+    void logsTheRegistrationAndTheDecisionToContinueWithTheClerk() throws Exception {
+        dao.register(new DemandRequest("S-000203/2026", LocalDate.parse("2026-11-27"), "Juzgado de Cuautla", "12",
+            "Civil", Party.unidentified(PartyRole.PLAINTIFF), Party.unidentified(PartyRole.DEFENDANT),
+            "Lic. Marcos Rivera Peña", "Laura Méndez", List.of(new Annex("Demanda.pdf", 120)),
+            new DuplicityWarning("Juzgado de Jojutla", "Civil", "Continuó con el registro")), clerk);
+
+        assertEquals(1, count("SELECT COUNT(*) FROM audit_log a JOIN users u ON u.id = a.actor_user_id "
+            + "WHERE a.action = 'REQUEST_REGISTERED' AND a.entity_id = 'S-000203/2026' AND u.email = '" + CLERK_EMAIL
+            + "'"));
+        assertEquals(1, count("SELECT COUNT(*) FROM audit_log WHERE action = 'DUPLICITY_WARNING_CONTINUED' "
+            + "AND entity_id = 'S-000203/2026'"));
+    }
+
+    @Test
+    void savesNothingWhenTheClerkHasNoAccount() {
+        User stranger = new User("nadie@utez.edu.mx", "Nadie", UserRole.CLERK, "Juzgado de Cuautla");
+
+        assertThrows(RuntimeException.class, () -> dao.register(new DemandRequest("S-000204/2026",
+            LocalDate.parse("2026-11-27"), "Juzgado de Cuautla", "12", "Civil", Party.unidentified(PartyRole.PLAINTIFF),
+            Party.unidentified(PartyRole.DEFENDANT), "Lic. Marcos Rivera Peña", "Nadie",
+            List.of(new Annex("Demanda.pdf", 120)), null), stranger));
+        assertTrue(dao.findByFolio("S-000204/2026").isEmpty());
     }
 
     @Test

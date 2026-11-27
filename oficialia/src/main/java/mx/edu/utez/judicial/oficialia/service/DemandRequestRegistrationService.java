@@ -100,7 +100,7 @@ public class DemandRequestRegistrationService {
                 data.getLegalRepresentative(), user.getFullName(), data.getAnnexes(), warning,
                 data.getPresentationTypeValue(), data.observationsOrNull());
             try {
-                demandRequestDao.insert(request);
+                demandRequestDao.register(request, user);
                 return Registration.saved(request);
             } catch (DuplicateCodeException e) {
                 if (attempt == FOLIO_ATTEMPTS) {

@@ -67,6 +67,11 @@ public class InMemoryDemandRequestDao implements DemandRequestDao {
     }
 
     @Override
+    public void register(DemandRequest demandRequest, User clerk) {
+        insert(demandRequest);
+    }
+
+    @Override
     public void insert(DemandRequest demandRequest) {
         if (requestsByFolio.putIfAbsent(demandRequest.getFolio(), demandRequest) != null) {
             throw new DuplicateCodeException(demandRequest.getFolio(), null);

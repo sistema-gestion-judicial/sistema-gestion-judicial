@@ -30,6 +30,14 @@ public interface DemandRequestDao {
     void insert(DemandRequest demandRequest);
 
     /**
+     * Saves a request the clerk just registered, like {@link #insert}, and logs the registration with the
+     * clerk and the moment, and the decision to continue when it came with a duplicity warning (DFR 3.3.9).
+     *
+     * @throws DuplicateCodeException when another request already has the folio
+     */
+    void register(DemandRequest demandRequest, User clerk);
+
+    /**
      * Rules a pending request as admissible and opens its case file with the next number of its court
      * for that year (AAAA/NNNNN/JJ). Everything is saved together or not at all (DFR 3.3.2), the number
      * is never given twice, and the desk stays pending until {@link #assignHearingDesk} runs.
