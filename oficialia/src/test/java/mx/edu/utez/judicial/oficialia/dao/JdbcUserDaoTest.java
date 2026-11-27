@@ -8,10 +8,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.List;
 import mx.edu.utez.judicial.common.db.Database;
 import mx.edu.utez.judicial.oficialia.model.NewUserAccount;
+import mx.edu.utez.judicial.oficialia.model.User;
 import mx.edu.utez.judicial.oficialia.model.UserAccount;
+import mx.edu.utez.judicial.oficialia.model.UserProfile;
 import mx.edu.utez.judicial.oficialia.model.UserRole;
 import mx.edu.utez.judicial.oficialia.model.UserSummary;
 import org.junit.jupiter.api.BeforeEach;
@@ -131,5 +134,72 @@ class JdbcUserDaoTest {
 
         assertEquals(List.of("Ana Ruiz", "Zoe Mar"),
             dao.findByCourt("Juzgado de Cuautla").stream().map(UserSummary::getFullName).toList());
+    }
+
+    @Test
+    void correctsAUserAndWritesTheChangesToTheAuditLog() throws Exception {
+        dao.insert(new NewUserAccount("Jorge", "Salas", "admin@utez.edu.mx", UserRole.COURT_ADMIN, "12", HASH, false, true));
+        dao.insert(new NewUserAccount("Ana", "Ruiz", "ana@utez.edu.mx", UserRole.CLERK, "12", HASH, true, true));
+        User admin = dao.findByEmail("admin@utez.edu.mx").orElseThrow().user();
+
+        dao.update("ana@utez.edu.mx", new UserProfile("Ana María", "Ruiz", "Ana.Maria@utez.edu.mx", "7771234567",
+            UserRole.COURT_ADMIN, null, true), admin);
+
+        assertTrue(dao.findProfile("ana@utez.edu.mx").isEmpty());
+        UserProfile saved = dao.findProfile("ana.maria@utez.edu.mx").orElseThrow();
+        assertEquals("Ana María Ruiz", saved.getFullName());
+        assertEquals("7771234567", saved.getPhone());
+        assertEquals(UserRole.COURT_ADMIN, saved.getRole());
+        assertEquals("Juzgado de Cuautla", saved.getCourtName());
+        assertEquals(HASH, dao.findByEmail("ana.maria@utez.edu.mx").orElseThrow().passwordHash());
+        assertEquals(List.of("admin@utez.edu.mx|USER_UPDATED|12"), auditEntries());
+    }
+
+    @Test
+    void anAdministratorCanCorrectTheirOwnEmail() throws Exception {
+        dao.insert(new NewUserAccount("Jorge", "Salas", "admin@utez.edu.mx", UserRole.COURT_ADMIN, "12", HASH, false, true));
+        User admin = dao.findByEmail("admin@utez.edu.mx").orElseThrow().user();
+
+        dao.update("admin@utez.edu.mx", new UserProfile("Jorge", "Salas", "jsalas@utez.edu.mx", null,
+            UserRole.COURT_ADMIN, null, true), admin);
+
+        assertTrue(dao.findProfile("jsalas@utez.edu.mx").isPresent());
+        assertEquals(List.of("jsalas@utez.edu.mx|USER_UPDATED|12"), auditEntries());
+    }
+
+    @Test
+    void refusesTheEmailOfAnotherUser() {
+        dao.insert(new NewUserAccount("Jorge", "Salas", "admin@utez.edu.mx", UserRole.COURT_ADMIN, "12", HASH, false, true));
+        dao.insert(new NewUserAccount("Ana", "Ruiz", "ana@utez.edu.mx", UserRole.CLERK, "12", HASH, true, true));
+        User admin = dao.findByEmail("admin@utez.edu.mx").orElseThrow().user();
+
+        assertThrows(DuplicateEmailException.class, () -> dao.update("ana@utez.edu.mx",
+            new UserProfile("Ana", "Ruiz", "admin@utez.edu.mx", null, UserRole.CLERK, null, true), admin));
+        assertEquals("Ana Ruiz", dao.findProfile("ana@utez.edu.mx").orElseThrow().getFullName());
+    }
+
+    @Test
+    void deactivatesAUserAndWritesItToTheAuditLog() throws Exception {
+        dao.insert(new NewUserAccount("Jorge", "Salas", "admin@utez.edu.mx", UserRole.COURT_ADMIN, "12", HASH, false, true));
+        dao.insert(new NewUserAccount("Ana", "Ruiz", "ana@utez.edu.mx", UserRole.CLERK, "12", HASH, true, true));
+        User admin = dao.findByEmail("admin@utez.edu.mx").orElseThrow().user();
+
+        dao.updateStatus("ana@utez.edu.mx", false, admin);
+
+        assertFalse(dao.findByEmail("ana@utez.edu.mx").orElseThrow().active());
+        assertEquals(List.of("admin@utez.edu.mx|USER_DEACTIVATED|12"), auditEntries());
+    }
+
+    /** author e-mail|action|court of every audit entry, oldest first. */
+    private List<String> auditEntries() throws Exception {
+        try (Connection connection = database.getConnection(); Statement statement = connection.createStatement();
+             ResultSet rows = statement.executeQuery("SELECT u.email, a.action, a.court_code "
+                 + "FROM audit_log a LEFT JOIN users u ON u.id = a.actor_user_id ORDER BY a.id")) {
+            List<String> entries = new ArrayList<>();
+            while (rows.next()) {
+                entries.add(rows.getString(1) + "|" + rows.getString(2) + "|" + rows.getString(3));
+            }
+            return entries;
+        }
     }
 }

@@ -7,12 +7,16 @@ import java.sql.SQLException;
 import java.sql.SQLIntegrityConstraintViolationException;
 import java.sql.Types;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import mx.edu.utez.judicial.common.db.Database;
 import mx.edu.utez.judicial.oficialia.model.NewUserAccount;
 import mx.edu.utez.judicial.oficialia.model.User;
 import mx.edu.utez.judicial.oficialia.model.UserAccount;
+import mx.edu.utez.judicial.oficialia.model.UserProfile;
 import mx.edu.utez.judicial.oficialia.model.UserRole;
 import mx.edu.utez.judicial.oficialia.model.UserSummary;
 import mx.edu.utez.judicial.oficialia.util.EmailValidator;
@@ -150,5 +154,141 @@ public class JdbcUserDao implements UserDao {
         } catch (SQLException e) {
             throw new DataAccessException("Could not create the user account " + account.email(), e);
         }
+    }
+
+    @Override
+    public Optional<UserProfile> findProfile(String email) {
+        if (email == null) {
+            return Optional.empty();
+        }
+        String sql = "SELECT u.first_name, u.last_name, u.email, u.phone, u.role, u.active, c.name AS court_name "
+            + "FROM users u LEFT JOIN courts c ON c.code = u.court_code WHERE u.email = ?";
+        try (Connection connection = database.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, EmailValidator.normalize(email));
+            try (ResultSet rows = statement.executeQuery()) {
+                if (!rows.next()) {
+                    return Optional.empty();
+                }
+                return Optional.of(new UserProfile(rows.getString("first_name"), rows.getString("last_name"),
+                    rows.getString("email"), rows.getString("phone"), UserRole.valueOf(rows.getString("role")),
+                    rows.getString("court_name"), rows.getBoolean("active")));
+            }
+        } catch (SQLException e) {
+            throw new DataAccessException("Could not read the user account", e);
+        }
+    }
+
+    /**
+     * The audit record is written before the update, because the actor is found by e-mail and may be the
+     * user whose e-mail changes. Both are saved together or not at all.
+     */
+    @Override
+    public void update(String email, UserProfile changes, User actor) {
+        String current = EmailValidator.normalize(email);
+        try (Connection connection = database.getConnection()) {
+            connection.setAutoCommit(false);
+            try {
+                Stored stored = stored(connection, current);
+                if (stored == null) {
+                    connection.rollback();
+                    return;
+                }
+                Map<String, Object> details = new LinkedHashMap<>();
+                putChange(details, "firstName", stored.profile().getFirstName(), changes.getFirstName());
+                putChange(details, "lastName", stored.profile().getLastName(), changes.getLastName());
+                putChange(details, "email", stored.profile().getEmail(), EmailValidator.normalize(changes.getEmail()));
+                putChange(details, "phone", stored.profile().getPhone(), changes.getPhone());
+                putChange(details, "role", stored.profile().getRole().name(), changes.getRole().name());
+                AuditLog.record(connection, actor, stored.courtCode(), "USER_UPDATED", "USER",
+                    String.valueOf(stored.id()), null, details);
+                try (PreparedStatement statement = connection.prepareStatement(
+                         "UPDATE users SET first_name = ?, last_name = ?, email = ?, phone = ?, role = ? WHERE id = ?")) {
+                    statement.setString(1, changes.getFirstName());
+                    statement.setString(2, changes.getLastName());
+                    statement.setString(3, EmailValidator.normalize(changes.getEmail()));
+                    if (changes.getPhone() == null) {
+                        statement.setNull(4, Types.VARCHAR);
+                    } else {
+                        statement.setString(4, changes.getPhone());
+                    }
+                    statement.setString(5, changes.getRole().name());
+                    statement.setLong(6, stored.id());
+                    statement.executeUpdate();
+                }
+                connection.commit();
+            } catch (SQLException e) {
+                connection.rollback();
+                throw e;
+            }
+        } catch (SQLIntegrityConstraintViolationException e) {
+            if (e.getErrorCode() == MYSQL_DUPLICATE_ENTRY) {
+                throw new DuplicateEmailException(changes.getEmail(), e);
+            }
+            throw new DataAccessException("Could not update the user account " + email, e);
+        } catch (SQLException e) {
+            throw new DataAccessException("Could not update the user account " + email, e);
+        }
+    }
+
+    @Override
+    public void updateStatus(String email, boolean active, User actor) {
+        String current = EmailValidator.normalize(email);
+        try (Connection connection = database.getConnection()) {
+            connection.setAutoCommit(false);
+            try {
+                Stored stored = stored(connection, current);
+                if (stored == null) {
+                    connection.rollback();
+                    return;
+                }
+                try (PreparedStatement statement = connection.prepareStatement(
+                         "UPDATE users SET active = ? WHERE id = ?")) {
+                    statement.setBoolean(1, active);
+                    statement.setLong(2, stored.id());
+                    statement.executeUpdate();
+                }
+                AuditLog.record(connection, actor, stored.courtCode(), active ? "USER_ACTIVATED" : "USER_DEACTIVATED",
+                    "USER", String.valueOf(stored.id()), null, Map.of("email", current));
+                connection.commit();
+            } catch (SQLException e) {
+                connection.rollback();
+                throw e;
+            }
+        } catch (SQLException e) {
+            throw new DataAccessException("Could not change the status of the user account " + email, e);
+        }
+    }
+
+    /** The row of the account, locked until the transaction ends; null when the e-mail is unknown. */
+    private static Stored stored(Connection connection, String email) throws SQLException {
+        String sql = "SELECT u.id, u.court_code, u.first_name, u.last_name, u.email, u.phone, u.role, u.active, "
+            + "c.name AS court_name FROM users u LEFT JOIN courts c ON c.code = u.court_code "
+            + "WHERE u.email = ? FOR UPDATE";
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, email);
+            try (ResultSet rows = statement.executeQuery()) {
+                if (!rows.next()) {
+                    return null;
+                }
+                UserProfile profile = new UserProfile(rows.getString("first_name"), rows.getString("last_name"),
+                    rows.getString("email"), rows.getString("phone"), UserRole.valueOf(rows.getString("role")),
+                    rows.getString("court_name"), rows.getBoolean("active"));
+                return new Stored(rows.getLong("id"), rows.getString("court_code"), profile);
+            }
+        }
+    }
+
+    /** Keeps only the fields that change, with their old and new values. */
+    private static void putChange(Map<String, Object> details, String field, String before, String after) {
+        if (!Objects.equals(before, after)) {
+            Map<String, Object> change = new LinkedHashMap<>();
+            change.put("before", before);
+            change.put("after", after);
+            details.put(field, change);
+        }
+    }
+
+    private record Stored(long id, String courtCode, UserProfile profile) {
     }
 }
