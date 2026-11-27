@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import mx.edu.utez.judicial.oficialia.model.DemandRequest;
+import mx.edu.utez.judicial.oficialia.model.DuplicityWarning;
 import mx.edu.utez.judicial.oficialia.model.User;
 
 /**
@@ -39,4 +40,15 @@ public interface DemandRequestDao {
      * @throws IllegalStateException when the request was ruled in the meantime
      */
     void reject(DemandRequest request, String reason, User clerk, LocalDateTime ruledAt);
+
+    /**
+     * Replaces the subject matter, the parties and the legal representative of a pending request with the
+     * corrected ones (DFR 3.4) and writes the change to the audit log with the clerk. When the clerk continued
+     * despite a new duplicity warning, the warning and the decision are kept too. Folio, court, date and
+     * annexes never change.
+     *
+     * @param warning the duplicity warning the clerk continued with, or null when there was none
+     * @throws IllegalStateException when the request was ruled in the meantime
+     */
+    void correct(DemandRequest corrected, DuplicityWarning warning, User clerk, LocalDateTime at);
 }

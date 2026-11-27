@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import mx.edu.utez.judicial.common.db.Database;
 import mx.edu.utez.judicial.oficialia.model.Annex;
@@ -309,6 +310,91 @@ public class JdbcDemandRequestDao implements DemandRequestDao {
     }
 
     /** A request saved after a warning is one whose clerk chose to continue (DFR 3.1). */
+    /**
+     * The request row is locked, so a ruling and a correction cannot cross. The parties are replaced as a
+     * whole; their phone and e-mail come in the corrected request.
+     */
+    @Override
+    public void correct(DemandRequest corrected, DuplicityWarning warning, User clerk, LocalDateTime at) {
+        String folio = corrected.getFolio();
+        // Read before locking, for the court and the old values of the audit record; the lock rechecks the status
+        DemandRequest current = findByFolio(folio)
+            .orElseThrow(() -> new IllegalStateException("Request " + folio + " does not exist"));
+        try (Connection connection = database.getConnection()) {
+            connection.setAutoCommit(false);
+            try {
+                requirePending(connection, folio);
+                StringBuilder sql = new StringBuilder("UPDATE demand_requests SET matter = ?, legal_representative = ?");
+                if (warning != null) {
+                    sql.append(", duplicity_court = ?, duplicity_matter = ?, duplicity_decision = ?");
+                }
+                sql.append(" WHERE folio = ?");
+                try (PreparedStatement statement = connection.prepareStatement(sql.toString())) {
+                    int index = 1;
+                    statement.setString(index++, corrected.getMatter());
+                    statement.setString(index++, corrected.getLegalRepresentative());
+                    if (warning != null) {
+                        statement.setString(index++, warning.getCourtName());
+                        statement.setString(index++, warning.getMatter());
+                        statement.setString(index++, warning.getDecision());
+                    }
+                    statement.setString(index, folio);
+                    statement.executeUpdate();
+                }
+                try (PreparedStatement statement = connection.prepareStatement("DELETE FROM parties WHERE folio = ?")) {
+                    statement.setString(1, folio);
+                    statement.executeUpdate();
+                }
+                insertParty(connection, folio, corrected.getPlaintiff());
+                insertParty(connection, folio, corrected.getDefendant());
+                if (warning != null) {
+                    try (PreparedStatement statement = connection.prepareStatement(
+                             "INSERT INTO duplicity_warning_decisions (folio, court_code, matched_court, matched_matter, "
+                                 + "decision, decided_by, decided_at) VALUES (?, ?, ?, ?, 'CONTINUE', ?, ?)")) {
+                        statement.setString(1, folio);
+                        statement.setString(2, current.getCourtCode());
+                        statement.setString(3, warning.getCourtName());
+                        statement.setString(4, warning.getMatter() == null ? corrected.getMatter() : warning.getMatter());
+                        statement.setString(5, clerk.getFullName());
+                        statement.setTimestamp(6, timestamp(at));
+                        statement.executeUpdate();
+                    }
+                }
+                AuditLog.record(connection, clerk, current.getCourtCode(), "REQUEST_CORRECTED", "DEMAND_REQUEST",
+                    folio, null, correctionDetails(current, corrected));
+                connection.commit();
+            } catch (SQLException | RuntimeException e) {
+                connection.rollback();
+                throw e;
+            }
+        } catch (SQLException e) {
+            throw new DataAccessException("Could not correct demand request " + folio, e);
+        }
+    }
+
+    /** Old and new value of every corrected field, for the audit log. */
+    private static Map<String, Object> correctionDetails(DemandRequest before, DemandRequest after) {
+        Map<String, Object> details = new LinkedHashMap<>();
+        putChange(details, "matter", before.getMatter(), after.getMatter());
+        putChange(details, "legalRepresentative", before.getLegalRepresentative(), after.getLegalRepresentative());
+        putChange(details, "plaintiff", partyText(before.getPlaintiff()), partyText(after.getPlaintiff()));
+        putChange(details, "defendant", partyText(before.getDefendant()), partyText(after.getDefendant()));
+        return details;
+    }
+
+    private static String partyText(Party party) {
+        return party.isIdentified() ? party.getName() + " (" + party.getPersonId() + ")" : null;
+    }
+
+    private static void putChange(Map<String, Object> details, String field, String before, String after) {
+        if (!Objects.equals(before, after)) {
+            Map<String, Object> change = new LinkedHashMap<>();
+            change.put("before", before);
+            change.put("after", after);
+            details.put(field, change);
+        }
+    }
+
     private static void insertWarningDecision(Connection connection, DemandRequest request) throws SQLException {
         DuplicityWarning warning = request.getDuplicityWarning();
         if (warning == null) {
