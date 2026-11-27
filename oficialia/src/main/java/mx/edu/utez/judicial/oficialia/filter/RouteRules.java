@@ -24,6 +24,10 @@ final class RouteRules {
     // The catalogs are managed only by the judicial body administrator (DFR 2.1)
     private static final Set<String> CATALOG_PATHS =
         Set.of("/judicial-districts", "/judicial-districts/new", "/judicial-districts/edit");
+    // The case files of a court are for its staff; only the clerk records the second instance (DFR 3.6, 3.7)
+    private static final Set<String> CASE_FILE_PATHS =
+        Set.of("/case-files", "/case-files/detail", "/case-files/receipt");
+    private static final String SECOND_INSTANCE_PATH = "/case-files/second-instance";
     // Every profile looks up the courts catalog (DFR 2.10)
     private static final String COURTS_PATH = "/courts";
     // "/" and "/index.jsp" only redirect to the home page
@@ -50,6 +54,12 @@ final class RouteRules {
         // DEMO (temporary): the judicial body administrator reaches every page the Oficial de Partes reaches
         if (path.equals(NEW_REQUEST_PATH)) {
             return role == UserRole.CLERK || role == UserRole.JUDICIAL_BODY_ADMIN;
+        }
+        if (CASE_FILE_PATHS.contains(path)) {
+            return role == UserRole.CLERK || role == UserRole.COURT_ADMIN;
+        }
+        if (path.equals(SECOND_INSTANCE_PATH)) {
+            return role == UserRole.CLERK;
         }
         if (COURT_ADMIN_PATHS.contains(path)) {
             return role == UserRole.COURT_ADMIN;
